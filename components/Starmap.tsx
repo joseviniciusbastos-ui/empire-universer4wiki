@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { StarSystem } from '../types';
 import { MOCK_SYSTEMS } from '../constants';
+import { useToast } from '../contexts/ToastContext';
 
 const Starmap: React.FC = () => {
+  const { showToast } = useToast();
   const [selectedSystem, setSelectedSystem] = useState<StarSystem | null>(null);
   const [zoom, setZoom] = useState(1);
 
   // Theme color for JS/SVG usage (Matches Tailwind space-neon #00C2FF)
-  const THEME_COLOR = '#00C2FF'; 
+  const THEME_COLOR = '#00C2FF';
 
   return (
     <div className="w-full h-[600px] bg-space-black border border-space-steel relative overflow-hidden group">
@@ -18,7 +20,7 @@ const Starmap: React.FC = () => {
       </div>
 
       {/* Grid Background Effect */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none" 
+      <div className="absolute inset-0 opacity-20 pointer-events-none"
         style={{
           backgroundImage: 'radial-gradient(#333 1px, transparent 1px)',
           backgroundSize: '20px 20px'
@@ -27,28 +29,28 @@ const Starmap: React.FC = () => {
 
       {/* Map Surface */}
       <div className="w-full h-full flex items-center justify-center cursor-move active:cursor-grabbing">
-        <svg 
-          viewBox="0 0 800 600" 
+        <svg
+          viewBox="0 0 800 600"
           className="w-full h-full transition-transform duration-300"
           style={{ transform: `scale(${zoom})` }}
         >
           <defs>
             <filter id="glow">
-              <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+              <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
               <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
           </defs>
 
           {/* Connections */}
-          {MOCK_SYSTEMS.map(sys => 
+          {MOCK_SYSTEMS.map(sys =>
             sys.connections.map(targetId => {
               const target = MOCK_SYSTEMS.find(s => s.id === targetId);
               if (!target) return null;
               return (
-                <line 
+                <line
                   key={`${sys.id}-${target.id}`}
                   x1={sys.x} y1={sys.y}
                   x2={target.x} y2={target.y}
@@ -71,8 +73,8 @@ const Starmap: React.FC = () => {
             const isSelected = selectedSystem?.id === sys.id;
 
             return (
-              <g 
-                key={sys.id} 
+              <g
+                key={sys.id}
                 onClick={() => setSelectedSystem(sys)}
                 className="cursor-pointer transition-opacity hover:opacity-100"
                 style={{ opacity: isSelected ? 1 : 0.8 }}
@@ -80,19 +82,19 @@ const Starmap: React.FC = () => {
                 {isSelected && (
                   <circle cx={sys.x} cy={sys.y} r={radius * 3} fill="transparent" stroke={THEME_COLOR} strokeWidth="1" opacity="0.5" className="animate-pulse" />
                 )}
-                <circle 
-                  cx={sys.x} 
-                  cy={sys.y} 
-                  r={radius} 
+                <circle
+                  cx={sys.x}
+                  cy={sys.y}
+                  r={radius}
                   fill={color}
                   filter="url(#glow)"
                 />
-                <text 
-                  x={sys.x} 
-                  y={sys.y + radius + 15} 
-                  fill={isSelected ? THEME_COLOR : '#888'} 
-                  fontSize="10" 
-                  fontFamily="Space Mono" 
+                <text
+                  x={sys.x}
+                  y={sys.y + radius + 15}
+                  fill={isSelected ? THEME_COLOR : '#888'}
+                  fontSize="10"
+                  fontFamily="Space Mono"
                   textAnchor="middle"
                   className="pointer-events-none select-none"
                 >
@@ -117,9 +119,9 @@ const Starmap: React.FC = () => {
               ALERTA: Níveis elevados de radiação detectados neste setor. Prossiga com cautela.
             </p>
           </div>
-          <button 
+          <button
             className="mt-4 w-full bg-space-neon text-black font-bold text-xs py-2 hover:bg-white transition-colors uppercase tracking-wider"
-            onClick={() => alert(`Motor de dobra engajado para ${selectedSystem.name}`)}
+            onClick={() => showToast(`Motor de dobra engajado para ${selectedSystem.name}`, 'info')}
           >
             Iniciar Dobra
           </button>

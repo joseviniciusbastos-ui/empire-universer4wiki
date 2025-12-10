@@ -1,7 +1,7 @@
 import React from 'react';
 import { Hammer, Lock, Activity } from 'lucide-react';
 import { MOCK_TOOLS } from '../constants';
-import { Card, Badge, Button } from './Shared';
+import { Card, Badge, Button } from './ui/Shared';
 
 const Tools: React.FC = () => {
   return (
@@ -24,20 +24,20 @@ const Tools: React.FC = () => {
                 {tool.status === 'locked' && <Lock size={20} className="text-space-alert" />}
               </div>
               <Badge color={
-                tool.status === 'active' ? 'bg-space-neon text-black' : 
-                tool.status === 'construction' ? 'bg-yellow-500 text-black' : 
-                'bg-space-alert text-black'
+                tool.status === 'active' ? 'bg-space-neon text-black' :
+                  tool.status === 'construction' ? 'bg-yellow-500 text-black' :
+                    'bg-space-alert text-black'
               }>
                 {tool.status === 'active' ? 'OPERACIONAL' : tool.status === 'construction' ? 'EM OBRAS' : 'BLOQUEADO'}
               </Badge>
             </div>
-            
+
             <h3 className="text-lg font-bold font-heading mb-2">{tool.name}</h3>
             <p className="text-xs font-mono text-space-muted mb-6 h-10">{tool.description}</p>
-            
-            <Button 
-              size="sm" 
-              variant={tool.status === 'active' ? 'secondary' : 'ghost'} 
+
+            <Button
+              size="sm"
+              variant={tool.status === 'active' ? 'secondary' : 'ghost'}
               className="w-full"
               disabled={tool.status !== 'active'}
             >

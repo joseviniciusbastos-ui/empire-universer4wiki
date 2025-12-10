@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { Button, Input, Card } from './Shared';
+import { supabase } from '../../lib/supabase';
+import { Button, Input, Card } from '../ui/Shared';
 import { X, LogIn, UserPlus } from 'lucide-react';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../../contexts/ToastContext';
 
 interface LoginModalProps {
     isOpen: boolean;

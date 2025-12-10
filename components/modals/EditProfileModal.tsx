@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { Button, Input, Card } from './Shared';
-import { useToast } from '../contexts/ToastContext';
+import { supabase } from '../../lib/supabase';
+import { Button, Input, Card } from '../ui/Shared';
+import { useToast } from '../../contexts/ToastContext';
 import { X, UploadCloud, User as UserIcon, Lock, Mail, Save, Camera } from 'lucide-react';
-import { User } from '../types';
+import { User } from '../../types';
 
 interface EditProfileModalProps {
     isOpen: boolean;

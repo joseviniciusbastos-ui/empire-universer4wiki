@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
-import { Post, User } from '../types';
-import { Button, Card, Badge } from './Shared';
+import { Post, User } from '../../types';
+import { Button, Card, Badge } from '../ui/Shared';
 import { X, User as UserIcon, Clock, Eye, Heart, Share2, Trash2, Edit } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 import DOMPurify from 'isomorphic-dompurify';
-import Comments from './Comments';
-import { useToast } from '../contexts/ToastContext';
+import Comments from '../Comments';
+import { useToast } from '../../contexts/ToastContext';
 
 interface PostViewModalProps {
     post: Post | null;

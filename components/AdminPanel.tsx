@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Button, Card, Badge, Input } from './Shared';
+import { Button, Card, Badge, Input } from './ui/Shared';
 import { Users, Settings, Save, Trash2, Shield, ShieldAlert, CheckCircle, X } from 'lucide-react';
-import { PostType } from '../types';
+import { PostType, User } from '../types';
+import { useToast } from '../contexts/ToastContext';
 
 interface AdminPanelProps {
-    currentUser: any;
+    currentUser: User | null;
 }
 
 const CATEGORY_KEYS = {
@@ -16,6 +17,7 @@ const CATEGORY_KEYS = {
 };
 
 export default function AdminPanel({ currentUser }: AdminPanelProps) {
+    const { showToast } = useToast();
     const [activeTab, setActiveTab] = useState<'users' | 'settings'>('users');
     const [users, setUsers] = useState<any[]>([]);
     const [categories, setCategories] = useState<Record<string, string[]>>({});

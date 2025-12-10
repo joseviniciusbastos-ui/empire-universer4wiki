@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { PostType } from '../types';
+import ReactQuill, { Quill } from 'react-quill';
+import { PostType, User } from '../types';
 import { Button, Input, Card } from './Shared';
 import { X, Maximize2, Minimize2, Image as ImageIcon, UploadCloud, Save, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useToast } from '../contexts/ToastContext';
 import 'react-quill/dist/quill.snow.css';
 import '../quill-theme.css';
 
@@ -10,11 +12,12 @@ interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
   postType: PostType;
-  currentUser: any;
+  currentUser: User | null;
   onPostCreated: () => void;
 }
 
 const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, postType, currentUser, onPostCreated }) => {
+  const { showToast } = useToast();
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
   const [content, setContent] = useState('');
@@ -234,6 +237,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
       // Clear draft after successful post
       localStorage.removeItem(getDraftKey());
 
+      showToast("Post criado com sucesso!", 'success');
       onPostCreated();
       onClose();
       // Reset form
@@ -247,7 +251,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
 
     } catch (error: any) {
       console.error("Error creating post:", error);
-      alert("Erro ao criar post: " + error.message);
+      showToast("Erro ao criar post: " + error.message, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -339,30 +343,81 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
           </div>
 
           {/* Rich Text Editor */}
-          <div className="flex-1 flex flex-col min-h-[300px]">
+          <div
+            className="flex-1 flex flex-col min-h-[300px]"
+            onDrop={async (e) => {
+              e.preventDefault();
+              const files = e.dataTransfer.files;
+              if (files && files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                  const file = files[i];
+                  if (file.type.startsWith('image/')) {
+                    const url = await handleImageUpload(file);
+                    if (url && quillRef.current) {
+                      const editor = quillRef.current.getEditor();
+                      const range = editor.getSelection(true) || { index: editor.getLength() };
+                      editor.insertEmbed(range.index, 'image', url);
+                      editor.setSelection(range.index + 1);
+                    }
+                  }
+                }
+              }
+            }}
+            onDragOver={(e) => e.preventDefault()}
+            onPaste={async (e) => {
+              const clipboardItems = e.clipboardData.items;
+              // Loop through items properly
+              for (let i = 0; i < clipboardItems.length; i++) {
+                const item = clipboardItems[i];
+                if (item.type.startsWith('image/')) {
+                  e.preventDefault(); // Prevent default base64 paste
+                  const file = item.getAsFile();
+                  if (file) {
+                    const url = await handleImageUpload(file);
+                    if (url && quillRef.current) {
+                      const editor = quillRef.current.getEditor();
+                      const range = editor.getSelection(true) || { index: editor.getLength() };
+                      editor.insertEmbed(range.index, 'image', url);
+                      editor.setSelection(range.index + 1);
+                    }
+                  }
+                }
+              }
+            }}
+          >
             <label className="text-xs font-mono text-space-muted mb-1 block uppercase flex justify-between">
               <span>Conteúdo Principal</span>
-              <span className="text-[10px] text-space-neon flex items-center gap-1">✓ RICH TEXT ENABLED</span>
+              <span className="text-[10px] text-space-neon flex items-center gap-1">✓ DRAG & DROP SUPPORTED</span>
             </label>
 
             {ReactQuill ? (
               <ReactQuill
+                ref={quillRef}
                 theme="snow"
                 value={content}
                 onChange={setContent}
                 className="flex-1 quill-editor"
-                modules={{
-                  toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                    ['blockquote', 'code-block'],
-                    [{ 'color': [] }, { 'background': [] }],
-                    ['link'],
-                    ['clean']
-                  ]
-                }}
-                placeholder="Escreva sua transmissão aqui..."
+                modules={React.useMemo(() => ({
+                  toolbar: {
+                    container: [
+                      [{ 'header': [1, 2, 3, false] }],
+                      ['bold', 'italic', 'underline', 'strike'],
+                      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                      ['blockquote', 'code-block'],
+                      [{ 'color': [] }, { 'background': [] }],
+                      ['link', 'image'],
+                      ['clean']
+                    ],
+                    handlers: {
+                      image: imageHandler
+                    }
+                  },
+                  imageResize: {
+                    parchment: ReactQuill.Quill.import('parchment'),
+                    modules: ['Resize', 'DisplaySize']
+                  }
+                }), [])}
+                placeholder="Escreva sua transmissão aqui... Arraste imagens diretamente para o editor."
               />
             ) : (
               <div className="flex-1 bg-space-darker/50 border border-space-steel rounded p-4 flex items-center justify-center">

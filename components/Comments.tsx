@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input } from './Shared';
+import { Button, Input } from './ui/Shared';
 import { supabase } from '../lib/supabase';
-import { Send, Trash2 } from 'lucide-react';
+import { Send, Trash2, MessageSquare, CornerDownRight } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
+import { PostType, User } from '../types';
 
 interface Comment {
     id: string;
@@ -11,16 +13,20 @@ interface Comment {
     content: string;
     created_at: string;
     likes: number;
+    parent_id: string | null;
 }
 
 interface CommentsProps {
     postId: string;
-    currentUser: any;
+    currentUser: User | null;
 }
 
 const Comments: React.FC<CommentsProps> = ({ postId, currentUser }) => {
+    const { showToast } = useToast();
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState('');
+    const [replyingTo, setReplyingTo] = useState<string | null>(null);
+    const [replyContent, setReplyContent] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isFetching, setIsFetching] = useState(true);
 
@@ -35,7 +41,7 @@ const Comments: React.FC<CommentsProps> = ({ postId, currentUser }) => {
             .from('comments')
             .select('*')
             .eq('post_id', postId)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: true }); // Order by oldest first for threads
 
         if (error) {
             console.error('Error fetching comments:', error);
@@ -45,43 +51,52 @@ const Comments: React.FC<CommentsProps> = ({ postId, currentUser }) => {
         setIsFetching(false);
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent, parentId: string | null = null) => {
         e.preventDefault();
-        if (!newComment.trim() || !currentUser) return;
+        const contentToPost = parentId ? replyContent : newComment;
+
+        if (!contentToPost.trim() || !currentUser) return;
 
         setIsLoading(true);
-        const { error } = await supabase.from('comments').insert([
-            {
+        try {
+            const commentData = {
                 post_id: postId,
                 author_id: currentUser.id,
-                author_name: currentUser.nickname || currentUser.email,
-                content: newComment.trim()
-            }
-        ]);
+                author_name: currentUser.username || currentUser.nickname || currentUser.email,
+                content: contentToPost.trim(),
+                parent_id: parentId
+            };
+            await supabase.from('comments').insert([commentData]);
 
-        if (error) {
-            console.error('Error posting comment:', error);
-            alert('Erro ao postar comentário: ' + error.message);
-        } else {
-            setNewComment('');
+            if (parentId) {
+                setReplyingTo(null);
+                setReplyContent('');
+            } else {
+                setNewComment('');
+            }
             fetchComments();
+            showToast('Comentário enviado!', 'success');
+        } catch (error: any) {
+            console.error('Error posting comment:', error);
+            showToast('Erro ao postar comentário: ' + error.message, 'error');
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
 
     const handleDelete = async (commentId: string) => {
         if (!confirm('Excluir este comentário?')) return;
 
-        const { error } = await supabase
-            .from('comments')
-            .delete()
-            .eq('id', commentId);
-
-        if (error) {
-            console.error('Error deleting comment:', error);
-            alert('Erro ao excluir comentário');
-        } else {
+        try {
+            await supabase
+                .from('comments')
+                .delete()
+                .eq('id', commentId);
+            showToast('Comentário excluído', 'success');
             fetchComments();
+        } catch (error) {
+            console.error('Error deleting comment:', error);
+            showToast('Erro ao excluir comentário', 'error');
         }
     };
 
@@ -94,19 +109,22 @@ const Comments: React.FC<CommentsProps> = ({ postId, currentUser }) => {
         );
     };
 
+    // organize comments into a tree
+    const getReplies = (parentId: string) => comments.filter(c => c.parent_id === parentId);
+    const rootComments = comments.filter(c => !c.parent_id);
     return (
         <div className="space-y-6">
-            <h3 className="text-2xl font-display font-bold text-space-neon">
-                Comentários ({comments.length})
+            <h3 className="text-2xl font-display font-bold text-space-neon flex items-center gap-2">
+                Comentários <span className="text-sm text-space-muted font-mono bg-space-dark px-2 rounded-full border border-space-steel">{comments.length}</span>
             </h3>
 
-            {/* Comment Form */}
+            {/* Comment Form (Top Level) */}
             {currentUser ? (
-                <form onSubmit={handleSubmit} className="space-y-3">
+                <form onSubmit={(e) => handleSubmit(e, null)} className="space-y-3">
                     <div className="flex gap-3">
                         <div className="w-10 h-10 rounded-full bg-space-steel overflow-hidden border-2 border-space-neon/30 flex-shrink-0">
                             <img
-                                src={`https://api.dicebear.com/7.x/identicon/svg?seed=${currentUser.nickname || currentUser.email}`}
+                                src={`https://api.dicebear.com/7.x/identicon/svg?seed=${currentUser.username || currentUser.nickname || currentUser.email}`}
                                 alt="avatar"
                             />
                         </div>
@@ -141,7 +159,7 @@ const Comments: React.FC<CommentsProps> = ({ postId, currentUser }) => {
             )}
 
             {/* Comments List */}
-            <div className="space-y-4">
+            <div className="space-y-2">
                 {isFetching ? (
                     <div className="text-center text-space-muted font-mono text-sm py-8">
                         Carregando comentários...
@@ -151,52 +169,166 @@ const Comments: React.FC<CommentsProps> = ({ postId, currentUser }) => {
                         Seja o primeiro a comentar!
                     </div>
                 ) : (
-                    comments.map((comment) => (
-                        <div
+                    rootComments.map((comment) => (
+                        <CommentItem
                             key={comment.id}
-                            className="border border-space-steel/30 rounded-lg p-4 bg-space-dark/20 hover:border-space-steel transition-colors"
-                        >
-                            <div className="flex gap-3">
-                                <div className="w-10 h-10 rounded-full bg-space-steel overflow-hidden flex-shrink-0">
-                                    <img
-                                        src={`https://api.dicebear.com/7.x/identicon/svg?seed=${comment.author_name}`}
-                                        alt="avatar"
-                                    />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-start justify-between gap-2 mb-2">
-                                        <div>
-                                            <p className="text-sm font-bold text-space-text">
-                                                {comment.author_name}
-                                            </p>
-                                            <p className="text-xs text-space-muted font-mono">
-                                                {new Date(comment.created_at).toLocaleDateString('pt-BR', {
-                                                    day: '2-digit',
-                                                    month: 'short',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
-                                            </p>
-                                        </div>
-                                        {canDelete(comment) && (
-                                            <button
-                                                onClick={() => handleDelete(comment.id)}
-                                                className="text-space-alert hover:text-red-300 transition-colors p-1"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        )}
-                                    </div>
-                                    <p className="text-sm text-space-text leading-relaxed break-words">
-                                        {comment.content}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                            comment={comment}
+                            allComments={comments}
+                            currentUser={currentUser}
+                            onDelete={handleDelete}
+                            onReplySubmit={handleSubmit}
+                            replyingTo={replyingTo}
+                            setReplyingTo={setReplyingTo}
+                            replyContent={replyContent}
+                            setReplyContent={setReplyContent}
+                        />
                     ))
                 )}
             </div>
+        </div>
+    );
+};
+
+// Extracted Component
+// Extracted Component
+interface CommentItemProps {
+    comment: Comment;
+    allComments: Comment[];
+    currentUser: any;
+    depth?: number;
+    onDelete: (id: string) => void;
+    onReplySubmit: (e: React.FormEvent, parentId: string) => void;
+    replyingTo: string | null;
+    setReplyingTo: (id: string | null) => void;
+    replyContent: string;
+    setReplyContent: (s: string) => void;
+}
+
+const CommentItem: React.FC<CommentItemProps> = ({
+    comment,
+    allComments,
+    currentUser,
+    depth = 0,
+    onDelete,
+    onReplySubmit,
+    replyingTo,
+    setReplyingTo,
+    replyContent,
+    setReplyContent
+}) => {
+    const replies = allComments.filter(c => c.parent_id === comment.id);
+    const isReplying = replyingTo === comment.id;
+
+    const canDelete = () => {
+        if (!currentUser) return false;
+        return (
+            currentUser.id === comment.author_id ||
+            currentUser.role === 'ADMIN' ||
+            currentUser.role === 'MODERATOR'
+        );
+    };
+
+    return (
+        <div className={`mt-4 ${depth > 0 ? 'ml-8 pl-4 border-l border-space-steel/30' : ''}`}>
+            <div className="border border-space-steel/30 rounded-lg p-4 bg-space-dark/20 hover:border-space-steel transition-colors group">
+                <div className="flex gap-3">
+                    <div className="w-8 h-8 rounded-full bg-space-steel overflow-hidden flex-shrink-0">
+                        <img
+                            src={`https://api.dicebear.com/7.x/identicon/svg?seed=${comment.author_name}`}
+                            alt="avatar"
+                        />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                            <div>
+                                <span className="text-sm font-bold text-space-text mr-2">
+                                    {comment.author_name}
+                                </span>
+                                <span className="text-xs text-space-muted font-mono">
+                                    {new Date(comment.created_at).toLocaleDateString('pt-BR', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                </span>
+                            </div>
+                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                {currentUser && (
+                                    <button
+                                        onClick={() => {
+                                            if (isReplying) {
+                                                setReplyingTo(null);
+                                                setReplyContent('');
+                                            } else {
+                                                setReplyingTo(comment.id);
+                                                setReplyContent('');
+                                            }
+                                        }}
+                                        className="text-space-neon hover:text-white transition-colors p-1"
+                                        title="Responder"
+                                    >
+                                        <MessageSquare size={14} />
+                                    </button>
+                                )}
+                                {canDelete() && (
+                                    <button
+                                        onClick={() => onDelete(comment.id)}
+                                        className="text-space-alert hover:text-red-300 transition-colors p-1"
+                                        title="Excluir"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        <p className="text-sm text-space-text leading-relaxed break-words">
+                            {comment.content}
+                        </p>
+
+                        {/* Reply Input */}
+                        {isReplying && (
+                            <div className="mt-3 animate-in fade-in slide-in-from-top-2">
+                                <form onSubmit={(e) => onReplySubmit(e, comment.id)} className="flex gap-2">
+                                    <div className="flex-1">
+                                        <Input
+                                            value={replyContent}
+                                            onChange={(e) => setReplyContent(e.target.value)}
+                                            placeholder={`Respondendo a ${comment.author_name}...`}
+                                            className="w-full text-xs h-8"
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <Button type="submit" size="sm" variant="secondary" disabled={!replyContent.trim()}>
+                                        <CornerDownRight size={14} />
+                                    </Button>
+                                </form>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Recursive Replies */}
+            {replies.length > 0 && (
+                <div className="space-y-2">
+                    {replies.map(reply => (
+                        <CommentItem
+                            key={reply.id}
+                            comment={reply}
+                            allComments={allComments}
+                            currentUser={currentUser}
+                            depth={depth + 1}
+                            onDelete={onDelete}
+                            onReplySubmit={onReplySubmit}
+                            replyingTo={replyingTo}
+                            setReplyingTo={setReplyingTo}
+                            replyContent={replyContent}
+                            setReplyContent={setReplyContent}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

@@ -1,7 +1,7 @@
 import React from 'react';
-import { Card, Badge, Button } from './Shared';
+import { Card, Badge, Button } from '../ui/Shared';
 import { Users, BookOpen, Clock, History, AlertTriangle, Star, Activity, ArrowRight, Zap } from 'lucide-react';
-import { Post } from '../types';
+import { Post } from '../../types';
 
 interface HomeViewProps {
     stats: {

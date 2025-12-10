@@ -1,10 +1,10 @@
-// Cache utilities for performance optimization
+import { Post } from '../types';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export const CacheManager = {
     // Posts cache
-    getPosts: (): any[] | null => {
+    getPosts: (): Post[] | null => {
         const cached = localStorage.getItem('wiki_posts_cache');
         if (!cached) return null;
 
@@ -14,13 +14,13 @@ export const CacheManager = {
                 localStorage.removeItem('wiki_posts_cache');
                 return null;
             }
-            return data;
+            return data as Post[];
         } catch (e) {
             return null;
         }
     },
 
-    setPosts: (posts: any[]) => {
+    setPosts: (posts: Post[]) => {
         const cache = {
             data: posts,
             timestamp: Date.now()
@@ -33,7 +33,7 @@ export const CacheManager = {
     },
 
     // Generic cache getter
-    get: (key: string, duration: number = CACHE_DURATION): any | null => {
+    get: <T>(key: string, duration: number = CACHE_DURATION): T | null => {
         const cached = localStorage.getItem(key);
         if (!cached) return null;
 
@@ -43,14 +43,14 @@ export const CacheManager = {
                 localStorage.removeItem(key);
                 return null;
             }
-            return data;
+            return data as T;
         } catch (e) {
             return null;
         }
     },
 
     // Generic cache setter
-    set: (key: string, data: any) => {
+    set: <T>(key: string, data: T) => {
         const cache = {
             data,
             timestamp: Date.now()
