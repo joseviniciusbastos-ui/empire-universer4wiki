@@ -1,0 +1,108 @@
+/* Custom Quill Styles for Space Theme */
+
+/* Editor Container */
+.quill-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.quill-editor .ql-container {
+  flex: 1;
+  background-color: rgba(10, 14, 23, 0.5);
+  border: 1px solid #2d3748;
+  border-top: none;
+  color: #cbd5e0;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+}
+
+.quill-editor .ql-editor {
+  min-height: 250px;
+  color: #cbd5e0;
+}
+
+.quill-editor .ql-editor.ql-blank::before {
+  color: rgba(203, 213, 224, 0.5);
+  font-style: italic;
+}
+
+/* Toolbar */
+.quill-editor .ql-toolbar {
+  background-color: #1a202c;
+  border: 1px solid #2d3748;
+  border-radius: 4px 4px 0 0;
+}
+
+.quill-editor .ql-toolbar button {
+  color: #718096;
+}
+
+.quill-editor .ql-toolbar button:hover {
+  color: #00c2ff;
+}
+
+.quill-editor .ql-toolbar button.ql-active {
+  color: #00c2ff;
+}
+
+.quill-editor .ql-toolbar .ql-stroke {
+  stroke: #718096;
+}
+
+.quill-editor .ql-toolbar button:hover .ql-stroke {
+  stroke: #00c2ff;
+}
+
+.quill-editor .ql-toolbar button.ql-active .ql-stroke {
+  stroke: #00c2ff;
+}
+
+.quill-editor .ql-toolbar .ql-fill {
+  fill: #718096;
+}
+
+.quill-editor .ql-toolbar button:hover .ql-fill {
+  fill: #00c2ff;
+}
+
+.quill-editor .ql-toolbar button.ql-active .ql-fill {
+  fill: #00c2ff;
+}
+
+/* Dropdown */
+.quill-editor .ql-toolbar .ql-picker-label {
+  color: #718096;
+}
+
+.quill-editor .ql-toolbar .ql-picker-label:hover {
+  color: #00c2ff;
+}
+
+.quill-editor .ql-toolbar .ql-picker-options {
+  background-color: #1a202c;
+  border: 1px solid #2d3748;
+}
+
+.quill-editor .ql-toolbar .ql-picker-item {
+  color: #cbd5e0;
+}
+
+.quill-editor .ql-toolbar .ql-picker-item:hover {
+  color: #00c2ff;
+  background-color: rgba(0, 194, 255, 0.1);
+}
+
+/* Focus State */
+.quill-editor .ql-container.ql-snow {
+  border-color: #2d3748;
+}
+
+.quill-editor:focus-within .ql-container {
+  border-color: #00c2ff;
+  box-shadow: 0 0 10px rgba(0, 194, 255, 0.2);
+}
+
+.quill-editor:focus-within .ql-toolbar {
+  border-color: #00c2ff;
+}

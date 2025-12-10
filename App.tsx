@@ -6,6 +6,7 @@ import {
 import { supabase } from './lib/supabase';
 import { CURRENT_USER, CATEGORIES } from './constants';
 import { Post, PostType, DB_Post } from './types';
+import { CacheManager, debounce } from './lib/cache';
 import Terminal from './components/Terminal';
 import Tools from './components/Tools';
 import CreatePostModal from './components/CreatePostModal';
@@ -13,12 +14,14 @@ import LoginModal from './components/LoginModal';
 import AdminPanel from './components/AdminPanel';
 import { HomeView } from './components/HomeView';
 import EditProfileModal from './components/EditProfileModal';
+import PostViewModal from './components/PostViewModal';
+
 import { Button, Card, Badge, Input } from './components/Shared';
 
 // --- SUB-COMPONENTS ---
 
-const PostCard: React.FC<{ post: Post }> = ({ post }) => (
-  <Card className="hover:border-space-muted transition-colors cursor-pointer group mb-4">
+const PostCard: React.FC<{ post: Post; onClick: () => void }> = ({ post, onClick }) => (
+  <Card className="hover:border-space-muted transition-colors cursor-pointer group mb-4" onClick={onClick}>
     <div className="flex justify-between items-start mb-2">
       <div className="flex gap-2">
         <Badge color={post.type === PostType.BLOG ? 'bg-space-neon text-black' : 'bg-space-steel'}>
@@ -57,7 +60,7 @@ const CATEGORY_KEYS = {
 };
 
 export default function App() {
-  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'tools' | 'profile' | 'admin'>('home');
+  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'tools' | 'profile' | 'admin' | 'post-view'>('home');
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
@@ -160,14 +163,36 @@ export default function App() {
     }
   };
 
-  // Search State
+  // Search State with debounce
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+
+  // Debounced search
+  const debouncedSearch = useRef(
+    debounce((query: string) => {
+      setDebouncedQuery(query);
+    }, 300)
+  ).current;
+
+  useEffect(() => {
+    debouncedSearch(searchQuery);
+  }, [searchQuery]);
 
   useEffect(() => {
     fetchPosts();
   }, []);
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (forceRefresh = false) => {
+    // Try cache first
+    if (!forceRefresh) {
+      const cachedPosts = CacheManager.getPosts();
+      if (cachedPosts) {
+        setPosts(cachedPosts);
+        setIsLoading(false);
+        return;
+      }
+    }
+
     setIsLoading(true);
     const { data, error } = await supabase
       .from('posts')
@@ -193,14 +218,16 @@ export default function App() {
         updatedAt: dbPost.updated_at
       }));
       setPosts(mappedPosts);
+      // Cache the posts
+      CacheManager.setPosts(mappedPosts);
     }
     setIsLoading(false);
   };
 
   const filteredPosts = posts.filter(post =>
-    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    post.title.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+    post.content.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+    post.tags.some(tag => tag.toLowerCase().includes(debouncedQuery.toLowerCase()))
   );
 
   const applySearch = (query: string) => {
@@ -228,6 +255,26 @@ export default function App() {
   // Edit Profile Modal
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
+  // Post View Modal
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [isPostViewOpen, setIsPostViewOpen] = useState(false);
+
+  const openPostView = (post: Post) => {
+    console.log('Opening post in modal:', post);
+    setSelectedPost(post);
+    setIsPostViewOpen(true);
+  };
+
+  const handlePostDelete = (deletedPostId: string) => {
+    setPosts(posts.filter(p => p.id !== deletedPostId));
+    CacheManager.clearPosts(); // Clear cache after delete
+  };
+
+  const handlePostCreated = () => {
+    CacheManager.clearPosts(); // Clear cache
+    fetchPosts(true); // Force refresh from database
+  };
+
   return (
     <div className="min-h-screen bg-space-black text-space-text font-sans selection:bg-space-neon selection:text-black overflow-hidden flex">
 
@@ -244,7 +291,7 @@ export default function App() {
         onClose={() => setIsCreateModalOpen(false)}
         postType={createPostType}
         currentUser={currentUser}
-        onPostCreated={fetchPosts}
+        onPostCreated={handlePostCreated}
       />
 
       <EditProfileModal
@@ -252,6 +299,15 @@ export default function App() {
         onClose={() => setIsEditProfileOpen(false)}
         currentUser={currentUser}
         onUpdate={() => fetchProfile(currentUser.id)}
+      />
+
+      {/* Post Modal */}
+      <PostViewModal
+        post={selectedPost}
+        isOpen={isPostViewOpen}
+        onClose={() => setIsPostViewOpen(false)}
+        currentUser={currentUser}
+        onDelete={handlePostDelete}
       />
 
       {/* Terminal Overlay */}
@@ -279,20 +335,20 @@ export default function App() {
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           <div className="mb-6">
             <p className="text-xs text-space-muted font-mono mb-2 px-2">NAVEGAÇÃO</p>
-            <Button variant={view === 'home' ? 'primary' : 'ghost'} className="w-full justify-start mb-1" onClick={() => setView('home')}>
-              <BookOpen size={18} className="mr-3" /> CONTROLE DA MISSÃO
+            <Button variant={view === 'home' ? 'primary' : 'ghost'} className="w-full justify-start mb-1 flex items-center" onClick={() => setView('home')}>
+              <BookOpen size={18} className="mr-3 flex-shrink-0" /> <span className="flex-1 text-left">CONTROLE DA MISSÃO</span>
             </Button>
-            <Button variant={view === 'wiki' ? 'primary' : 'ghost'} className="w-full justify-start mb-1" onClick={() => setView('wiki')}>
-              <Book size={18} className="mr-3" /> ENCYCLOPEDIA GALACTICA
+            <Button variant={view === 'wiki' ? 'primary' : 'ghost'} className="w-full justify-start mb-1 flex items-center" onClick={() => setView('wiki')}>
+              <Book size={18} className="mr-3 flex-shrink-0" /> <span className="flex-1 text-left">ENCYCLOPEDIA GALACTICA</span>
             </Button>
-            <Button variant={view === 'articles' ? 'primary' : 'ghost'} className="w-full justify-start mb-1" onClick={() => setView('articles')}>
-              <TerminalIcon size={18} className="mr-3" /> DATA LOGS
+            <Button variant={view === 'articles' ? 'primary' : 'ghost'} className="w-full justify-start mb-1 flex items-center" onClick={() => setView('articles')}>
+              <TerminalIcon size={18} className="mr-3 flex-shrink-0" /> <span className="flex-1 text-left">DATA LOGS</span>
             </Button>
-            <Button variant={view === 'forum' ? 'primary' : 'ghost'} className="w-full justify-start mb-1" onClick={() => setView('forum')}>
-              <MessageSquare size={18} className="mr-3" /> REDE DE COMMS
+            <Button variant={view === 'forum' ? 'primary' : 'ghost'} className="w-full justify-start mb-1 flex items-center" onClick={() => setView('forum')}>
+              <MessageSquare size={18} className="mr-3 flex-shrink-0" /> <span className="flex-1 text-left">REDE DE COMMS</span>
             </Button>
-            <Button variant={view === 'tools' ? 'primary' : 'ghost'} className="w-full justify-start mb-1" onClick={() => setView('tools')}>
-              <Wrench size={18} className="mr-3" /> ENGENHARIA
+            <Button variant={view === 'tools' ? 'primary' : 'ghost'} className="w-full justify-start mb-1 flex items-center" onClick={() => setView('tools')}>
+              <Wrench size={18} className="mr-3 flex-shrink-0" /> <span className="flex-1 text-left">ENGENHARIA</span>
             </Button>
           </div>
 
@@ -300,13 +356,13 @@ export default function App() {
             <p className="text-xs text-space-muted font-mono mb-2 px-2">PESSOAL</p>
             {currentUser ? (
               <>
-                <Button variant={view === 'profile' ? 'primary' : 'ghost'} className="w-full justify-start mb-1" onClick={() => setView('profile')}>
-                  <UserIcon size={18} className="mr-3" /> PERFIL: {currentUser.username.toUpperCase()}
+                <Button variant={view === 'profile' ? 'primary' : 'ghost'} className="w-full justify-start mb-1 flex items-center" onClick={() => setView('profile')}>
+                  <UserIcon size={18} className="mr-3 flex-shrink-0" /> <span className="flex-1 text-left">PERFIL: {currentUser.username.toUpperCase()}</span>
                 </Button>
 
                 {currentUser.role === 'ADMIN' && (
-                  <Button variant={view === 'admin' ? 'primary' : 'ghost'} className="w-full justify-start mb-1 text-space-neon" onClick={() => setView('admin')}>
-                    <Shield size={18} className="mr-3" /> COMANDO
+                  <Button variant={view === 'admin' ? 'primary' : 'ghost'} className="w-full justify-start mb-1 text-space-neon flex items-center" onClick={() => setView('admin')}>
+                    <Shield size={18} className="mr-3 flex-shrink-0" /> <span className="flex-1 text-left">COMANDO</span>
                   </Button>
                 )}
                 <div className="px-2 py-2">
@@ -325,8 +381,8 @@ export default function App() {
                 </Button>
               </>
             ) : (
-              <Button variant="primary" className="w-full justify-start animate-pulse-slow" onClick={() => setIsLoginModalOpen(true)}>
-                <LogIn size={18} className="mr-3" /> ACESSAR SISTEMA
+              <Button variant="primary" className="w-full justify-start animate-pulse-slow flex items-center" onClick={() => setIsLoginModalOpen(true)}>
+                <LogIn size={18} className="mr-3 flex-shrink-0" /> <span className="flex-1 text-left">ACESSAR SISTEMA</span>
               </Button>
             )}
           </div>
@@ -387,25 +443,37 @@ export default function App() {
         </header>
 
         {/* View Content */}
-        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-space-steel scrollbar-track-space-darker">
+        <div className="flex-1 overflow-y-auto p-6 pb-32 scrollbar-thin scrollbar-thumb-space-steel scrollbar-track-space-darker">
 
 
           {view === 'home' && (
             <HomeView
               stats={{
-                population: "42.8K",
-                todayGrowth: 128,
-                archiveEntries: posts.filter(p => p.type === PostType.WIKI).length + 840,
-                lastUpdate: "14m atrás",
+                population: posts.length > 0 ? `${(posts.length * 2.3).toFixed(1)}K` : "0",
+                todayGrowth: posts.filter(p => {
+                  const postDate = new Date(p.createdAt);
+                  const today = new Date();
+                  return postDate.toDateString() === today.toDateString();
+                }).length,
+                archiveEntries: posts.filter(p => p.type === PostType.WIKI).length,
+                lastUpdate: posts.length > 0
+                  ? (() => {
+                    const lastPost = new Date(posts[0].createdAt);
+                    const now = new Date();
+                    const diffMs = now.getTime() - lastPost.getTime();
+                    const diffMins = Math.floor(diffMs / 60000);
+                    if (diffMins < 60) return `${diffMins}m atrás`;
+                    const diffHours = Math.floor(diffMins / 60);
+                    if (diffHours < 24) return `${diffHours}h atrás`;
+                    return `${Math.floor(diffHours / 24)}d atrás`;
+                  })()
+                  : "N/A",
                 serverStatus: "99.9%"
               }}
               recentPosts={posts}
               isLoading={isLoading}
               onNavigate={setView}
-              onPostClick={(post) => {
-                // Ideally open a PostView, for now just log or could open modal
-                console.log("Clicked post:", post);
-              }}
+              onPostClick={(post) => openPostView(post)}
             />
           )}
 
@@ -430,7 +498,7 @@ export default function App() {
                 </div>
                 <div className="md:col-span-3 space-y-4">
                   {filteredPosts.filter(p => p.type === PostType.WIKI).map(post => (
-                    <PostCard key={post.id} post={post} />
+                    <PostCard key={post.id} post={post} onClick={() => openPostView(post)} />
                   ))}
                   {filteredPosts.filter(p => p.type === PostType.WIKI).length === 0 && (
                     <div className="text-space-muted font-mono">Nenhuma entrada encontrada.</div>
@@ -461,7 +529,7 @@ export default function App() {
                 </div>
                 <div className="md:col-span-3 space-y-4">
                   {filteredPosts.filter(p => p.type === PostType.ARTICLE).map(post => (
-                    <PostCard key={post.id} post={post} />
+                    <PostCard key={post.id} post={post} onClick={() => openPostView(post)} />
                   ))}
                   {filteredPosts.filter(p => p.type === PostType.ARTICLE).length === 0 && (
                     <div className="text-space-muted font-mono">Nenhum artigo encontrado.</div>
@@ -492,7 +560,7 @@ export default function App() {
                 </div>
                 <div className="md:col-span-3 space-y-4">
                   {filteredPosts.filter(p => p.type === PostType.THREAD).map(post => (
-                    <PostCard key={post.id} post={post} />
+                    <PostCard key={post.id} post={post} onClick={() => openPostView(post)} />
                   ))}
                   {filteredPosts.filter(p => p.type === PostType.THREAD).length === 0 && (
                     <div className="text-space-muted font-mono">Nenhum tópico encontrado.</div>
@@ -586,6 +654,9 @@ export default function App() {
               <Button onClick={() => setIsLoginModalOpen(true)}>LOGIN</Button>
             </div>
           )}
+
+          {/* Post View - Full Page */}
+
 
         </div>
       </main>

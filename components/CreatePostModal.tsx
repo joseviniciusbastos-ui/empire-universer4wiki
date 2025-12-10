@@ -1,8 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PostType } from '../types';
 import { Button, Input, Card } from './Shared';
-import { X, Maximize2, Minimize2, Image as ImageIcon, Type, UploadCloud } from 'lucide-react';
+import { X, Maximize2, Minimize2, Image as ImageIcon, UploadCloud, Save, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import 'react-quill/dist/quill.snow.css';
+import '../quill-theme.css';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -20,10 +22,159 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
   const [newTag, setNewTag] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [ReactQuill, setReactQuill] = useState<any>(null);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [hasDraft, setHasDraft] = useState(false);
+  const quillRef = useRef<any>(null);
+
+  // Dynamic import for React Quill and ImageResize module
+  useEffect(() => {
+    const loadQuill = async () => {
+      const quillModule = await import('react-quill');
+      const Quill = quillModule.default.Quill;
+
+      // Register image resize module
+      try {
+        const ImageResize = (await import('quill-image-resize-module-react')).default;
+        Quill.register('modules/imageResize', ImageResize);
+      } catch (e) {
+        console.error('Failed to load image resize module:', e);
+      }
+
+      setReactQuill(() => quillModule.default);
+    };
+
+    loadQuill();
+  }, []);
 
   // Custom: Cover Image State
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
+
+  // Draft management
+  const getDraftKey = () => `draft_${postType}_${currentUser?.id || 'guest'}`;
+
+  const saveDraft = () => {
+    if (!title && !content && tags.length === 0) return; // Don't save empty drafts
+
+    const draft = {
+      title,
+      category,
+      content,
+      tags,
+      timestamp: new Date().toISOString()
+    };
+
+    localStorage.setItem(getDraftKey(), JSON.stringify(draft));
+    setLastSaved(new Date());
+  };
+
+  const loadDraft = () => {
+    const draftStr = localStorage.getItem(getDraftKey());
+    if (!draftStr) return false;
+
+    try {
+      const draft = JSON.parse(draftStr);
+      const draftAge = Date.now() - new Date(draft.timestamp).getTime();
+      const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+
+      if (draftAge > SEVEN_DAYS) {
+        localStorage.removeItem(getDraftKey());
+        return false;
+      }
+
+      setTitle(draft.title || '');
+      setCategory(draft.category || '');
+      setContent(draft.content || '');
+      setTags(draft.tags || []);
+      setLastSaved(new Date(draft.timestamp));
+      return true;
+    } catch (e) {
+      console.error('Error loading draft:', e);
+      return false;
+    }
+  };
+
+  const discardDraft = () => {
+    if (confirm('Descartar rascunho? Esta ação não pode ser desfeita.')) {
+      localStorage.removeItem(getDraftKey());
+      setTitle('');
+      setCategory('');
+      setContent('');
+      setTags([]);
+      setCoverImage(null);
+      setCoverPreview(null);
+      setLastSaved(null);
+      setHasDraft(false);
+    }
+  };
+
+  // Load draft when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const hasSavedDraft = loadDraft();
+      setHasDraft(hasSavedDraft);
+    }
+  }, [isOpen, postType]);
+
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const interval = setInterval(() => {
+      saveDraft();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [isOpen, title, category, content, tags]);
+
+  // Save draft before closing (if user presses X)
+  const handleClose = () => {
+    saveDraft();
+    onClose();
+  };
+
+  // Handle image upload from paste or drag
+  const handleImageUpload = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop() || 'png';
+      const fileName = `${Math.random()}_${Date.now()}.${fileExt}`;
+      const filePath = `content-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('images').getPublicUrl(filePath);
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+  };
+
+  // Custom image handler for Quill
+  const imageHandler = () => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (file) {
+        const url = await handleImageUpload(file);
+        if (url && quillRef.current) {
+          const editor = quillRef.current.getEditor();
+          const range = editor.getSelection(true);
+          editor.insertEmbed(range.index, 'image', url);
+          editor.setSelection(range.index + 1);
+        }
+      }
+    };
+  };
 
   if (!isOpen) return null;
 
@@ -58,8 +209,8 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
       const slug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') + '-' + Date.now().toString().slice(-4);
 
       // 3. Insert Post 
-      // We prepend the cover image to content for now if it exists, as HTML
-      let finalContent = content.replace(/\n/g, '<br>'); // Simple formatting
+      // Content is already HTML from Quill, we prepend the cover image if it exists
+      let finalContent = content;
       if (coverUrl) {
         finalContent = `<img src="${coverUrl}" alt="Cover" class="w-full h-64 object-cover rounded-md mb-6" />` + finalContent;
       }
@@ -80,6 +231,9 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
 
       if (error) throw error;
 
+      // Clear draft after successful post
+      localStorage.removeItem(getDraftKey());
+
       onPostCreated();
       onClose();
       // Reset form
@@ -89,6 +243,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
       setCategory('');
       setCoverImage(null);
       setCoverPreview(null);
+      setLastSaved(null);
 
     } catch (error: any) {
       console.error("Error creating post:", error);
@@ -183,20 +338,37 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
             </label>
           </div>
 
-          {/* Textarea Fallback */}
+          {/* Rich Text Editor */}
           <div className="flex-1 flex flex-col min-h-[300px]">
             <label className="text-xs font-mono text-space-muted mb-1 block uppercase flex justify-between">
               <span>Conteúdo Principal</span>
-              <span className="text-[10px] text-space-alert flex items-center gap-1"><Type size={10} /> RICHTEXT DISABLED (React 19 Conflicts)</span>
+              <span className="text-[10px] text-space-neon flex items-center gap-1">✓ RICH TEXT ENABLED</span>
             </label>
 
-            <textarea
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              className="flex-1 bg-space-darker/50 border border-space-steel rounded p-4 text-sm font-mono focus:border-space-neon focus:outline-none transition-colors resize-none"
-              placeholder="Escreva sua transmissão aqui..."
-            />
-
+            {ReactQuill ? (
+              <ReactQuill
+                theme="snow"
+                value={content}
+                onChange={setContent}
+                className="flex-1 quill-editor"
+                modules={{
+                  toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    ['blockquote', 'code-block'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    ['link'],
+                    ['clean']
+                  ]
+                }}
+                placeholder="Escreva sua transmissão aqui..."
+              />
+            ) : (
+              <div className="flex-1 bg-space-darker/50 border border-space-steel rounded p-4 flex items-center justify-center">
+                <span className="text-space-muted font-mono text-sm">Carregando editor...</span>
+              </div>
+            )}
           </div>
 
           {/* Tags Section */}

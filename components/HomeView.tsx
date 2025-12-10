@@ -163,41 +163,67 @@ export const HomeView: React.FC<HomeViewProps> = ({ stats, recentPosts, isLoadin
                 {/* Right Column: Featured & Sidebar Stats */}
                 <div className="space-y-6">
 
-                    {/* Featured Member - Now 'Officer on Deck' */}
-                    <div className="relative p-1 rounded-xl bg-gradient-to-b from-space-neon via-transparent to-transparent">
-                        <div className="bg-space-black/90 backdrop-blur-xl p-6 rounded-lg border border-space-steel/30 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-2">
-                                <Star size={16} className="text-yellow-400 animate-spin-slow" />
-                            </div>
-                            <h4 className="text-xs font-mono text-space-neon uppercase mb-4 tracking-widest text-center">Oficial em Destaque</h4>
 
-                            <div className="flex flex-col items-center">
-                                <div className="w-24 h-24 rounded-full p-1 border-2 border-space-neon border-dashed mb-3 relative group cursor-pointer">
-                                    <img
-                                        src="https://api.dicebear.com/7.x/identicon/svg?seed=CommanderX"
-                                        alt="User"
-                                        className="w-full h-full rounded-full bg-space-steel object-cover grayscale group-hover:grayscale-0 transition-all"
-                                    />
-                                    <div className="absolute -bottom-1 -right-1 bg-space-black p-1 rounded-full border border-space-neon">
-                                        <Badge color="bg-yellow-500 text-black">99</Badge>
-                                    </div>
-                                </div>
-                                <p className="font-display font-bold text-lg text-white">CommanderX</p>
-                                <p className="text-xs text-space-muted font-mono mb-4">Almirante da Frota</p>
+                    {/* Featured Member - Top Contributor */}
+                    {(() => {
+                        // Calculate top contributor
+                        const authorCounts: { [key: string]: { name: string, count: number } } = {};
+                        recentPosts.forEach(post => {
+                            if (!authorCounts[post.authorId]) {
+                                authorCounts[post.authorId] = { name: post.authorName, count: 0 };
+                            }
+                            authorCounts[post.authorId].count++;
+                        });
 
-                                <div className="w-full grid grid-cols-2 gap-2 text-center">
-                                    <div className="bg-space-dark p-2 rounded border border-space-steel/30">
-                                        <p className="text-[10px] text-space-muted uppercase">Posts</p>
-                                        <p className="font-mono text-white">1,204</p>
-                                    </div>
-                                    <div className="bg-space-dark p-2 rounded border border-space-steel/30">
-                                        <p className="text-[10px] text-space-muted uppercase">Rep</p>
-                                        <p className="font-mono text-white">50K</p>
-                                    </div>
+                        const topContributor = Object.values(authorCounts)
+                            .sort((a, b) => b.count - a.count)[0];
+
+                        if (!topContributor) return (
+                            <div className="relative p-1 rounded-xl bg-gradient-to-b from-space-neon via-transparent to-transparent">
+                                <div className="bg-space-black/90 backdrop-blur-xl p-6 rounded-lg border border-space-steel/30 relative overflow-hidden">
+                                    <h4 className="text-xs font-mono text-space-neon uppercase mb-4 tracking-widest text-center">Oficial em Destaque</h4>
+                                    <p className="text-space-muted text-center text-sm font-mono">Nenhum contribuidor ativo</p>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        );
+
+                        return (
+                            <div className="relative p-1 rounded-xl bg-gradient-to-b from-space-neon via-transparent to-transparent">
+                                <div className="bg-space-black/90 backdrop-blur-xl p-6 rounded-lg border border-space-steel/30 relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-2">
+                                        <Star size={16} className="text-yellow-400 animate-spin-slow" />
+                                    </div>
+                                    <h4 className="text-xs font-mono text-space-neon uppercase mb-4 tracking-widest text-center">Contribuidor Destacado</h4>
+
+                                    <div className="flex flex-col items-center">
+                                        <div className="w-24 h-24 rounded-full p-1 border-2 border-space-neon border-dashed mb-3 relative group cursor-pointer">
+                                            <img
+                                                src={`https://api.dicebear.com/7.x/identicon/svg?seed=${topContributor.name}`}
+                                                alt="User"
+                                                className="w-full h-full rounded-full bg-space-steel object-cover grayscale group-hover:grayscale-0 transition-all"
+                                            />
+                                            <div className="absolute -bottom-1 -right-1 bg-space-black p-1 rounded-full border border-space-neon">
+                                                <Badge color="bg-yellow-500 text-black">{Math.min(topContributor.count * 5, 99)}</Badge>
+                                            </div>
+                                        </div>
+                                        <p className="font-display font-bold text-lg text-white">{topContributor.name}</p>
+                                        <p className="text-xs text-space-muted font-mono mb-4">Top Contribuidor</p>
+
+                                        <div className="w-full grid grid-cols-2 gap-2 text-center">
+                                            <div className="bg-space-dark p-2 rounded border border-space-steel/30">
+                                                <p className="text-[10px] text-space-muted uppercase">Posts</p>
+                                                <p className="font-mono text-white">{topContributor.count}</p>
+                                            </div>
+                                            <div className="bg-space-dark p-2 rounded border border-space-steel/30">
+                                                <p className="text-[10px] text-space-muted uppercase">Rep</p>
+                                                <p className="font-mono text-white">{topContributor.count * 10}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
 
                     {/* Bulletin Board - Styled */}
                     <div className="border border-space-steel/30 rounded-xl p-5 bg-gradient-to-br from-space-dark/50 to-transparent">
