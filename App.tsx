@@ -177,6 +177,7 @@ export default function App() {
 
   // REFACTORED DELETION LOGIC
   const handleDeletePostConfirmed = async (postId: string) => {
+    // 1. Perform deletion in Supabase
     const { error } = await supabase
         .from('posts')
         .delete()
@@ -184,18 +185,20 @@ export default function App() {
 
     if (error) {
         console.error('[DEBUG] Supabase DELETE Error:', error);
-        throw new Error(error.message);
+        // Throwing the error ensures the modal's catch block handles the toast error message
+        throw new Error(error.message); 
     }
 
-    // 1. Close the modal immediately
-    setIsPostViewOpen(false);
-    // 2. Clear selected post state
-    setSelectedPost(null); 
-    // 3. Update local state (optimistic update)
+    // 2. Update local state (optimistic update)
     setPosts(prevPosts => prevPosts.filter(p => p.id !== postId));
-    // 4. Clear cache and force a re-fetch to ensure data integrity
+    
+    // 3. Clear cache and force a re-fetch to ensure data integrity
     CacheManager.clearPosts();
     await fetchPosts(true);
+    
+    // 4. Close the modal and clear selection
+    setIsPostViewOpen(false);
+    setSelectedPost(null); 
     
     showToast('Post excluído com sucesso!', 'success');
   };
