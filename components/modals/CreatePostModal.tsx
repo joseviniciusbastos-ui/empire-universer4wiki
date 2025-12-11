@@ -15,12 +15,13 @@ interface CreatePostModalProps {
     currentUser: User | null;
     initialData?: Post; // Optional prop for editing
     onPostCreated: () => void;
+    availableCategories: string[];
 }
 
-const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, postType, currentUser, onPostCreated, initialData }) => {
+const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, postType, currentUser, onPostCreated, initialData, availableCategories }) => {
     const { showToast } = useToast();
     const [title, setTitle] = useState('');
-    const [category, setCategory] = useState('');
+    const [category, setCategory] = useState(availableCategories[0] || '');
     const [content, setContent] = useState('');
     const [tags, setTags] = useState<string[]>([]);
     const [newTag, setNewTag] = useState('');
@@ -273,11 +274,20 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="md:col-span-1">
                             <label className="text-xs font-mono text-space-muted mb-1 block uppercase">Categoria</label>
-                            <Input
-                                placeholder="Ex: Oficial, Guia..."
+                            <select
                                 value={category}
                                 onChange={e => setCategory(e.target.value)}
-                            />
+                                className="w-full bg-space-dark border border-space-steel text-white rounded px-3 py-2 text-sm focus:border-space-neon focus:ring-1 focus:ring-space-neon outline-none"
+                            >
+                                <option value="" disabled>Selecione...</option>
+                                {availableCategories.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                                {/* Fallback for existing posts with categories not in list */}
+                                {initialData && !availableCategories.includes(initialData.category) && (
+                                    <option value={initialData.category}>{initialData.category}</option>
+                                )}
+                            </select>
                         </div>
                         <div className="md:col-span-2">
                             <label className="text-xs font-mono text-space-muted mb-1 block uppercase">Título / Assunto</label>

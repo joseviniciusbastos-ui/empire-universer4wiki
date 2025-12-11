@@ -260,6 +260,7 @@ export default function App() {
         currentUser={currentUser}
         onPostCreated={handlePostCreated}
         initialData={editingPost}
+        availableCategories={appCategories[createPostType] || []}
       />
 
       <EditProfileModal
