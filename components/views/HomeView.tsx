@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Badge, Button } from '../ui/Shared';
 import { Users, BookOpen, Clock, History, AlertTriangle, Star, Activity, ArrowRight, Zap, Edit3, Rocket } from 'lucide-react';
+import { PostCard } from '../PostCard';
 import { Post, User } from '../../types';
 
 interface HomeViewProps {
@@ -18,11 +19,12 @@ interface HomeViewProps {
     aboutContent?: string;
     currentUser?: User | null;
     onEditAbout?: () => void;
+    onAuthorClick?: (userId: string) => void;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({
     stats, recentPosts, isLoading, onNavigate, onPostClick,
-    aboutTitle, aboutContent, currentUser, onEditAbout
+    aboutTitle, aboutContent, currentUser, onEditAbout, onAuthorClick
 }) => {
     const isAdmin = currentUser?.role === 'ADMIN';
 
@@ -147,51 +149,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
                             </div>
                         ) : recentPosts.length > 0 ? (
                             recentPosts.slice(0, 5).map(post => (
-                                <div
+                                <PostCard
                                     key={post.id}
+                                    post={post}
                                     onClick={() => onPostClick(post)}
-                                    className="group flex flex-col md:flex-row gap-4 p-4 rounded-lg border border-space-steel/20 bg-space-dark/20 hover:bg-space-neon/5 hover:border-space-neon/50 transition-all cursor-pointer"
-                                >
-                                    {/* Placeholder for future post image */}
-                                    <div className="w-full md:w-48 h-32 rounded bg-space-black border border-space-steel/30 overflow-hidden relative grayscale group-hover:grayscale-0 transition-all">
-                                        <img
-                                            src={`https://source.unsplash.com/random/400x300?space,${post.category}`}
-                                            className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity group-hover:scale-105 duration-500"
-                                            alt="Cover"
-                                            onError={(e) => (e.currentTarget.src = 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=500&auto=format&fit=crop&q=60')}
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                                        <span className="absolute bottom-2 left-2 text-[10px] font-bold px-1.5 py-0.5 bg-space-neon text-black rounded-sm uppercase">
-                                            {post.type}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex-1 flex flex-col justify-between py-1">
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className="text-[10px] font-mono text-space-neon border border-space-neon/30 px-1 rounded">{post.category}</span>
-                                                <span className="text-[10px] text-space-muted">{new Date(post.createdAt).toLocaleDateString('pt-BR')}</span>
-                                            </div>
-                                            <h3 className="text-xl font-display font-bold text-white group-hover:text-space-neon transition-colors mb-2 line-clamp-1">
-                                                {post.title}
-                                            </h3>
-                                            <p className="text-sm text-space-muted font-mono line-clamp-2" dangerouslySetInnerHTML={{ __html: post.content.replace(/<[^>]*>?/gm, '') }} />
-                                        </div>
-
-                                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-space-steel/10">
-                                            <div className="flex items-center gap-2 text-xs text-space-muted/70">
-                                                <div className="w-4 h-4 rounded-full bg-space-steel overflow-hidden">
-                                                    <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=${post.authorName}`} alt="avatar" />
-                                                </div>
-                                                {post.authorName}
-                                            </div>
-                                            <div className="flex gap-3 text-[10px] font-mono text-space-muted">
-                                                <span>CORE: {post.likes}</span>
-                                                <span>VIEW: {post.views}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                    currentUser={currentUser || null}
+                                    onAuthorClick={onAuthorClick}
+                                />
                             ))
                         ) : (
                             <div className="text-space-muted font-mono text-center py-10 border border-dashed border-space-steel rounded">SINAL PERDIDO. Nenhuma transmissão encontrada.</div>

@@ -17,6 +17,7 @@ import { WikiView } from './components/views/WikiView';
 import { BlogView } from './components/views/BlogView';
 import { ForumView } from './components/views/ForumView';
 import { ProfileView } from './components/views/ProfileView';
+import { PublicProfileView } from './components/views/PublicProfileView';
 import { useToast } from './contexts/ToastContext';
 import { useAuth } from './contexts/AuthContext';
 import { FilterState } from './components/SearchFilters';
@@ -29,7 +30,7 @@ const CATEGORY_KEYS = {
 };
 
 export default function App() {
-  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'tools' | 'profile' | 'admin' | 'post-view'>('home');
+  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'tools' | 'profile' | 'admin' | 'post-view' | 'public-profile'>('home');
 
   // App State
   const { currentUser, isLoading: isAuthLoading, refreshProfile } = useAuth();
@@ -180,6 +181,16 @@ export default function App() {
     }
     setCreatePostType(type);
     setIsCreateModalOpen(true);
+    setEditingPost(undefined); // Ensure we are in create mode
+  };
+
+  const [editingPost, setEditingPost] = useState<Post | undefined>(undefined);
+
+  const handleEditPost = (post: Post) => {
+    setEditingPost(post);
+    setCreatePostType(post.type);
+    setIsCreateModalOpen(true);
+    setIsPostViewOpen(false); // Close view modal
   };
 
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
@@ -194,6 +205,13 @@ export default function App() {
   const handlePostDelete = (deletedPostId: string) => {
     setPosts(posts.filter(p => p.id !== deletedPostId));
     CacheManager.clearPosts();
+  };
+
+  const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
+
+  const handleProfileClick = (userId: string) => {
+    setViewingProfileId(userId);
+    setView('public-profile');
   };
 
   const handlePostCreated = () => {
@@ -241,6 +259,7 @@ export default function App() {
         postType={createPostType}
         currentUser={currentUser}
         onPostCreated={handlePostCreated}
+        initialData={editingPost}
       />
 
       <EditProfileModal
@@ -255,7 +274,9 @@ export default function App() {
         isOpen={isPostViewOpen}
         onClose={() => setIsPostViewOpen(false)}
         currentUser={currentUser}
-        onDelete={handlePostDelete}
+        onDeleteConfirmed={async (id) => handlePostDelete(id)}
+        onEdit={handleEditPost}
+        onAuthorClick={handleProfileClick}
       />
 
       {/* RENDER CURRENT VIEW */}
@@ -275,6 +296,7 @@ export default function App() {
           aboutContent={welcomeContent}
           currentUser={currentUser}
           onEditAbout={() => setIsEditWelcomeOpen(true)}
+          onAuthorClick={handleProfileClick}
         />
       )}
 
@@ -285,6 +307,7 @@ export default function App() {
           onCategoryClick={applySearch}
           onCreateClick={() => openCreateModal(PostType.WIKI)}
           onPostClick={openPostView}
+          onAuthorClick={handleProfileClick}
         />
       )}
 
@@ -295,6 +318,7 @@ export default function App() {
           onCategoryClick={applySearch}
           onCreateClick={() => openCreateModal(PostType.ARTICLE)}
           onPostClick={openPostView}
+          onAuthorClick={handleProfileClick}
         />
       )}
 
@@ -305,6 +329,7 @@ export default function App() {
           onCategoryClick={applySearch}
           onCreateClick={() => openCreateModal(PostType.THREAD)}
           onPostClick={openPostView}
+          onAuthorClick={handleProfileClick}
         />
       )}
 
@@ -324,6 +349,14 @@ export default function App() {
           currentUser={currentUser}
           onEditProfile={() => setIsEditProfileOpen(true)}
           onLoginClick={() => setIsLoginModalOpen(true)}
+        />
+      )}
+
+      {view === 'public-profile' && viewingProfileId && (
+        <PublicProfileView
+          userId={viewingProfileId}
+          onClose={() => setView('home')}
+          onPostClick={openPostView}
         />
       )}
 

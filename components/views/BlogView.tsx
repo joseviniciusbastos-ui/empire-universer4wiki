@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, Card } from '../ui/Shared';
 import { PostCard } from '../PostCard';
-import { Post, PostType } from '../../types';
+import { Post, PostType, User } from '../../types';
 
 interface BlogViewProps {
     posts: Post[];
@@ -9,9 +9,11 @@ interface BlogViewProps {
     onCategoryClick: (category: string) => void;
     onCreateClick: () => void;
     onPostClick: (post: Post) => void;
+    currentUser: User | null;
+    onAuthorClick: (userId: string) => void;
 }
 
-export const BlogView: React.FC<BlogViewProps> = ({ posts, categories, onCategoryClick, onCreateClick, onPostClick }) => {
+export const BlogView: React.FC<BlogViewProps> = ({ posts, categories, onCategoryClick, onCreateClick, onPostClick, currentUser, onAuthorClick }) => {
     const blogPosts = posts.filter(p => p.type === PostType.ARTICLE);
 
     return (
@@ -35,7 +37,7 @@ export const BlogView: React.FC<BlogViewProps> = ({ posts, categories, onCategor
                 </div>
                 <div className="md:col-span-3 space-y-4">
                     {blogPosts.map(post => (
-                        <PostCard key={post.id} post={post} onClick={() => onPostClick(post)} />
+                        <PostCard key={post.id} post={post} onClick={() => onPostClick(post)} currentUser={currentUser} onAuthorClick={onAuthorClick} />
                     ))}
                     {blogPosts.length === 0 && (
                         <div className="text-space-muted font-mono">Nenhum artigo encontrado.</div>

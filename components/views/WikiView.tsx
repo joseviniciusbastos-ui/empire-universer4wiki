@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, Card } from '../ui/Shared';
 import { PostCard } from '../PostCard';
-import { Post, PostType } from '../../types';
+import { Post, PostType, User } from '../../types';
 
 interface WikiViewProps {
     posts: Post[];
@@ -9,9 +9,11 @@ interface WikiViewProps {
     onCategoryClick: (category: string) => void;
     onCreateClick: () => void;
     onPostClick: (post: Post) => void;
+    currentUser: User | null;
+    onAuthorClick: (userId: string) => void;
 }
 
-export const WikiView: React.FC<WikiViewProps> = ({ posts, categories, onCategoryClick, onCreateClick, onPostClick }) => {
+export const WikiView: React.FC<WikiViewProps> = ({ posts, categories, onCategoryClick, onCreateClick, onPostClick, currentUser, onAuthorClick }) => {
     const wikiPosts = posts.filter(p => p.type === PostType.WIKI);
 
     return (
@@ -35,11 +37,13 @@ export const WikiView: React.FC<WikiViewProps> = ({ posts, categories, onCategor
                 </div>
                 <div className="md:col-span-3 space-y-4">
                     {wikiPosts.map(post => (
-                        <PostCard key={post.id} post={post} onClick={() => onPostClick(post)} />
+                        <PostCard key={post.id} post={post} onClick={() => onPostClick(post)} currentUser={currentUser} onAuthorClick={onAuthorClick} />
                     ))}
-                    {wikiPosts.length === 0 && (
-                        <div className="text-space-muted font-mono">Nenhuma entrada encontrada.</div>
-                    )}
+                    {
+                        wikiPosts.length === 0 && (
+                            <div className="text-space-muted font-mono">Nenhuma entrada encontrada.</div>
+                        )
+                    }
                 </div>
             </div>
         </div>

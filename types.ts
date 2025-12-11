@@ -36,6 +36,18 @@ export interface Post {
   createdAt: string;
   updatedAt?: string;
   views?: number;
+  reactions?: Record<ReactionType, number>;
+  userReaction?: ReactionType | null;
+}
+
+export type ReactionType = 'LIKE' | 'ROCKET' | 'INTEL' | 'STAR' | 'WARNING';
+
+export interface PostReaction {
+  id: number;
+  post_id: number;
+  user_id: string;
+  reaction_type: ReactionType;
+  created_at: string;
 }
 
 // Database Row Type

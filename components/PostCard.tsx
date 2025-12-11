@@ -1,14 +1,17 @@
 import React from 'react';
 import { User as UserIcon } from 'lucide-react';
 import { Card, Badge } from './ui/Shared';
-import { Post, PostType } from '../types';
+import { ReactionButton } from './ui/ReactionButton';
+import { Post, PostType, User } from '../types';
 
 interface PostCardProps {
     post: Post;
     onClick: () => void;
+    currentUser: User | null;
+    onAuthorClick?: (userId: string) => void;
 }
 
-export const PostCard: React.FC<PostCardProps> = ({ post, onClick }) => (
+export const PostCard: React.FC<PostCardProps> = ({ post, onClick, currentUser, onAuthorClick }) => (
     <Card className="hover:border-space-muted transition-colors cursor-pointer group mb-4" onClick={onClick}>
         <div className="flex justify-between items-start mb-2">
             <div className="flex gap-2">
@@ -27,12 +30,26 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onClick }) => (
         </h3>
         <p className="text-sm text-space-muted line-clamp-2 font-mono mb-4" dangerouslySetInnerHTML={{ __html: post.content.replace(/<[^>]*>?/gm, '') }} />
         <div className="flex justify-between items-center border-t border-space-steel pt-3">
-            <div className="flex items-center gap-2 text-xs text-space-muted">
+            <div
+                className="flex items-center gap-2 text-xs text-space-muted hover:text-white transition-colors cursor-pointer z-10"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onAuthorClick && onAuthorClick(post.authorId);
+                }}
+            >
                 <UserIcon size={12} /> {post.authorName}
             </div>
-            <div className="flex gap-4 text-xs font-mono">
-                <span>CURTIDAS: {post.likes}</span>
-                <span>VISUALIZAÇÕES: {post.views}</span>
+            <ReactionButton
+                post={post}
+                currentUser={currentUser}
+                onReactionUpdate={() => { }} // List view typically refreshes or we need to lift state. 
+            // For now, in list view we might want to just SHOW reactions or allow simple toggle.
+            // Given complexity of lifting state for every card in a list, maybe make it read-only or functional?
+            // Let's allow interaction, it will update local component state inside ReactionButton (optimistic) 
+            // but won't persist across route changes unless we refresh list.
+            />
+            <div className="flex items-center gap-1 text-xs text-space-muted">
+                <span>VIEWS: {post.views}</span>
             </div>
         </div>
     </Card>

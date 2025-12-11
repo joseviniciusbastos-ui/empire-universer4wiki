@@ -12,10 +12,12 @@ interface PostViewModalProps {
     isOpen: boolean;
     onClose: () => void;
     currentUser: User | null;
-    onDeleteConfirmed: (postId: string) => Promise<void>; // New prop for confirmed deletion
+    onDeleteConfirmed: (postId: string) => Promise<void>;
+    onEdit: (post: Post) => void;
+    onAuthorClick?: (userId: string) => void;
 }
 
-const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, currentUser, onDeleteConfirmed }) => {
+const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, currentUser, onDeleteConfirmed, onEdit, onAuthorClick }) => {
     const { showToast } = useToast();
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [isConfirmingDelete, setIsConfirmingDelete] = React.useState(false);
@@ -98,7 +100,13 @@ const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, cu
 
                         {/* Author and Meta Info */}
                         <div className="flex items-center gap-4 text-xs text-space-muted font-mono">
-                            <div className="flex items-center gap-2">
+                            <div
+                                className="flex items-center gap-2 hover:text-white cursor-pointer transition-colors"
+                                onClick={() => {
+                                    onAuthorClick && onClose(); // Close modal first
+                                    onAuthorClick && onAuthorClick(post.authorId);
+                                }}
+                            >
                                 <div className="w-6 h-6 rounded-full bg-space-steel overflow-hidden">
                                     <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=${post.authorName}`} alt="avatar" />
                                 </div>
@@ -185,6 +193,17 @@ const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, cu
                             >
                                 <Trash2 size={14} className="mr-2" />
                                 {isDeleting ? 'EXCLUINDO...' : isConfirmingDelete ? 'CONFIRMAR?' : 'EXCLUIR'}
+                            </Button>
+                        )}
+                        {canDelete && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onEdit(post)}
+                                className="text-space-neon hover:bg-space-neon/10"
+                            >
+                                <Edit size={14} className="mr-2" />
+                                EDITAR
                             </Button>
                         )}
                     </div>

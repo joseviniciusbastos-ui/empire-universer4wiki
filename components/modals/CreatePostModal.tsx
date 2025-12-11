@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { RichTextEditor } from '../ui/RichTextEditor';
-import { PostType, User } from '../../types';
+import { Post, PostType, User } from '../../types';
 import { Button, Input, Card } from '../ui/Shared';
 import { X, Maximize2, Minimize2, Image as ImageIcon, UploadCloud, Save, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -13,10 +13,11 @@ interface CreatePostModalProps {
     onClose: () => void;
     postType: PostType;
     currentUser: User | null;
+    initialData?: Post; // Optional prop for editing
     onPostCreated: () => void;
 }
 
-const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, postType, currentUser, onPostCreated }) => {
+const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, postType, currentUser, onPostCreated, initialData }) => {
     const { showToast } = useToast();
     const [title, setTitle] = useState('');
     const [category, setCategory] = useState('');
@@ -90,24 +91,34 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
         }
     };
 
-    // Load draft when modal opens
+    // Load draft OR initial data when modal opens
     useEffect(() => {
         if (isOpen) {
-            const hasSavedDraft = loadDraft();
-            setHasDraft(hasSavedDraft);
+            if (initialData) {
+                // Formatting update mode
+                setTitle(initialData.title);
+                setCategory(initialData.category);
+                setContent(initialData.content);
+                setTags(initialData.tags);
+                // Can't easily preview cover image from HTML content without parsing, simplify for now
+            } else {
+                const hasSavedDraft = loadDraft();
+                setHasDraft(hasSavedDraft);
+            }
         }
-    }, [isOpen, postType]);
+    }, [isOpen, postType, initialData]);
 
-    // Auto-save every 30 seconds
+    // Auto-save every 30 seconds (only if NOT editing an existing post, to avoid overwriting drafts with published data logic maybe? Or separate key?)
+    // For now, disable auto-save drafts on Edit Mode to keep it simple
     useEffect(() => {
-        if (!isOpen) return;
+        if (!isOpen || initialData) return;
 
         const interval = setInterval(() => {
             saveDraft();
         }, 30000); // 30 seconds
 
         return () => clearInterval(interval);
-    }, [isOpen, title, category, content, tags]);
+    }, [isOpen, title, category, content, tags, initialData]);
 
     // Save draft before closing (if user presses X)
     const handleClose = () => {
@@ -147,33 +158,60 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
             // 2. Prepare slug
             const slug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') + '-' + Date.now().toString().slice(-4);
 
-            // 3. Insert Post 
-            // Content is already HTML from Quill, we prepend the cover image if it exists
-            let finalContent = content;
-            if (coverUrl) {
-                finalContent = `<img src="${coverUrl}" alt="Cover" class="w-full h-64 object-cover rounded-md mb-6" />` + finalContent;
+            if (initialData) {
+                // UPDATE EXISTING POST
+                let finalContent = content;
+                // If uploading new cover, prepend it. If not, keep content as is (assuming old cover is part of content HTML)
+                if (coverUrl) {
+                    finalContent = `<img src="${coverUrl}" alt="Cover" class="w-full h-64 object-cover rounded-md mb-6" />` + finalContent;
+                }
+
+                const { error } = await supabase
+                    .from('posts')
+                    .update({
+                        title,
+                        content: finalContent,
+                        category: category || 'Geral',
+                        tags: tags,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', initialData.id);
+
+                if (error) throw error;
+                showToast("Post atualizado com sucesso!", 'success');
+
+            } else {
+                // CREATE NEW POST
+                let finalContent = content;
+                if (coverUrl) {
+                    finalContent = `<img src="${coverUrl}" alt="Cover" class="w-full h-64 object-cover rounded-md mb-6" />` + finalContent;
+                }
+
+                const { error } = await supabase
+                    .from('posts')
+                    .insert({
+                        type: postType,
+                        title,
+                        content: finalContent,
+                        category: category || 'Geral',
+                        author_id: currentUser.id,
+                        author_name: currentUser.username,
+                        slug,
+                        tags: tags,
+                        created_at: new Date().toISOString()
+                    });
+
+                if (error) throw error;
+                showToast("Post criado com sucesso!", 'success');
             }
 
-            const { error } = await supabase
-                .from('posts')
-                .insert({
-                    type: postType,
-                    title,
-                    content: finalContent,
-                    category: category || 'Geral',
-                    author_id: currentUser.id,
-                    author_name: currentUser.username,
-                    slug,
-                    tags: tags,
-                    created_at: new Date().toISOString()
-                });
 
-            if (error) throw error;
 
-            // Clear draft after successful post
-            localStorage.removeItem(getDraftKey());
+            // Clear draft after successful post (only for new posts)
+            if (!initialData) {
+                localStorage.removeItem(getDraftKey());
+            }
 
-            showToast("Post criado com sucesso!", 'success');
             onPostCreated();
             onClose();
             // Reset form
@@ -214,9 +252,9 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
                 <div className="flex justify-between items-center mb-4 border-b border-space-steel pb-4 sticky top-0 bg-space-black z-10">
                     <div>
                         <h2 className="text-2xl font-display font-bold text-space-neon uppercase flex items-center gap-2">
-                            NOVA TRANSMISSÃO <span className="text-sm text-space-muted font-mono bg-space-dark px-2 py-0.5 rounded border border-space-steel">{postType}</span>
+                            {initialData ? 'EDITAR TRANSMISSÃO' : 'NOVA TRANSMISSÃO'} <span className="text-sm text-space-muted font-mono bg-space-dark px-2 py-0.5 rounded border border-space-steel">{postType}</span>
                         </h2>
-                        <p className="text-[10px] text-space-muted font-mono tracking-widest">CANAL SEGURO // CRIPTOGRAFIA ATIVADA</p>
+                        <p className="text-[10px] text-space-muted font-mono tracking-widest">{initialData ? 'ATUALIZANDO DADOS DO ARQUIVO...' : 'CANAL SEGURO // CRIPTOGRAFIA ATIVADA'}</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <button onClick={() => setIsExpanded(!isExpanded)} className="text-space-muted hover:text-white p-2">
@@ -322,7 +360,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
                 <div className="border-t border-space-steel pt-4 mt-4 flex justify-end gap-3">
                     <Button variant="ghost" onClick={onClose}>CANCELAR</Button>
                     <Button variant="primary" onClick={handleCreatePost} disabled={isLoading}>
-                        {isLoading ? 'TRANSMITINDO...' : 'ENVIAR TRANSMISSÃO'}
+                        {isLoading ? 'TRANSMITINDO...' : (initialData ? 'ATUALIZAR DADOS' : 'ENVIAR TRANSMISSÃO')}
                     </Button>
                 </div>
 
