@@ -176,8 +176,12 @@ export default function App() {
   };
 
   const handlePostDelete = (deletedPostId: string) => {
+    // 1. Update local state immediately
     setPosts(posts.filter(p => p.id !== deletedPostId));
+    // 2. Clear cache
     CacheManager.clearPosts();
+    // 3. Force a re-fetch from DB to ensure cache is immediately repopulated with fresh data
+    fetchPosts(true);
   };
 
   const handlePostCreated = () => {
