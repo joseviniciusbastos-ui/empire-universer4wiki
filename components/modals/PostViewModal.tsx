@@ -64,30 +64,26 @@ const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, cu
 
         try {
 
-            const { error, count } = await supabase
+            const { error } = await supabase
                 .from('posts')
-                .delete({ count: 'exact' }) // Request count to verify deletion
+                .delete()
                 .eq('id', post.id);
-
-
 
             if (error) {
                 console.error('[DEBUG] Supabase DELETE Error:', error);
                 throw error;
             }
 
-            // If count is 0, it means RLS prevented deletion or post not found
-            /* Note: Supabase delete returns null count sometimes depending on headers, 
-               but error is the main check. If no error but didn't delete, it's usually RLS. */
-
-            showToast('Post excluído com sucesso!', 'success'); // Replaced alert
+            showToast('Post excluído com sucesso!', 'success');
+            
+            // 1. Notify parent (App.tsx) to update state/cache
             if (onDelete) {
-
                 onDelete(post.id);
-            } else {
-                console.warn('[DEBUG] onDelete prop missing');
             }
+            
+            // 2. Close the modal immediately
             onClose();
+
         } catch (error: any) {
             console.error('Error deleting post:', error);
             showToast('Erro ao excluir post: ' + (error.message || 'Erro desconhecido'), 'error');
