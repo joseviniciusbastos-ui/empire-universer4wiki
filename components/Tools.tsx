@@ -1,7 +1,10 @@
 import React from 'react';
 import { Hammer, Lock, Activity } from 'lucide-react';
-import { MOCK_TOOLS } from '../constants';
 import { Card, Badge, Button } from './ui/Shared';
+import { ToolModule } from '../types';
+
+// Placeholder for dynamic tools data
+const DYNAMIC_TOOLS: ToolModule[] = [];
 
 const Tools: React.FC = () => {
   return (
@@ -15,7 +18,7 @@ const Tools: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {MOCK_TOOLS.map(tool => (
+        {DYNAMIC_TOOLS.map(tool => (
           <Card key={tool.id} className={`group ${tool.status === 'locked' ? 'opacity-50' : 'hover:border-space-neon'}`}>
             <div className="flex justify-between items-start mb-4">
               <div className="p-2 bg-space-black border border-space-steel rounded-full">
@@ -57,6 +60,15 @@ const Tools: React.FC = () => {
           </Card>
         ))}
       </div>
+
+      {DYNAMIC_TOOLS.length === 0 && (
+        <div className="mt-12 p-8 border border-dashed border-space-steel text-center rounded-lg bg-space-black/50">
+          <h3 className="text-space-muted font-heading text-lg mb-2">NENHUM MÓDULO ATIVO</h3>
+          <p className="text-xs font-mono text-space-muted max-w-md mx-auto mb-4">
+            Aguardando a implantação de novos módulos de engenharia.
+          </p>
+        </div>
+      )}
 
       <div className="mt-12 p-8 border border-dashed border-space-steel text-center rounded-lg bg-space-black/50">
         <h3 className="text-space-muted font-heading text-lg mb-2">SOLICITAÇÃO DE RECURSOS</h3>

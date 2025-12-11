@@ -12,10 +12,10 @@ interface PostViewModalProps {
     isOpen: boolean;
     onClose: () => void;
     currentUser: User | null;
-    onDelete?: (postId: string) => void;
+    onDeleteConfirmed: (postId: string) => Promise<void>; // New prop for confirmed deletion
 }
 
-const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, currentUser, onDelete }) => {
+const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, currentUser, onDeleteConfirmed }) => {
     const { showToast } = useToast();
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [isConfirmingDelete, setIsConfirmingDelete] = React.useState(false);
@@ -28,18 +28,23 @@ const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, cu
                 .update({ views: (post.views || 0) + 1 })
                 .eq('id', post.id)
                 .then(() => {
-
+                    // View count updated
                 });
         }
     }, [isOpen, post]);
 
+    // Reset confirmation state when modal opens/closes
+    useEffect(() => {
+        if (!isOpen) {
+            setIsConfirmingDelete(false);
+            setIsDeleting(false);
+        }
+    }, [isOpen]);
 
 
     if (!isOpen || !post) {
         return null;
     }
-
-
 
     const canDelete = currentUser && (
         currentUser.id === post.authorId ||
@@ -47,47 +52,20 @@ const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, cu
         currentUser.role === 'MODERATOR'
     );
 
-    const handleDelete = async () => {
+    const handleDeleteClick = async () => {
         if (!isConfirmingDelete) {
             setIsConfirmingDelete(true);
             // Auto-reset confirmation after 3 seconds if not clicked again
             setTimeout(() => {
-                setIsConfirmingDelete(prev => {
-                    if (prev) return false; // Only reset if still verifying
-                    return prev;
-                });
+                setIsConfirmingDelete(false);
             }, 3000);
             return;
         }
 
         setIsDeleting(true);
-
         try {
-
-            const { error, count } = await supabase
-                .from('posts')
-                .delete({ count: 'exact' }) // Request count to verify deletion
-                .eq('id', post.id);
-
-
-
-            if (error) {
-                console.error('[DEBUG] Supabase DELETE Error:', error);
-                throw error;
-            }
-
-            // If count is 0, it means RLS prevented deletion or post not found
-            /* Note: Supabase delete returns null count sometimes depending on headers, 
-               but error is the main check. If no error but didn't delete, it's usually RLS. */
-
-            showToast('Post excluído com sucesso!', 'success'); // Replaced alert
-            if (onDelete) {
-
-                onDelete(post.id);
-            } else {
-                console.warn('[DEBUG] onDelete prop missing');
-            }
-            onClose();
+            await onDeleteConfirmed(post.id);
+            // Parent component handles closing the modal and state update
         } catch (error: any) {
             console.error('Error deleting post:', error);
             showToast('Erro ao excluir post: ' + (error.message || 'Erro desconhecido'), 'error');
@@ -201,7 +179,7 @@ const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, cu
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={handleDelete}
+                                onClick={handleDeleteClick}
                                 className={`transition-all duration-200 ${isConfirmingDelete ? 'bg-red-900/50 text-white animate-pulse' : 'text-space-alert hover:bg-red-900/20'}`}
                                 disabled={isDeleting}
                             >

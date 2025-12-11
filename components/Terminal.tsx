@@ -5,7 +5,7 @@ interface TerminalProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (view: string) => void;
-  currentUser: User;
+  currentUser: User | null;
 }
 
 const Terminal: React.FC<TerminalProps> = ({ isOpen, onClose, onNavigate, currentUser }) => {
@@ -32,6 +32,12 @@ const Terminal: React.FC<TerminalProps> = ({ isOpen, onClose, onNavigate, curren
     const command = args[0].toLowerCase();
     
     let response = '';
+
+    if (!currentUser) {
+        response = 'ERRO: ACESSO NEGADO. Faça login para usar o terminal.';
+        setHistory(prev => [...prev, `> ${cmd}`, response]);
+        return;
+    }
 
     switch (command) {
       case 'ajuda':
@@ -67,7 +73,8 @@ const Terminal: React.FC<TerminalProps> = ({ isOpen, onClose, onNavigate, curren
             'home': 'home', 'inicio': 'home',
             'wiki': 'wiki',
             'forum': 'forum', 'fórum': 'forum',
-            'starmap': 'starmap', 'mapa': 'starmap',
+            'starmap': 'tools', // Mapping starmap to tools view
+            'mapa': 'tools',
             'perfil': 'profile', 'profile': 'profile'
           };
 
@@ -109,7 +116,7 @@ const Terminal: React.FC<TerminalProps> = ({ isOpen, onClose, onNavigate, curren
       <div className="w-full max-w-3xl bg-space-black border border-space-steel shadow-2xl font-mono text-sm relative">
         {/* Header */}
         <div className="bg-space-steel text-space-text px-4 py-1 flex justify-between items-center select-none">
-          <span className="font-bold text-xs tracking-widest">TERMINAL // NÍVEL_ACESSO_{currentUser.role}</span>
+          <span className="font-bold text-xs tracking-widest">TERMINAL // NÍVEL_ACESSO_{currentUser?.role || 'GUEST'}</span>
           <button onClick={onClose} className="hover:text-space-alert">X</button>
         </div>
         

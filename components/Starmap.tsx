@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { StarSystem } from '../types';
-import { MOCK_SYSTEMS } from '../constants';
 import { useToast } from '../contexts/ToastContext';
+
+// Placeholder for dynamic systems data
+const DYNAMIC_SYSTEMS: StarSystem[] = []; 
 
 const Starmap: React.FC = () => {
   const { showToast } = useToast();
@@ -45,9 +47,9 @@ const Starmap: React.FC = () => {
           </defs>
 
           {/* Connections */}
-          {MOCK_SYSTEMS.map(sys =>
+          {DYNAMIC_SYSTEMS.map(sys =>
             sys.connections.map(targetId => {
-              const target = MOCK_SYSTEMS.find(s => s.id === targetId);
+              const target = DYNAMIC_SYSTEMS.find(s => s.id === targetId);
               if (!target) return null;
               return (
                 <line
@@ -63,7 +65,7 @@ const Starmap: React.FC = () => {
           )}
 
           {/* Systems */}
-          {MOCK_SYSTEMS.map((sys) => {
+          {DYNAMIC_SYSTEMS.map((sys) => {
             let color = '#FFF';
             let radius = 4;
             if (sys.type === 'star') { color = '#FFE082'; radius = 6; }
@@ -125,6 +127,11 @@ const Starmap: React.FC = () => {
           >
             Iniciar Dobra
           </button>
+        </div>
+      )}
+      {DYNAMIC_SYSTEMS.length === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center text-space-muted font-mono text-sm">
+          Nenhum sistema estelar mapeado.
         </div>
       )}
     </div>
