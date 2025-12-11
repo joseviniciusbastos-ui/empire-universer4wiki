@@ -19,6 +19,7 @@ import { ProfileView } from './components/views/ProfileView';
 import { useToast } from './contexts/ToastContext';
 import { useAuth } from './contexts/AuthContext';
 import { FilterState } from './components/SearchFilters';
+import EditAboutModal from './components/modals/EditAboutModal'; // Import new modal
 
 const CATEGORY_KEYS = {
   [PostType.WIKI]: 'categories_wiki',
@@ -41,16 +42,22 @@ export default function App() {
     tags: []
   });
 
+  // About Wiki State
+  const [aboutTitle, setAboutTitle] = useState('Bem-vindo à Wiki EU4');
+  const [aboutContent, setAboutContent] = useState('Esta é a enciclopédia colaborativa dedicada ao universo de Empire Universe 4.');
+  const [isEditAboutModalOpen, setIsEditAboutModalOpen] = useState(false);
+
   // Dynamic Categories State
   const [appCategories, setAppCategories] = useState(CATEGORIES);
 
-  // Fetch Categories
+  // Fetch Categories and About Content
   useEffect(() => {
-    const fetchCategories = async () => {
-      const { data } = await supabase.from('app_settings').select('*');
-      if (data && data.length > 0) {
+    const fetchSettings = async () => {
+      // Fetch Categories
+      const { data: catData } = await supabase.from('app_settings').select('*');
+      if (catData && catData.length > 0) {
         const newCats = { ...CATEGORIES };
-        data.forEach(setting => {
+        catData.forEach(setting => {
           const typeEntry = Object.entries(CATEGORY_KEYS).find(([_, value]) => value === setting.key);
           if (typeEntry) {
             newCats[typeEntry[0] as PostType] = setting.value;
@@ -58,8 +65,21 @@ export default function App() {
         });
         setAppCategories(newCats);
       }
+
+      // Fetch About Content
+      const { data: siteData } = await supabase
+        .from('site_settings')
+        .select('key, value')
+        .in('key', ['about_title', 'about_content']);
+
+      if (siteData) {
+        const title = siteData.find(s => s.key === 'about_title')?.value || 'Bem-vindo à Wiki EU4';
+        const content = siteData.find(s => s.key === 'about_content')?.value || 'Esta é a enciclopédia colaborativa dedicada ao universo de Empire Universe 4.';
+        setAboutTitle(title);
+        setAboutContent(content);
+      }
     };
-    fetchCategories();
+    fetchSettings();
   }, []);
 
   // Search State with debounce
@@ -208,6 +228,21 @@ export default function App() {
     fetchPosts(true);
   };
 
+  const handleAboutSave = async () => {
+    // Re-fetch site settings to update local state after admin save
+    const { data: siteData } = await supabase
+        .from('site_settings')
+        .select('key, value')
+        .in('key', ['about_title', 'about_content']);
+
+    if (siteData) {
+        const title = siteData.find(s => s.key === 'about_title')?.value || 'Bem-vindo à Wiki EU4';
+        const content = siteData.find(s => s.key === 'about_content')?.value || 'Esta é a enciclopédia colaborativa dedicada ao universo de Empire Universe 4.';
+        setAboutTitle(title);
+        setAboutContent(content);
+    }
+  };
+
   return (
     <MainLayout
       view={view}
@@ -246,6 +281,14 @@ export default function App() {
         onDeleteConfirmed={handleDeletePostConfirmed} // Using the new centralized function
       />
 
+      <EditAboutModal
+        isOpen={isEditAboutModalOpen}
+        onClose={() => setIsEditAboutModalOpen(false)}
+        currentTitle={aboutTitle}
+        currentContent={aboutContent}
+        onSave={handleAboutSave}
+      />
+
       {/* RENDER CURRENT VIEW */}
       {view === 'home' && (
         <HomeView
@@ -259,6 +302,10 @@ export default function App() {
           isLoading={isLoading}
           onNavigate={setView}
           onPostClick={(post) => openPostView(post)}
+          aboutTitle={aboutTitle}
+          aboutContent={aboutContent}
+          currentUser={currentUser}
+          onEditAbout={() => setIsEditAboutModalOpen(true)}
         />
       )}
 
