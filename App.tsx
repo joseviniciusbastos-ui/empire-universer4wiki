@@ -175,15 +175,29 @@ export default function App() {
     setIsPostViewOpen(true);
   };
 
-  const handlePostDelete = (deletedPostId: string) => {
-    // 1. Update local state immediately
-    setPosts(posts.filter(p => p.id !== deletedPostId));
+  // REFACTORED DELETION LOGIC
+  const handleDeletePostConfirmed = async (postId: string) => {
+    const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', postId);
+
+    if (error) {
+        console.error('[DEBUG] Supabase DELETE Error:', error);
+        throw new Error(error.message);
+    }
+
+    // 1. Close the modal immediately
+    setIsPostViewOpen(false);
     // 2. Clear selected post state
     setSelectedPost(null); 
-    // 3. Clear cache
+    // 3. Update local state (optimistic update)
+    setPosts(prevPosts => prevPosts.filter(p => p.id !== postId));
+    // 4. Clear cache and force a re-fetch to ensure data integrity
     CacheManager.clearPosts();
-    // 4. Force a re-fetch from DB to ensure cache is immediately repopulated with fresh data
-    fetchPosts(true);
+    await fetchPosts(true);
+    
+    showToast('Post excluído com sucesso!', 'success');
   };
 
   const handlePostCreated = () => {
@@ -226,7 +240,7 @@ export default function App() {
         isOpen={isPostViewOpen}
         onClose={() => setIsPostViewOpen(false)}
         currentUser={currentUser}
-        onDelete={handlePostDelete}
+        onDeleteConfirmed={handleDeletePostConfirmed} // Using the new centralized function
       />
 
       {/* RENDER CURRENT VIEW */}
