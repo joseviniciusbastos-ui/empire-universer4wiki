@@ -28,37 +28,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
     return (
         <div className="space-y-8 animate-fadeIn">
-            {/* About Section - Editable by Admin */}
-            <div className="relative group">
-                <div className="bg-gradient-to-r from-space-neon/10 via-violet-500/10 to-space-alert/10 border border-space-neon/30 rounded-xl p-6 backdrop-blur-sm">
-                    <div className="flex items-start gap-4">
-                        <div className="p-3 bg-space-neon/20 rounded-lg border border-space-neon/30">
-                            <Rocket size={32} className="text-space-neon" />
-                        </div>
-                        <div className="flex-1">
-                            <div className="flex justify-between items-start">
-                                <h2 className="text-2xl font-display font-bold text-white mb-2">
-                                    {aboutTitle || 'Bem-vindo à Wiki EU4'}
-                                </h2>
-                                {isAdmin && onEditAbout && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={onEditAbout}
-                                        className="opacity-0 group-hover:opacity-100 transition-opacity text-space-neon"
-                                    >
-                                        <Edit3 size={14} className="mr-1" /> EDITAR
-                                    </Button>
-                                )}
-                            </div>
-                            <p className="text-space-muted font-mono text-sm leading-relaxed max-w-3xl">
-                                {aboutContent || 'Esta é a enciclopédia colaborativa dedicada ao universo de Empire Universe 4.'}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             {/* Hero Stats - Holographic Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
@@ -124,8 +93,41 @@ export const HomeView: React.FC<HomeViewProps> = ({
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
 
-                {/* Left Column: Recent Activity */}
-                <div className="lg:col-span-3 space-y-6">
+                {/* Left Column: Recent Activity & Welcome */}
+                <div className="lg:col-span-3 space-y-8">
+
+                    {/* About Section - Editable by Admin */}
+                    <div className="relative group">
+                        <div className="bg-gradient-to-r from-space-neon/10 via-violet-500/10 to-space-alert/10 border border-space-neon/30 rounded-xl p-6 backdrop-blur-sm">
+                            <div className="flex items-start gap-4">
+                                <div className="p-3 bg-space-neon/20 rounded-lg border border-space-neon/30">
+                                    <Rocket size={32} className="text-space-neon" />
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex justify-between items-start">
+                                        <h2 className="text-2xl font-display font-bold text-white mb-2">
+                                            {aboutTitle || 'Bem-vindo à Wiki EU4'}
+                                        </h2>
+                                        {isAdmin && onEditAbout && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={onEditAbout}
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity text-space-neon"
+                                            >
+                                                <Edit3 size={14} className="mr-1" /> EDITAR
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <div
+                                        className="text-space-muted font-mono text-sm leading-relaxed max-w-3xl prose prose-invert prose-sm max-w-none pr-2 custom-scrollbar"
+                                        dangerouslySetInnerHTML={{ __html: aboutContent || 'Esta é a enciclopédia colaborativa dedicada ao universo de Empire Universe 4.' }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="flex justify-between items-end border-b border-space-steel/30 pb-2">
                         <h2 className="text-2xl font-display font-bold uppercase flex items-center gap-3 text-white">
                             <History className="text-space-neon" /> Transmissões Recentes
@@ -284,6 +286,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
                 </div>
             </div>
-        </div>
+        </div >
     );
 };

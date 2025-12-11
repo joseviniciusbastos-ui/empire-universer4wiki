@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import ReactQuill, { Quill } from 'react-quill';
+import { RichTextEditor } from '../ui/RichTextEditor';
 import { PostType, User } from '../../types';
 import { Button, Input, Card } from '../ui/Shared';
 import { X, Maximize2, Minimize2, Image as ImageIcon, UploadCloud, Save, Trash2 } from 'lucide-react';
@@ -25,30 +25,8 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
     const [newTag, setNewTag] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
-    const [ReactQuill, setReactQuill] = useState<any>(null);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [hasDraft, setHasDraft] = useState(false);
-    const quillRef = useRef<any>(null);
-
-    // Dynamic import for React Quill and ImageResize module
-    useEffect(() => {
-        const loadQuill = async () => {
-            const quillModule = await import('react-quill');
-            const Quill = quillModule.default.Quill;
-
-            // Register image resize module
-            try {
-                const ImageResize = (await import('quill-image-resize-module-react')).default;
-                Quill.register('modules/imageResize', ImageResize);
-            } catch (e) {
-                console.error('Failed to load image resize module:', e);
-            }
-
-            setReactQuill(() => quillModule.default);
-        };
-
-        loadQuill();
-    }, []);
 
     // Custom: Cover Image State
     const [coverImage, setCoverImage] = useState<File | null>(null);
@@ -135,48 +113,6 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
     const handleClose = () => {
         saveDraft();
         onClose();
-    };
-
-    // Handle image upload from paste or drag
-    const handleImageUpload = async (file: File): Promise<string | null> => {
-        try {
-            const fileExt = file.name.split('.').pop() || 'png';
-            const fileName = `${Math.random()}_${Date.now()}.${fileExt}`;
-            const filePath = `content-images/${fileName}`;
-
-            const { error: uploadError } = await supabase.storage
-                .from('images')
-                .upload(filePath, file);
-
-            if (uploadError) throw uploadError;
-
-            const { data } = supabase.storage.from('images').getPublicUrl(filePath);
-            return data.publicUrl;
-        } catch (error) {
-            console.error('Error uploading image:', error);
-            return null;
-        }
-    };
-
-    // Custom image handler for Quill
-    const imageHandler = () => {
-        const input = document.createElement('input');
-        input.setAttribute('type', 'file');
-        input.setAttribute('accept', 'image/*');
-        input.click();
-
-        input.onchange = async () => {
-            const file = input.files?.[0];
-            if (file) {
-                const url = await handleImageUpload(file);
-                if (url && quillRef.current) {
-                    const editor = quillRef.current.getEditor();
-                    const range = editor.getSelection(true);
-                    editor.insertEmbed(range.index, 'image', url);
-                    editor.setSelection(range.index + 1);
-                }
-            }
-        };
     };
 
     if (!isOpen) return null;
@@ -343,87 +279,18 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
                     </div>
 
                     {/* Rich Text Editor */}
-                    <div
-                        className="flex-1 flex flex-col min-h-[300px]"
-                        onDrop={async (e) => {
-                            e.preventDefault();
-                            const files = e.dataTransfer.files;
-                            if (files && files.length > 0) {
-                                for (let i = 0; i < files.length; i++) {
-                                    const file = files[i];
-                                    if (file.type.startsWith('image/')) {
-                                        const url = await handleImageUpload(file);
-                                        if (url && quillRef.current) {
-                                            const editor = quillRef.current.getEditor();
-                                            const range = editor.getSelection(true) || { index: editor.getLength() };
-                                            editor.insertEmbed(range.index, 'image', url);
-                                            editor.setSelection(range.index + 1);
-                                        }
-                                    }
-                                }
-                            }
-                        }}
-                        onDragOver={(e) => e.preventDefault()}
-                        onPaste={async (e) => {
-                            const clipboardItems = e.clipboardData.items;
-                            // Loop through items properly
-                            for (let i = 0; i < clipboardItems.length; i++) {
-                                const item = clipboardItems[i];
-                                if (item.type.startsWith('image/')) {
-                                    e.preventDefault(); // Prevent default base64 paste
-                                    const file = item.getAsFile();
-                                    if (file) {
-                                        const url = await handleImageUpload(file);
-                                        if (url && quillRef.current) {
-                                            const editor = quillRef.current.getEditor();
-                                            const range = editor.getSelection(true) || { index: editor.getLength() };
-                                            editor.insertEmbed(range.index, 'image', url);
-                                            editor.setSelection(range.index + 1);
-                                        }
-                                    }
-                                }
-                            }
-                        }}
-                    >
+                    <div className="flex-1 flex flex-col min-h-[300px]">
                         <label className="text-xs font-mono text-space-muted mb-1 block uppercase flex justify-between">
                             <span>Conteúdo Principal</span>
                             <span className="text-[10px] text-space-neon flex items-center gap-1">✓ DRAG & DROP SUPPORTED</span>
                         </label>
 
-                        {ReactQuill ? (
-                            <ReactQuill
-                                ref={quillRef}
-                                theme="snow"
-                                value={content}
-                                onChange={setContent}
-                                className="flex-1 quill-editor"
-                                modules={React.useMemo(() => ({
-                                    toolbar: {
-                                        container: [
-                                            [{ 'header': [1, 2, 3, false] }],
-                                            ['bold', 'italic', 'underline', 'strike'],
-                                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                                            ['blockquote', 'code-block'],
-                                            [{ 'color': [] }, { 'background': [] }],
-                                            ['link', 'image'],
-                                            ['clean']
-                                        ],
-                                        handlers: {
-                                            image: imageHandler
-                                        }
-                                    },
-                                    imageResize: {
-                                        parchment: ReactQuill.Quill.import('parchment'),
-                                        modules: ['Resize', 'DisplaySize']
-                                    }
-                                }), [])}
-                                placeholder="Escreva sua transmissão aqui... Arraste imagens diretamente para o editor."
-                            />
-                        ) : (
-                            <div className="flex-1 bg-space-darker/50 border border-space-steel rounded p-4 flex items-center justify-center">
-                                <span className="text-space-muted font-mono text-sm">Carregando editor...</span>
-                            </div>
-                        )}
+                        <RichTextEditor
+                            value={content}
+                            onChange={setContent}
+                            placeholder="Escreva sua transmissão aqui... Arraste imagens diretamente para o editor."
+                            className="flex-1"
+                        />
                     </div>
 
                     {/* Tags Section */}

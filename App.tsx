@@ -10,6 +10,7 @@ import LoginModal from './components/modals/LoginModal';
 import AdminPanel from './components/AdminPanel';
 import { HomeView } from './components/views/HomeView';
 import EditProfileModal from './components/modals/EditProfileModal';
+import EditWelcomeModal from './components/modals/EditWelcomeModal';
 import PostViewModal from './components/modals/PostViewModal';
 import { MainLayout } from './components/layout/MainLayout';
 import { WikiView } from './components/views/WikiView';
@@ -44,22 +45,37 @@ export default function App() {
   // Dynamic Categories State
   const [appCategories, setAppCategories] = useState(CATEGORIES);
 
-  // Fetch Categories
+  // Welcome Section State
+  const [welcomeTitle, setWelcomeTitle] = useState('');
+  const [welcomeContent, setWelcomeContent] = useState('');
+  const [isEditWelcomeOpen, setIsEditWelcomeOpen] = useState(false);
+
+  // Fetch Categories and Settings
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchSettings = async () => {
       const { data } = await supabase.from('app_settings').select('*');
       if (data && data.length > 0) {
         const newCats = { ...CATEGORIES };
+        let wTitle = '';
+        let wContent = '';
+
         data.forEach(setting => {
+          // Categories
           const typeEntry = Object.entries(CATEGORY_KEYS).find(([_, value]) => value === setting.key);
           if (typeEntry) {
             newCats[typeEntry[0] as PostType] = setting.value;
           }
+          // Welcome Section
+          if (setting.key === 'welcome_title') wTitle = setting.value;
+          if (setting.key === 'welcome_content') wContent = setting.value;
         });
+
         setAppCategories(newCats);
+        setWelcomeTitle(wTitle);
+        setWelcomeContent(wContent);
       }
     };
-    fetchCategories();
+    fetchSettings();
   }, []);
 
   // Search State with debounce
@@ -185,6 +201,25 @@ export default function App() {
     fetchPosts(true);
   };
 
+  const handleSaveWelcome = async (title: string, content: string) => {
+    try {
+      // Upsert settings
+      const updates = [
+        { key: 'welcome_title', value: title },
+        { key: 'welcome_content', value: content }
+      ];
+
+      const { error } = await supabase.from('app_settings').upsert(updates, { onConflict: 'key' });
+      if (error) throw error;
+
+      setWelcomeTitle(title);
+      setWelcomeContent(content);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      throw error;
+    }
+  };
+
   return (
     <MainLayout
       view={view}
@@ -236,6 +271,10 @@ export default function App() {
           isLoading={isLoading}
           onNavigate={setView}
           onPostClick={(post) => openPostView(post)}
+          aboutTitle={welcomeTitle}
+          aboutContent={welcomeContent}
+          currentUser={currentUser}
+          onEditAbout={() => setIsEditWelcomeOpen(true)}
         />
       )}
 
@@ -287,6 +326,14 @@ export default function App() {
           onLoginClick={() => setIsLoginModalOpen(true)}
         />
       )}
+
+      <EditWelcomeModal
+        isOpen={isEditWelcomeOpen}
+        onClose={() => setIsEditWelcomeOpen(false)}
+        initialTitle={welcomeTitle}
+        initialContent={welcomeContent}
+        onSave={handleSaveWelcome}
+      />
 
     </MainLayout>
   );

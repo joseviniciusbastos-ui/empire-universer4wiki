@@ -15,11 +15,20 @@
   color: #cbd5e0;
   font-family: 'Courier New', monospace;
   font-size: 14px;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .quill-editor .ql-editor {
   min-height: 250px;
   color: #cbd5e0;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  /* Ensure long words break */
+  white-space: pre-wrap;
+  /* Maintain spacing but wrap text */
+  max-width: 100%;
 }
 
 .quill-editor .ql-editor.ql-blank::before {
@@ -29,9 +38,15 @@
 
 /* Toolbar */
 .quill-editor .ql-toolbar {
-  background-color: #1a202c;
+  background-color: rgba(13, 17, 23, 0.95);
   border: 1px solid #2d3748;
   border-radius: 4px 4px 0 0;
+
+  /* Sticky Positioning */
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(8px);
 }
 
 .quill-editor .ql-toolbar button {

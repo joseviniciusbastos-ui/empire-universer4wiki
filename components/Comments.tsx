@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Input } from './ui/Shared';
+import { RichTextEditor } from './ui/RichTextEditor';
 import { supabase } from '../lib/supabase';
 import { Send, Trash2, MessageSquare, CornerDownRight } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
@@ -55,7 +56,9 @@ const Comments: React.FC<CommentsProps> = ({ postId, currentUser }) => {
         e.preventDefault();
         const contentToPost = parentId ? replyContent : newComment;
 
-        if (!contentToPost.trim() || !currentUser) return;
+        // Strip HTML tags to check if content is empty
+        const cleanContent = contentToPost.replace(/<[^>]*>/g, '').trim();
+        if (!cleanContent || !currentUser) return;
 
         setIsLoading(true);
         try {
@@ -129,12 +132,12 @@ const Comments: React.FC<CommentsProps> = ({ postId, currentUser }) => {
                             />
                         </div>
                         <div className="flex-1">
-                            <Input
+                            <RichTextEditor
                                 value={newComment}
-                                onChange={(e) => setNewComment(e.target.value)}
+                                onChange={setNewComment}
                                 placeholder="Adicione um comentário..."
-                                className="w-full"
-                                disabled={isLoading}
+                                className="w-full bg-space-dark/50"
+                                minHeight="150px"
                             />
                         </div>
                     </div>
@@ -142,7 +145,7 @@ const Comments: React.FC<CommentsProps> = ({ postId, currentUser }) => {
                         <Button
                             type="submit"
                             variant="primary"
-                            disabled={!newComment.trim() || isLoading}
+                            disabled={!newComment.replace(/<[^>]*>/g, '').trim() || isLoading}
                             size="sm"
                         >
                             <Send size={14} className="mr-2" />
@@ -282,24 +285,25 @@ const CommentItem: React.FC<CommentItemProps> = ({
                                 )}
                             </div>
                         </div>
-                        <p className="text-sm text-space-text leading-relaxed break-words">
-                            {comment.content}
-                        </p>
+                        <div
+                            className="text-sm text-space-text leading-relaxed break-words prose prose-invert max-w-none"
+                            dangerouslySetInnerHTML={{ __html: comment.content }}
+                        />
 
                         {/* Reply Input */}
                         {isReplying && (
                             <div className="mt-3 animate-in fade-in slide-in-from-top-2">
                                 <form onSubmit={(e) => onReplySubmit(e, comment.id)} className="flex gap-2">
                                     <div className="flex-1">
-                                        <Input
+                                        <RichTextEditor
                                             value={replyContent}
-                                            onChange={(e) => setReplyContent(e.target.value)}
+                                            onChange={setReplyContent}
                                             placeholder={`Respondendo a ${comment.author_name}...`}
-                                            className="w-full text-xs h-8"
-                                            autoFocus
+                                            className="w-full text-xs"
+                                            minHeight="100px"
                                         />
                                     </div>
-                                    <Button type="submit" size="sm" variant="secondary" disabled={!replyContent.trim()}>
+                                    <Button type="submit" size="sm" variant="secondary" disabled={!replyContent.replace(/<[^>]*>/g, '').trim()}>
                                         <CornerDownRight size={14} />
                                     </Button>
                                 </form>

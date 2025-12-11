@@ -27,7 +27,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     const [isTerminalOpen, setIsTerminalOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-space-black text-space-text font-sans selection:bg-space-neon selection:text-black overflow-hidden flex">
+        <div className="min-h-screen bg-space-black text-space-text font-sans selection:bg-space-neon selection:text-black flex flex-col md:flex-row">
             {/* Terminal Overlay */}
             <Terminal isOpen={isTerminalOpen} onClose={() => setIsTerminalOpen(false)} />
 
@@ -40,7 +40,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                 onLoginClick={onLoginClick}
             />
 
-            <main className="flex-1 flex flex-col overflow-hidden relative">
+            <main className="flex-1 flex flex-col min-h-screen relative">
                 <Header
                     onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                     onToggleTerminal={() => setIsTerminalOpen(true)}
@@ -50,7 +50,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                 />
 
                 {/* View Content */}
-                <div className="flex-1 overflow-y-auto p-6 pb-32 scrollbar-thin scrollbar-thumb-space-steel scrollbar-track-space-darker">
+                <div className="flex-1 p-6 pb-32">
                     {children}
                 </div>
             </main>
