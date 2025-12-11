@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Badge, Button } from '../ui/Shared';
-import { Users, BookOpen, Clock, History, AlertTriangle, Star, Activity, ArrowRight, Zap } from 'lucide-react';
-import { Post } from '../../types';
+import { Users, BookOpen, Clock, History, AlertTriangle, Star, Activity, ArrowRight, Zap, Edit3, Rocket } from 'lucide-react';
+import { Post, User } from '../../types';
 
 interface HomeViewProps {
     stats: {
@@ -14,11 +14,51 @@ interface HomeViewProps {
     isLoading: boolean;
     onNavigate: (view: string) => void;
     onPostClick: (post: Post) => void;
+    aboutTitle?: string;
+    aboutContent?: string;
+    currentUser?: User | null;
+    onEditAbout?: () => void;
 }
 
-export const HomeView: React.FC<HomeViewProps> = ({ stats, recentPosts, isLoading, onNavigate, onPostClick }) => {
+export const HomeView: React.FC<HomeViewProps> = ({
+    stats, recentPosts, isLoading, onNavigate, onPostClick,
+    aboutTitle, aboutContent, currentUser, onEditAbout
+}) => {
+    const isAdmin = currentUser?.role === 'ADMIN';
+
     return (
         <div className="space-y-8 animate-fadeIn">
+            {/* About Section - Editable by Admin */}
+            <div className="relative group">
+                <div className="bg-gradient-to-r from-space-neon/10 via-violet-500/10 to-space-alert/10 border border-space-neon/30 rounded-xl p-6 backdrop-blur-sm">
+                    <div className="flex items-start gap-4">
+                        <div className="p-3 bg-space-neon/20 rounded-lg border border-space-neon/30">
+                            <Rocket size={32} className="text-space-neon" />
+                        </div>
+                        <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                                <h2 className="text-2xl font-display font-bold text-white mb-2">
+                                    {aboutTitle || 'Bem-vindo à Wiki EU4'}
+                                </h2>
+                                {isAdmin && onEditAbout && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={onEditAbout}
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity text-space-neon"
+                                    >
+                                        <Edit3 size={14} className="mr-1" /> EDITAR
+                                    </Button>
+                                )}
+                            </div>
+                            <p className="text-space-muted font-mono text-sm leading-relaxed max-w-3xl">
+                                {aboutContent || 'Esta é a enciclopédia colaborativa dedicada ao universo de Empire Universe 4.'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Hero Stats - Holographic Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
