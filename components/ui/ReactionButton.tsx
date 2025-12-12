@@ -73,7 +73,7 @@ export const ReactionButton: React.FC<ReactionButtonProps> = ({ post, currentUse
                 const { error } = await supabase
                     .from('post_reactions')
                     .upsert({
-                        post_id: parseInt(post.id),
+                        post_id: post.id,
                         user_id: currentUser.id,
                         reaction_type: type
                     });
@@ -91,7 +91,7 @@ export const ReactionButton: React.FC<ReactionButtonProps> = ({ post, currentUse
 
     // Calculate total reactions for display
     const totalReactions = post.reactions
-        ? Object.values(post.reactions).reduce((a, b) => a + b, 0)
+        ? Object.values(post.reactions).reduce((a, b) => (Number(a) || 0) + (Number(b) || 0), 0)
         : (post.likes || 0);
 
     return (

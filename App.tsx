@@ -308,6 +308,7 @@ export default function App() {
           onCategoryClick={applySearch}
           onCreateClick={() => openCreateModal(PostType.WIKI)}
           onPostClick={openPostView}
+          currentUser={currentUser}
           onAuthorClick={handleProfileClick}
         />
       )}
