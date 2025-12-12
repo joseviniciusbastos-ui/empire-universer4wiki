@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Button, Input, Card } from '../ui/Shared';
 import { useToast } from '../../contexts/ToastContext';
@@ -20,6 +20,14 @@ export default function EditProfileModal({ isOpen, onClose, currentUser, onUpdat
     const [password, setPassword] = useState('');
     const [email, setEmail] = useState(''); // Only for request
     const [isLoading, setIsLoading] = useState(false);
+
+    // Sync state with currentUser when it changes
+    useEffect(() => {
+        if (currentUser) {
+            setBio(currentUser.bio || '');
+            setAvatarUrl(currentUser.avatarUrl || '');
+        }
+    }, [currentUser]);
 
     if (!isOpen) return null;
 

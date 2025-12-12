@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Input, Card } from '../ui/Shared';
 import { RichTextEditor } from '../ui/RichTextEditor';
 import { X, Save } from 'lucide-react';
@@ -17,6 +17,12 @@ const EditWelcomeModal: React.FC<EditWelcomeModalProps> = ({ isOpen, onClose, in
     const [title, setTitle] = useState(initialTitle);
     const [content, setContent] = useState(initialContent);
     const [isLoading, setIsLoading] = useState(false);
+
+    // Sync state with props when they change
+    useEffect(() => {
+        setTitle(initialTitle);
+        setContent(initialContent);
+    }, [initialTitle, initialContent]);
 
     if (!isOpen) return null;
 

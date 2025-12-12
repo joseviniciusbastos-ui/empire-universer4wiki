@@ -5,6 +5,7 @@ import { Button, Input, Card } from '../ui/Shared';
 import { X, Maximize2, Minimize2, Image as ImageIcon, UploadCloud, Save, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../contexts/ToastContext';
+import { ImageCropper } from '../ui/ImageCropper';
 import 'react-quill/dist/quill.snow.css';
 import '../../quill-theme.css';
 
@@ -33,6 +34,10 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
     // Custom: Cover Image State
     const [coverImage, setCoverImage] = useState<File | null>(null);
     const [coverPreview, setCoverPreview] = useState<string | null>(null);
+
+    // Crop states
+    const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+    const [isCropping, setIsCropping] = useState(false);
 
     // Draft management
     const getDraftKey = () => `draft_${postType}_${currentUser?.id || 'guest'}`;
@@ -96,12 +101,11 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
     useEffect(() => {
         if (isOpen) {
             if (initialData) {
-                // Formatting update mode
+                // Editing mode - load post data
                 setTitle(initialData.title);
                 setCategory(initialData.category);
                 setContent(initialData.content);
                 setTags(initialData.tags);
-                // Can't easily preview cover image from HTML content without parsing, simplify for now
             } else {
                 const hasSavedDraft = loadDraft();
                 setHasDraft(hasSavedDraft);
@@ -120,6 +124,38 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
 
         return () => clearInterval(interval);
     }, [isOpen, title, category, content, tags, initialData]);
+
+    // Handle cover image selection
+    const handleCoverImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target?.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                setImageToCrop(reader.result as string);
+                setIsCropping(true);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleCropComplete = (croppedBlob: Blob) => {
+        const croppedFile = new File([croppedBlob], 'cover.jpg', { type: 'image/jpeg' });
+        setCoverImage(croppedFile);
+        const previewUrl = URL.createObjectURL(croppedBlob);
+        setCoverPreview(previewUrl);
+        setIsCropping(false);
+        setImageToCrop(null);
+    };
+
+    const handleCropCancel = () => {
+        setIsCropping(false);
+        setImageToCrop(null);
+    };
+
+    const handleRemoveCoverImage = () => {
+        setCoverImage(null);
+        setCoverPreview(null);
+    };
 
     // Save draft before closing (if user presses X)
     const handleClose = () => {
@@ -307,7 +343,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
                             id="cover-upload"
                             accept="image/*"
                             className="hidden"
-                            onChange={handleFileChange}
+                            onChange={handleCoverImageSelect}
                         />
                         <label htmlFor="cover-upload" className="cursor-pointer flex flex-col items-center justify-center gap-2 w-full h-full">
                             {coverPreview ? (
@@ -375,6 +411,15 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
                 </div>
 
             </Card>
+
+            {/* Image Cropper Modal */}
+            {isCropping && imageToCrop && (
+                <ImageCropper
+                    image={imageToCrop}
+                    onCropComplete={handleCropComplete}
+                    onCancel={handleCropCancel}
+                />
+            )}
         </div>
     );
 };
