@@ -44,15 +44,18 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
 
     const updateUserRole = async (userId: string, newRole: string) => {
         setLoadingAction(userId);
-        const { error } = await supabase
-            .from('profiles')
-            .update({ role: newRole })
-            .eq('id', userId);
+
+        const { error } = await supabase.rpc('set_user_role', {
+            target_user_id: userId,
+            new_role: newRole
+        });
 
         if (!error) {
             setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+            showToast("Função atualizada com sucesso.", "success");
         } else {
-            alert("Erro ao atualizar: " + error.message);
+            console.error(error);
+            showToast("Erro ao atualizar: " + error.message, "error");
         }
         setLoadingAction(null);
     };

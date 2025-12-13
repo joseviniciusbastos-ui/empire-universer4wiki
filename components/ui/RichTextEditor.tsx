@@ -108,6 +108,30 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         imageResize: {
             parchment: ReactQuillComponent?.Quill?.import('parchment'),
             modules: ['Resize', 'DisplaySize']
+        },
+        keyboard: {
+            bindings: {
+                imageBackspace: {
+                    key: 8, // Backspace
+                    collapsed: false,
+                    format: ['image'],
+                    handler: function (range: any) {
+                        if (this.quill) {
+                            this.quill.deleteText(range.index, range.length);
+                        }
+                    }
+                },
+                imageDelete: {
+                    key: 46, // Delete
+                    collapsed: false,
+                    format: ['image'],
+                    handler: function (range: any) {
+                        if (this.quill) {
+                            this.quill.deleteText(range.index, range.length);
+                        }
+                    }
+                }
+            }
         }
     }), [ReactQuillComponent]);
 
