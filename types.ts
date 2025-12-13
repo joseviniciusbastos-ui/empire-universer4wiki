@@ -30,6 +30,7 @@ export interface Post {
   category: string;
   authorId: string;
   authorName: string;
+  authorReputation?: number; // Added
   slug: string;
   tags: string[];
   likes: number;
@@ -65,6 +66,9 @@ export interface DB_Post {
   views: number;
   created_at: string;
   updated_at?: string;
+  profiles?: {
+    reputation: number;
+  };
 }
 
 export interface Comment {

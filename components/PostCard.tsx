@@ -2,6 +2,7 @@ import React from 'react';
 import { User as UserIcon } from 'lucide-react';
 import { Card, Badge } from './ui/Shared';
 import { ReactionButton } from './ui/ReactionButton';
+import { ReputationBadge } from './ui/ReputationBadge';
 import { Post, PostType, User } from '../types';
 
 interface PostCardProps {
@@ -75,6 +76,9 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onClick, currentUser, 
                             }}
                         >
                             <UserIcon size={12} /> {post.authorName}
+                            <div className="ml-1">
+                                <ReputationBadge reputation={post.authorReputation || 0} size="sm" showTitle={false} />
+                            </div>
                         </div>
                         <div onClick={(e) => e.stopPropagation()}>
                             <ReactionButton

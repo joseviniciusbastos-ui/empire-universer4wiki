@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './lib/supabase';
-import { CURRENT_USER, CATEGORIES } from './constants';
+import { CATEGORIES } from './constants';
 import { Post, PostType, DB_Post } from './types';
 import { CacheManager, debounce } from './lib/cache';
 import Terminal from './components/Terminal';
@@ -111,13 +111,13 @@ export default function App() {
     setIsLoading(true);
     const { data, error } = await supabase
       .from('posts')
-      .select('*')
+      .select('*, profiles(reputation)')
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error("Error fetching posts:", error);
     } else if (data) {
-      const mappedPosts: Post[] = data.map((dbPost: DB_Post) => ({
+      const mappedPosts: Post[] = data.map((dbPost: DB_Post | any) => ({
         id: dbPost.id.toString(),
         type: dbPost.type,
         title: dbPost.title,
@@ -125,6 +125,7 @@ export default function App() {
         category: dbPost.category,
         authorId: dbPost.author_id,
         authorName: dbPost.author_name,
+        authorReputation: dbPost.profiles?.reputation || 0,
         slug: dbPost.slug,
         tags: dbPost.tags || [],
         likes: dbPost.likes,
@@ -307,7 +308,8 @@ export default function App() {
         <WikiView
           posts={filteredPosts}
           categories={appCategories[PostType.WIKI]}
-          onCategoryClick={applySearch}
+          activeCategory={searchFilters.category}
+          onCategoryClick={(cat) => setSearchFilters(prev => ({ ...prev, category: cat === searchFilters.category ? 'all' : cat }))}
           onCreateClick={() => openCreateModal(PostType.WIKI)}
           onPostClick={openPostView}
           currentUser={currentUser}

@@ -134,17 +134,35 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                                 <div className="flex items-center gap-4">
                                     <div className="flex flex-col items-end gap-1">
                                         <span className="text-[10px] text-space-muted uppercase">Nível de Acesso</span>
-                                        <select
-                                            className="bg-space-dark border border-space-steel rounded px-2 py-1 text-xs font-mono text-white focus:border-space-neon outline-none"
-                                            value={user.role}
-                                            onChange={(e) => updateUserRole(user.id, e.target.value)}
-                                            disabled={loadingAction === user.id}
-                                        >
-                                            <option value="USER">USER</option>
-                                            <option value="MODERATOR">MODERATOR</option>
-                                            <option value="CREATOR">CREATOR</option>
-                                            <option value="ADMIN">ADMIN</option>
-                                        </select>
+                                        <div className="flex gap-2 items-center">
+                                            <select
+                                                className="bg-space-dark border border-space-steel rounded px-2 py-1 text-xs font-mono text-white focus:border-space-neon outline-none"
+                                                defaultValue={user.role}
+                                                id={`role-select-${user.id}`}
+                                            >
+                                                <option value="USER">USER</option>
+                                                <option value="MODERATOR">MODERATOR</option>
+                                                <option value="CREATOR">CREATOR</option>
+                                                <option value="ADMIN">ADMIN</option>
+                                            </select>
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                onClick={() => {
+                                                    const select = document.getElementById(`role-select-${user.id}`) as HTMLSelectElement;
+                                                    const newRole = select.value;
+                                                    if (newRole !== user.role) {
+                                                        if (confirm(`ATENÇÃO: Você está prestes a alterar o nível de acesso de ${user.username} para ${newRole}.\n\nIsso pode conceder privilégios administrativos e alterar a reputação base.\n\nConfirma a operação?`)) {
+                                                            updateUserRole(user.id, newRole);
+                                                        }
+                                                    }
+                                                }}
+                                                disabled={loadingAction === user.id}
+                                                className="h-6 px-2"
+                                            >
+                                                <Save size={12} />
+                                            </Button>
+                                        </div>
                                     </div>
                                     {loadingAction === user.id && <div className="w-4 h-4 rounded-full border-2 border-space-neon border-t-transparent animate-spin"></div>}
                                 </div>

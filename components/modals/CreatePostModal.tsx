@@ -22,7 +22,7 @@ interface CreatePostModalProps {
 const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, postType, currentUser, onPostCreated, initialData, availableCategories }) => {
     const { showToast } = useToast();
     const [title, setTitle] = useState('');
-    const [category, setCategory] = useState(availableCategories[0] || '');
+    const [category, setCategory] = useState(''); // Force manual selection
     const [content, setContent] = useState('');
     const [tags, setTags] = useState<string[]>([]);
     const [newTag, setNewTag] = useState('');
@@ -132,8 +132,8 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
                 // because the component stays mounted (returns null) and retains old state.
                 if (!hasSavedDraft) {
                     setTitle('');
-                    // Keep availableCategories[0] or empty
-                    setCategory(availableCategories[0] || '');
+                    // Force selection
+                    setCategory('');
                     setContent('');
                     setTags([]);
                     setCoverImage(null);
@@ -200,7 +200,12 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
 
     const handleCreatePost = async () => {
         if (!title || !content || !currentUser) {
-            alert("Preencha título e conteúdo.");
+            showToast("Preencha título e conteúdo.", "error");
+            return;
+        }
+
+        if (!category) {
+            showToast("Selecione uma categoria para a transmissão.", "error");
             return;
         }
 
@@ -236,7 +241,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
 
                 // If we have a cover image, prepend it to content
                 if (finalCoverUrl) {
-                    finalContent = `<img src="${finalCoverUrl}" alt="Cover" class="w-full h-64 object-cover rounded-md mb-6" />` + finalContent;
+                    finalContent = `<img src="${finalCoverUrl}" alt="Cover" class="w-full h-64 object-cover rounded-md mb-6" />` + finalContent; // Note: This might duplicate if content already has it via editor, but regex extraction usually cleans it for preview. For editing, we stripped it in useEffect.
                 }
 
                 const { error } = await supabase
@@ -244,7 +249,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
                     .update({
                         title,
                         content: finalContent,
-                        category: category || 'Geral',
+                        category: category,
                         tags: tags,
                         updated_at: new Date().toISOString()
                     })
@@ -266,7 +271,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
                         type: postType,
                         title,
                         content: finalContent,
-                        category: category || 'Geral',
+                        category: category,
                         author_id: currentUser.id,
                         author_name: currentUser.username,
                         slug,

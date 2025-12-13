@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Badge } from '../ui/Shared';
+import { ReputationBadge } from '../ui/ReputationBadge';
 import { User, Post, PostType } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { PostCard } from '../PostCard';
@@ -21,9 +22,9 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId, on
             try {
                 // Fetch User Profile
                 // Note: user_profiles table is "users" in public schema? Check types.ts or Supabase usage.
-                // Assuming 'users' table based on AuthContext logic
+                // Fetch User Profile
                 const { data: userData, error: userError } = await supabase
-                    .from('users')
+                    .from('profiles') // Fixed table name
                     .select('*')
                     .eq('id', userId)
                     .single();
@@ -48,6 +49,7 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId, on
                     category: dbPost.category,
                     authorId: dbPost.author_id,
                     authorName: dbPost.author_name,
+                    authorReputation: userData.reputation, // Pass author reputation
                     slug: dbPost.slug,
                     tags: dbPost.tags || [],
                     likes: dbPost.likes,
@@ -108,7 +110,10 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId, on
                     <div className="flex-1 text-center md:text-left space-y-3 pt-2">
                         <div>
                             <h2 className="text-4xl font-display font-bold text-white tracking-wide mb-2">{profile.username}</h2>
-                            <Badge color="bg-space-neon text-black font-bold tracking-widest">{profile.role}</Badge>
+                            <div className="flex gap-2 items-center">
+                                <Badge color="bg-space-neon text-black font-bold tracking-widest">{profile.role}</Badge>
+                                <ReputationBadge reputation={profile.reputation} size="md" />
+                            </div>
                         </div>
                         <p className="font-mono text-space-muted text-sm italic leading-relaxed max-w-2xl border-l-2 border-space-steel pl-4">
                             "{profile.bio || 'Sem dados biográficos.'}"

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Wrench } from 'lucide-react';
 import { Button, Badge } from '../ui/Shared';
+import { ReputationBadge } from '../ui/ReputationBadge';
 import { User } from '../../types';
 
 interface ProfileViewProps {
@@ -34,7 +35,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onEditPro
                                     <img src={currentUser.avatarUrl} className="w-full h-full object-cover rounded-full grayscale group-hover:grayscale-0 transition-all duration-500" />
                                 </div>
                                 <div className="absolute bottom-2 right-2 bg-space-black border border-space-neon rounded-full px-2 py-0.5 shadow-lg">
-                                    <span className="text-[10px] font-bold text-space-neon">LVL {currentUser.reputation > 100 ? '99' : '1'}</span>
+                                    <ReputationBadge reputation={currentUser.reputation} size="sm" showTitle={false} />
                                 </div>
                             </div>
 
@@ -47,8 +48,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onEditPro
                         <div className="flex-1 text-center md:text-left space-y-4 pt-2">
                             <div>
                                 <h2 className="text-5xl font-display font-bold text-white tracking-wide mb-2 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{currentUser.username}</h2>
-                                <div className="flex justify-center md:justify-start">
+                                <div className="flex justify-center md:justify-start gap-2 items-center">
                                     <Badge color="bg-space-neon text-black font-bold tracking-widest">{currentUser.role}</Badge>
+                                    <ReputationBadge reputation={currentUser.reputation} size="md" />
                                 </div>
                             </div>
 
