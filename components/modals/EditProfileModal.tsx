@@ -114,6 +114,17 @@ export default function EditProfileModal({ isOpen, onClose, currentUser, onUpdat
                                         <img src={avatarUrl} className="w-full h-full object-cover" onError={(e) => e.currentTarget.src = 'https://via.placeholder.com/150'} alt="Avatar" />
                                     </div>
                                     <Input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://..." className="flex-1" />
+                                    {avatarUrl && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setAvatarUrl('')}
+                                            className="text-space-muted hover:text-red-500"
+                                            title="Remover Imagem"
+                                        >
+                                            <X size={18} />
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                             <div>
