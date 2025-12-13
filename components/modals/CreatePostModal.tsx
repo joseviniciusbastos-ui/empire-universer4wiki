@@ -345,36 +345,31 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
                             className="hidden"
                             onChange={handleCoverImageSelect}
                         />
-                        <label htmlFor="cover-upload" className="cursor-pointer flex flex-col items-center justify-center gap-2 w-full h-full">
-                            {coverPreview ? (
-                                <div className="relative w-full h-40 group">
-                                    <img src={coverPreview} alt="Preview" className="w-full h-full object-cover rounded border border-space-neon/50" />
 
-                                    {/* Overlay for actions */}
-                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity gap-4">
-                                        <span className="text-white font-mono text-xs flex items-center gap-2 cursor-pointer hover:text-space-neon transition-colors">
-                                            <ImageIcon size={16} /> Alterar
-                                        </span>
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                handleRemoveCoverImage();
-                                            }}
-                                            className="text-white hover:text-red-500 font-mono text-xs flex items-center gap-2 p-2 rounded hover:bg-white/10 transition-colors"
-                                        >
-                                            <Trash2 size={16} /> Remover
-                                        </button>
-                                    </div>
+                        {coverPreview ? (
+                            <div className="relative w-full h-40 group">
+                                <img src={coverPreview} alt="Preview" className="w-full h-full object-cover rounded border border-space-neon/50" />
+
+                                {/* Overlay for actions */}
+                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity gap-4">
+                                    <label htmlFor="cover-upload" className="text-white font-mono text-xs flex items-center gap-2 cursor-pointer hover:text-space-neon transition-colors p-2 rounded hover:bg-white/10">
+                                        <ImageIcon size={16} /> Alterar
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={handleRemoveCoverImage}
+                                        className="text-white hover:text-red-500 font-mono text-xs flex items-center gap-2 p-2 rounded hover:bg-white/10 transition-colors z-20"
+                                    >
+                                        <Trash2 size={16} /> Remover
+                                    </button>
                                 </div>
-                            ) : (
-                                <>
-                                    <UploadCloud size={32} className="text-space-muted group-hover:text-space-neon" />
-                                    <p className="text-xs text-space-muted font-mono">Arraste ou clique para adicionar CAPA DA TRANSMISSÃO</p>
-                                </>
-                            )}
-                        </label>
+                            </div>
+                        ) : (
+                            <label htmlFor="cover-upload" className="cursor-pointer flex flex-col items-center justify-center gap-2 w-full h-full">
+                                <UploadCloud size={32} className="text-space-muted group-hover:text-space-neon" />
+                                <p className="text-xs text-space-muted font-mono">Arraste ou clique para adicionar CAPA DA TRANSMISSÃO</p>
+                            </label>
+                        )}
                     </div>
 
                     {/* Rich Text Editor */}
