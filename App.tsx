@@ -202,7 +202,9 @@ export default function App() {
     setIsPostViewOpen(true);
   };
 
-  const handlePostDelete = (deletedPostId: string) => {
+  const handlePostDelete = async (deletedPostId: string) => {
+    const { error } = await supabase.from('posts').delete().eq('id', deletedPostId);
+    if (error) throw error;
     setPosts(posts.filter(p => p.id !== deletedPostId));
     CacheManager.clearPosts();
   };

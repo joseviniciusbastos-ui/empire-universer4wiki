@@ -104,12 +104,26 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
                 // Editing mode - load post data
                 setTitle(initialData.title);
                 setCategory(initialData.category);
-                setContent(initialData.content);
                 setTags(initialData.tags);
-                // Note: Editing existing cover image is complex as we need to support URL vs File. 
-                // For now, we don't prepopulate the file input for existing remote images, 
-                // but we could show the existing one if we handled it in state. 
-                // (Assuming current implementation doesn't support viewing/deleting existing remote cover in this precise flow yet, relying on content embedded image).
+
+                // Handle Cover Image Extraction
+                // We look for the specific pattern we use to save covers: <img src="..." alt="Cover" ... />
+                // Note: The class list must match what we save: w-full h-64 object-cover rounded-md mb-6
+                // We use a looser regex for robustness, looking for alt="Cover" at the start.
+                const content = initialData.content;
+                const coverRegex = /<img src="([^"]+)" alt="Cover" class="[^"]+" \/>/;
+                const match = content.match(coverRegex);
+
+                if (match) {
+                    setCoverPreview(match[1]); // The URL
+                    setContent(content.replace(match[0], '')); // Remove from editor content to avoid duplication
+                } else {
+                    setCoverPreview(null);
+                    setContent(content);
+                }
+
+                // Reset file input (as it's a remote URL now)
+                setCoverImage(null);
             } else {
                 const hasSavedDraft = loadDraft();
                 setHasDraft(hasSavedDraft);
@@ -217,9 +231,12 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
             if (initialData) {
                 // UPDATE EXISTING POST
                 let finalContent = content;
-                // If uploading new cover, prepend it. If not, keep content as is (assuming old cover is part of content HTML)
-                if (coverUrl) {
-                    finalContent = `<img src="${coverUrl}" alt="Cover" class="w-full h-64 object-cover rounded-md mb-6" />` + finalContent;
+                // Determine final cover URL: New upload OR existing remote preview
+                const finalCoverUrl = coverUrl || (coverPreview && !coverPreview.startsWith('blob:') ? coverPreview : null);
+
+                // If we have a cover image, prepend it to content
+                if (finalCoverUrl) {
+                    finalContent = `<img src="${finalCoverUrl}" alt="Cover" class="w-full h-64 object-cover rounded-md mb-6" />` + finalContent;
                 }
 
                 const { error } = await supabase
