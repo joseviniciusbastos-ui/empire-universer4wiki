@@ -97,7 +97,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
         }
     };
 
-    // Load draft OR initial data when modal opens
+    // Load draft OR initial data AND reset state when modal opens
     useEffect(() => {
         if (isOpen) {
             if (initialData) {
@@ -106,10 +106,29 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
                 setCategory(initialData.category);
                 setContent(initialData.content);
                 setTags(initialData.tags);
+                // Note: Editing existing cover image is complex as we need to support URL vs File. 
+                // For now, we don't prepopulate the file input for existing remote images, 
+                // but we could show the existing one if we handled it in state. 
+                // (Assuming current implementation doesn't support viewing/deleting existing remote cover in this precise flow yet, relying on content embedded image).
             } else {
                 const hasSavedDraft = loadDraft();
                 setHasDraft(hasSavedDraft);
+
+                // CRITICAL FIX: If no draft was found, we MUST reset the state
+                // because the component stays mounted (returns null) and retains old state.
+                if (!hasSavedDraft) {
+                    setTitle('');
+                    // Keep availableCategories[0] or empty
+                    setCategory(availableCategories[0] || '');
+                    setContent('');
+                    setTags([]);
+                    setCoverImage(null);
+                    setCoverPreview(null);
+                    setLastSaved(null);
+                }
             }
+        } else {
+            // Optional: Reset on close to be safe, but mostly handled on open.
         }
     }, [isOpen, postType, initialData]);
 
@@ -413,11 +432,20 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
                 </div>
 
                 {/* Footer */}
-                <div className="border-t border-space-steel pt-4 mt-4 flex justify-end gap-3">
-                    <Button variant="ghost" onClick={onClose}>CANCELAR</Button>
-                    <Button variant="primary" onClick={handleCreatePost} disabled={isLoading}>
-                        {isLoading ? 'TRANSMITINDO...' : (initialData ? 'ATUALIZAR DADOS' : 'ENVIAR TRANSMISSÃO')}
-                    </Button>
+                <div className="border-t border-space-steel pt-4 mt-4 flex justify-between gap-3">
+                    <div>
+                        {(title || content || tags.length > 0 || coverImage) && (
+                            <Button variant="ghost" className="text-red-500 hover:bg-red-500/10 hover:text-red-400" onClick={discardDraft}>
+                                <Trash2 size={16} className="mr-2" /> Descartar
+                            </Button>
+                        )}
+                    </div>
+                    <div className="flex gap-3">
+                        <Button variant="ghost" onClick={handleClose}>SALVAR RASCUNHO & SAIR</Button>
+                        <Button variant="primary" onClick={handleCreatePost} disabled={isLoading}>
+                            {isLoading ? 'TRANSMITINDO...' : (initialData ? 'ATUALIZAR DADOS' : 'ENVIAR TRANSMISSÃO')}
+                        </Button>
+                    </div>
                 </div>
 
             </Card>
