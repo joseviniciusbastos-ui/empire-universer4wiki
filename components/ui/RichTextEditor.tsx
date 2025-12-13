@@ -117,6 +117,15 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                     format: ['image'],
                     handler: function (range: any) {
                         if (this.quill) {
+                            // 1. Remove selection to potentially help the resize module detach
+                            this.quill.setSelection(null);
+                            // 2. Schedule deletion in next tick to allow module to cleanup focus/overlay?
+                            // Or simplier: just delete. The crash usually happens because the module hooks into update
+                            // and finds that the image node is gone.
+                            // WORKAROUND: We manually remove the image resize overlay if present in DOM
+                            const overlays = document.querySelectorAll('[class^="pe-image-resize-"]'); // Potential selectors
+                            overlays.forEach(el => el.remove());
+
                             this.quill.deleteText(range.index, range.length);
                         }
                     }
@@ -127,6 +136,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                     format: ['image'],
                     handler: function (range: any) {
                         if (this.quill) {
+                            this.quill.setSelection(null);
                             this.quill.deleteText(range.index, range.length);
                         }
                     }

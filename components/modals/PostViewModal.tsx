@@ -68,6 +68,7 @@ const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, cu
         try {
             await onDeleteConfirmed(post.id);
             // Parent component handles closing the modal and state update
+            onClose(); // Explicitly close modal to be safe/navigate back
         } catch (error: any) {
             console.error('Error deleting post:', error);
             showToast('Erro ao excluir post: ' + (error.message || 'Erro desconhecido'), 'error');
