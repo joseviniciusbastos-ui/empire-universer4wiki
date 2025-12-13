@@ -22,21 +22,21 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     const quillRef = useRef<any>(null);
     const [ReactQuillComponent, setReactQuillComponent] = useState<any>(null);
 
-    // Dynamic import for React Quill and ImageResize module
+    // Dynamic import for React Quill and Blot Formatter
     useEffect(() => {
         const loadQuill = async () => {
             const quillModule = await import('react-quill');
             const Quill = quillModule.default.Quill;
 
-            // Register image resize module
+            // Register blot formatter
             try {
                 // Check if already registered to avoid warning
-                if (!(Quill as any).imports['modules/imageResize']) {
-                    const ImageResize = (await import('quill-image-resize-module-react')).default;
-                    Quill.register('modules/imageResize', ImageResize);
+                if (!(Quill as any).imports['modules/blotFormatter']) {
+                    const BlotFormatter = (await import('quill-blot-formatter')).default;
+                    Quill.register('modules/blotFormatter', BlotFormatter);
                 }
             } catch (e) {
-                console.error('Failed to load image resize module:', e);
+                console.error('Failed to load blot formatter:', e);
             }
 
             setReactQuillComponent(() => quillModule.default);
@@ -105,55 +105,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 image: imageHandler
             }
         },
-        imageResize: {
-            parchment: ReactQuillComponent?.Quill?.import('parchment'),
-            modules: ['Resize', 'DisplaySize']
-        },
-        keyboard: {
-            bindings: {
-                imageBackspace: {
-                    key: 8, // Backspace
-                    collapsed: false,
-                    format: ['image'],
-                    handler: function (range: any) {
-                        if (this.quill) {
-                            // Clear selection first to trigger 'blur' on the image
-                            this.quill.setSelection(null);
-
-                            // Remove hacks from DOM
-                            const overlays = document.querySelectorAll('[class*="image-resize"]');
-                            overlays.forEach(el => el.remove());
-
-                            // Wait for next tick to ensure event listeners don't fire on a dead element
-                            setTimeout(() => {
-                                if (this.quill) {
-                                    this.quill.deleteText(range.index, range.length);
-                                }
-                            }, 50);
-                        }
-                    }
-                },
-                imageDelete: {
-                    key: 46, // Delete
-                    collapsed: false,
-                    format: ['image'],
-                    handler: function (range: any) {
-                        if (this.quill) {
-                            this.quill.setSelection(null);
-
-                            const overlays = document.querySelectorAll('[class*="image-resize"]');
-                            overlays.forEach(el => el.remove());
-
-                            setTimeout(() => {
-                                if (this.quill) {
-                                    this.quill.deleteText(range.index, range.length);
-                                }
-                            }, 50);
-                        }
-                    }
-                }
-            }
-        }
+        blotFormatter: {}
     }), [ReactQuillComponent]);
 
     const handlePaste = async (e: React.ClipboardEvent) => {
