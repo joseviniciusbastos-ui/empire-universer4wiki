@@ -70,7 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, view, setVi
                                 <div className="bg-space-darker rounded border border-space-steel p-3">
                                     <div className="flex justify-between text-xs text-space-muted mb-1">
                                         <span>REPUTAÇÃO</span>
-                                        <span>NÍVEL {currentUser.reputation > 100 ? '99' : '1'}</span>
+                                        <span className="text-space-neon font-bold uppercase">{currentUser.rank || 'Civil'}</span>
                                     </div>
                                     <div className="w-full bg-space-steel h-1 rounded-full overflow-hidden">
                                         <div className="bg-space-neon h-full w-[45%]"></div>

@@ -107,6 +107,15 @@ export default function EditProfileModal({ isOpen, onClose, currentUser, onUpdat
                 <div className="flex-1 p-6 overflow-y-auto max-h-[80vh]">
                     {activeTab === 'profile' ? (
                         <div className="space-y-4">
+                            <div className="bg-space-dark/30 p-3 rounded border border-space-steel flex justify-between items-center mb-2">
+                                <span className="text-xs text-space-muted font-mono uppercase">Patente Atual</span>
+                                <span className="text-space-neon font-bold font-display uppercase tracking-widest text-sm flex items-center gap-2">
+                                    {currentUser?.rank || 'Civil / Recruta'}
+                                    <span className="text-[10px] text-space-muted font-mono bg-black/50 px-2 py-0.5 rounded">
+                                        {currentUser?.reputation || 0} PTS
+                                    </span>
+                                </span>
+                            </div>
                             <div>
                                 <label className="text-xs text-space-muted uppercase mb-2 block">Avatar URL</label>
                                 <div className="flex gap-2">

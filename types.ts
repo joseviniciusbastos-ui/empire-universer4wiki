@@ -13,6 +13,7 @@ export interface User {
   reputation: number;
   bio?: string;
   joinedAt: string;
+  rank?: string;
 }
 
 export enum PostType {
@@ -31,6 +32,7 @@ export interface Post {
   authorId: string;
   authorName: string;
   authorReputation?: number; // Added
+  authorRank?: string; // Added
   slug: string;
   tags: string[];
   likes: number;
@@ -72,6 +74,7 @@ export interface DB_Post {
   last_edited_by_name?: string;
   profiles?: {
     reputation: number;
+    rank: string;
   };
 }
 

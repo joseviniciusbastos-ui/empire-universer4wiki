@@ -112,6 +112,11 @@ const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, cu
                                     <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=${post.authorName}`} alt="avatar" />
                                 </div>
                                 <span className="text-space-text">{post.authorName}</span>
+                                {post.authorRank && (
+                                    <span className="text-[9px] text-space-neon border border-space-neon/30 px-1 rounded uppercase min-w-max">
+                                        {post.authorRank}
+                                    </span>
+                                )}
                             </div>
                             <div className="flex flex-col gap-1">
                                 <span className="flex items-center gap-1">

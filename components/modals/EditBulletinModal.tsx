@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Card, Badge } from '../ui/Shared';
-import { X, Save, Plus, Trash, AlertTriangle, Info } from 'lucide-react';
+import { Button, Input, Card } from '../ui/Shared';
+import { X, Save, Plus, Trash, AlertTriangle, Info, ChevronRight } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 import { BulletinItem } from '../../types';
+import { RichTextEditor } from '../ui/RichTextEditor';
 
 interface EditBulletinModalProps {
     isOpen: boolean;
@@ -14,26 +15,36 @@ interface EditBulletinModalProps {
 const EditBulletinModal: React.FC<EditBulletinModalProps> = ({ isOpen, onClose, currentBulletins, onSave }) => {
     const { showToast } = useToast();
     const [bulletins, setBulletins] = useState<BulletinItem[]>(currentBulletins || []);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
     // Sync state with props when they change
     useEffect(() => {
         setBulletins(currentBulletins || []);
+        if (currentBulletins && currentBulletins.length > 0 && !selectedId) {
+            setSelectedId(currentBulletins[0].id);
+        }
     }, [currentBulletins]);
 
     const handleAdd = () => {
         const newItem: BulletinItem = {
             id: Date.now().toString(),
-            title: '',
+            title: 'Novo Comunicado',
             content: '',
             type: 'info',
             createdAt: new Date().toISOString()
         };
         setBulletins([...bulletins, newItem]);
+        setSelectedId(newItem.id);
     };
 
-    const handleRemove = (id: string) => {
-        setBulletins(bulletins.filter(b => b.id !== id));
+    const handleRemove = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        const newBulletins = bulletins.filter(b => b.id !== id);
+        setBulletins(newBulletins);
+        if (selectedId === id) {
+            setSelectedId(newBulletins.length > 0 ? newBulletins[0].id : null);
+        }
     };
 
     const handleChange = (id: string, field: keyof BulletinItem, value: string) => {
@@ -64,95 +75,134 @@ const EditBulletinModal: React.FC<EditBulletinModalProps> = ({ isOpen, onClose, 
 
     if (!isOpen) return null;
 
+    const selectedItem = bulletins.find(b => b.id === selectedId);
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <Card className="w-full max-w-4xl bg-space-black border-lime-500 shadow-[0_0_50px_rgba(132,204,22,0.15)] flex flex-col h-[85vh]">
+            <Card className="w-full max-w-5xl bg-space-black border-lime-500 shadow-[0_0_50px_rgba(132,204,22,0.15)] flex flex-col h-[85vh] overflow-hidden">
 
                 {/* Header */}
-                <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-4">
-                    <h2 className="text-2xl font-display font-bold text-lime-400 uppercase">EDITOR DE BOLETIM OFICIAL</h2>
-                    <button onClick={onClose} className="text-space-muted hover:text-white p-2">
-                        <X size={24} />
-                    </button>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-                    <div className="flex justify-end">
-                        <Button variant="ghost" onClick={handleAdd} className="border border-space-neon text-space-neon hover:bg-space-neon hover:text-black">
-                            <Plus size={16} className="mr-2" /> ADICIONAR ITEM
+                <div className="flex justify-between items-center p-4 border-b border-white/10 bg-space-dark/20">
+                    <h2 className="text-xl font-display font-bold text-lime-400 uppercase tracking-wider">EDITOR DE BOLETIM OFICIAL</h2>
+                    <div className="flex gap-2">
+                        <Button variant="ghost" onClick={onClose}>CANCELAR</Button>
+                        <Button variant="primary" onClick={handleSave} disabled={isLoading} className="bg-lime-500 hover:bg-lime-600 text-black border-none font-bold">
+                            <Save size={16} className="mr-2" />
+                            {isLoading ? 'SALVANDO...' : 'SALVAR ALTERAÇÕES'}
                         </Button>
                     </div>
+                </div>
 
-                    <div className="space-y-4">
-                        {bulletins.length === 0 && (
-                            <div className="text-center py-10 text-space-muted font-mono border border-dashed border-white/20 rounded">
-                                Nenhum item no boletim. Adicione um novo item acima.
-                            </div>
-                        )}
-                        {bulletins.map((item, index) => (
-                            <div key={item.id} className="bg-white/5 border border-white/10 p-4 rounded-lg relative group">
-                                <button
-                                    onClick={() => handleRemove(item.id)}
-                                    className="absolute top-2 right-2 text-red-500 hover:bg-red-500/10 p-2 rounded opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity"
+                {/* Content - Split View */}
+                <div className="flex-1 flex overflow-hidden">
+
+                    {/* Sidebar List */}
+                    <div className="w-1/3 border-r border-white/10 flex flex-col bg-space-dark/10">
+                        <div className="p-4 border-b border-white/5">
+                            <Button variant="ghost" onClick={handleAdd} className="w-full border border-space-neon text-space-neon hover:bg-space-neon hover:text-black justify-center">
+                                <Plus size={16} className="mr-2" /> NOVO ITEM
+                            </Button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                            {bulletins.length === 0 && (
+                                <div className="text-center py-10 text-space-muted font-mono text-xs italic">
+                                    Lista vazia.
+                                </div>
+                            )}
+                            {bulletins.map(item => (
+                                <div
+                                    key={item.id}
+                                    onClick={() => setSelectedId(item.id)}
+                                    className={`p-3 rounded cursor-pointer border transition-all group relative ${selectedId === item.id
+                                            ? 'bg-lime-500/10 border-lime-500'
+                                            : 'bg-white/5 border-transparent hover:bg-white/10'
+                                        }`}
                                 >
-                                    <Trash size={16} />
-                                </button>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] uppercase text-space-muted">Título</label>
-                                        <Input
-                                            value={item.title}
-                                            onChange={(e) => handleChange(item.id, 'title', e.target.value)}
-                                            placeholder="Título do alerta ou notícia"
-                                        />
+                                    <div className="flex justify-between items-start mb-1">
+                                        <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${item.type === 'alert' ? 'text-red-400 border-red-400/30' : 'text-blue-400 border-blue-400/30'
+                                            }`}>
+                                            {item.type === 'alert' ? 'ALERTA' : 'INFO'}
+                                        </div>
+                                        <button
+                                            onClick={(e) => handleRemove(item.id, e)}
+                                            className="text-space-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <Trash size={14} />
+                                        </button>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] uppercase text-space-muted">Tipo</label>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => handleChange(item.id, 'type', 'info')}
-                                                className={`flex-1 p-2 rounded border text-sm font-mono flex items-center justify-center gap-2 transition-all ${item.type === 'info'
-                                                        ? 'bg-space-neon/20 border-space-neon text-space-neon'
-                                                        : 'bg-transparent border-white/20 text-space-muted hover:border-white/50'
-                                                    }`}
-                                            >
-                                                <Info size={14} /> INFO
-                                            </button>
-                                            <button
-                                                onClick={() => handleChange(item.id, 'type', 'alert')}
-                                                className={`flex-1 p-2 rounded border text-sm font-mono flex items-center justify-center gap-2 transition-all ${item.type === 'alert'
-                                                        ? 'bg-red-500/20 border-red-500 text-red-500'
-                                                        : 'bg-transparent border-white/20 text-space-muted hover:border-white/50'
-                                                    }`}
-                                            >
-                                                <AlertTriangle size={14} /> ALERTA
-                                            </button>
+                                    <p className={`text-sm font-bold truncate ${selectedId === item.id ? 'text-white' : 'text-space-muted'}`}>
+                                        {item.title || 'Sem título'}
+                                    </p>
+                                    <p className="text-[10px] text-space-muted truncate mt-1 opacity-60">
+                                        {new Date(item.createdAt).toLocaleDateString()}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Main Editor Area */}
+                    <div className="flex-1 flex flex-col bg-space-black relative">
+                        {selectedItem ? (
+                            <div className="flex-1 flex flex-col h-full overflow-hidden">
+                                <div className="p-6 space-y-4 overflow-y-auto flex-1">
+
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div className="col-span-2 space-y-2">
+                                            <label className="text-[10px] uppercase text-space-muted font-mono">Título</label>
+                                            <Input
+                                                value={selectedItem.title}
+                                                onChange={(e) => handleChange(selectedItem.id, 'title', e.target.value)}
+                                                placeholder="Título do alerta ou notícia"
+                                                className="font-bold text-lg"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] uppercase text-space-muted font-mono">Prioridade</label>
+                                            <div className="flex rounded border border-white/10 overflow-hidden">
+                                                <button
+                                                    onClick={() => handleChange(selectedItem.id, 'type', 'info')}
+                                                    className={`flex-1 p-2 text-xs font-mono flex items-center justify-center gap-2 transition-colors ${selectedItem.type === 'info'
+                                                            ? 'bg-blue-500/20 text-blue-400 font-bold'
+                                                            : 'hover:bg-white/5 text-space-muted'
+                                                        }`}
+                                                >
+                                                    <Info size={12} /> INFO
+                                                </button>
+                                                <div className="w-[1px] bg-white/10" />
+                                                <button
+                                                    onClick={() => handleChange(selectedItem.id, 'type', 'alert')}
+                                                    className={`flex-1 p-2 text-xs font-mono flex items-center justify-center gap-2 transition-colors ${selectedItem.type === 'alert'
+                                                            ? 'bg-red-500/20 text-red-500 font-bold'
+                                                            : 'hover:bg-white/5 text-space-muted'
+                                                        }`}
+                                                >
+                                                    <AlertTriangle size={12} /> ALERTA
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="md:col-span-2 space-y-2">
-                                        <label className="text-[10px] uppercase text-space-muted">Conteúdo</label>
-                                        <textarea
-                                            value={item.content}
-                                            onChange={(e) => handleChange(item.id, 'content', e.target.value)}
-                                            placeholder="Descrição detalhada..."
-                                            className="w-full bg-space-black border border-space-steel rounded p-2 text-white focus:outline-none focus:border-space-neon h-20 resize-none font-mono text-sm"
+
+                                    <div className="flex-1 flex flex-col min-h-[400px]">
+                                        <label className="text-[10px] uppercase text-space-muted font-mono mb-2">Conteúdo Detalhado</label>
+                                        <RichTextEditor
+                                            value={selectedItem.content}
+                                            onChange={(val) => handleChange(selectedItem.id, 'content', val)}
+                                            placeholder="Escreva os detalhes..."
+                                            className="flex-1 h-full min-h-[300px]"
                                         />
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-space-muted opacity-50 p-10 text-center">
+                                <div className="p-4 rounded-full bg-white/5 mb-4">
+                                    <ChevronRight size={40} />
+                                </div>
+                                <p>Selecione um item à esquerda para editar<br />ou crie um novo comunicado.</p>
+                            </div>
+                        )}
                     </div>
-                </div>
-
-                {/* Footer */}
-                <div className="border-t border-white/10 pt-4 mt-4 flex justify-end gap-3">
-                    <Button variant="ghost" onClick={onClose}>CANCELAR</Button>
-                    <Button variant="primary" onClick={handleSave} disabled={isLoading} className="bg-lime-500 hover:bg-lime-600 text-black border-none">
-                        <Save size={16} className="mr-2" />
-                        {isLoading ? 'SALVANDO...' : 'SALVAR BOLETIM'}
-                    </Button>
                 </div>
             </Card>
         </div>

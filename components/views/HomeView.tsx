@@ -261,9 +261,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
                                             }`}>
                                             {item.title}
                                         </h4>
-                                        <p className="text-[10px] text-space-muted mt-1 leading-relaxed">
-                                            {item.content}
-                                        </p>
+                                        <div
+                                            className="text-[10px] text-space-muted mt-1 leading-relaxed prose prose-invert max-w-none prose-p:my-1 prose-headings:my-1 prose-ul:my-1"
+                                            dangerouslySetInnerHTML={{ __html: item.content }}
+                                        />
                                     </div>
                                 ))
                             )}
