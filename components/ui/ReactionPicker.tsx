@@ -17,7 +17,7 @@ export const ReactionPicker: React.FC<ReactionPickerProps> = ({ onSelect, curren
     ];
 
     return (
-        <div className="absolute bottom-full left-0 mb-2 p-2 bg-black/90 backdrop-blur-xl border border-space-neon/30 rounded-full shadow-[0_0_20px_rgba(0,194,255,0.3)] flex gap-2 animate-in slide-in-from-bottom-2 fade-in duration-200 z-50">
+        <div className="flex gap-1 p-1 bg-space-dark/95 backdrop-blur-xl border border-space-neon/20 rounded-full shadow-lg shadow-space-neon/10 animate-in zoom-in-50 duration-200 origin-bottom">
             {reactions.map((r) => (
                 <button
                     key={r.type}

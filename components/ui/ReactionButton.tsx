@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ThumbsUp, Rocket, Brain, Star, AlertTriangle, Heart } from 'lucide-react';
 import { Post, ReactionType } from '../../types';
 import { ReactionPicker } from './ReactionPicker';
@@ -15,7 +15,19 @@ interface ReactionButtonProps {
 export const ReactionButton: React.FC<ReactionButtonProps> = ({ post, currentUser, onReactionUpdate }) => {
     const [isHovering, setIsHovering] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const timeoutRef = useRef<NodeJS.Timeout>();
     const { showToast } = useToast();
+
+    const handleMouseEnter = () => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        if (!isLoading) setIsHovering(true);
+    };
+
+    const handleMouseLeave = () => {
+        timeoutRef.current = setTimeout(() => {
+            setIsHovering(false);
+        }, 500);
+    };
 
     // Mapping icons for display button
     const getReactionIcon = (type: ReactionType) => {
@@ -76,7 +88,7 @@ export const ReactionButton: React.FC<ReactionButtonProps> = ({ post, currentUse
                         post_id: post.id,
                         user_id: currentUser.id,
                         reaction_type: type
-                    });
+                    }, { onConflict: 'post_id, user_id' });
                 if (error) throw error;
             }
         } catch (error: any) {
@@ -97,14 +109,20 @@ export const ReactionButton: React.FC<ReactionButtonProps> = ({ post, currentUse
     return (
         <div
             className="relative inline-block"
-            onMouseEnter={() => !isLoading && setIsHovering(true)}
-            onMouseLeave={() => setIsHovering(false)}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
         >
             {isHovering && (
-                <ReactionPicker
-                    onSelect={handleReactionSelect}
-                    currentReaction={post.userReaction || undefined}
-                />
+                <div
+                    className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50"
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                >
+                    <ReactionPicker
+                        onSelect={handleReactionSelect}
+                        currentReaction={post.userReaction || undefined}
+                    />
+                </div>
             )}
 
             <Button
