@@ -88,7 +88,8 @@ export const ReactionButton: React.FC<ReactionButtonProps> = ({ post, currentUse
                         post_id: post.id,
                         user_id: currentUser.id,
                         reaction_type: type
-                    }, { onConflict: 'post_id, user_id' });
+                        reaction_type: type
+                    }, { onConflict: 'post_reactions_post_id_user_id_key' });
                 if (error) throw error;
             }
         } catch (error: any) {
@@ -114,7 +115,7 @@ export const ReactionButton: React.FC<ReactionButtonProps> = ({ post, currentUse
         >
             {isHovering && (
                 <div
-                    className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50"
+                    className="absolute bottom-full left-1/2 -translate-x-1/2 pb-2 z-50"
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
                 >
