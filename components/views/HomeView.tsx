@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, Badge, Button } from '../ui/Shared';
 import { Users, BookOpen, Clock, History, AlertTriangle, Star, Activity, ArrowRight, Zap, Edit3, Rocket } from 'lucide-react';
 import { PostCard } from '../PostCard';
-import { Post, User } from '../../types';
+import { Post, User, BulletinItem } from '../../types';
 
 interface HomeViewProps {
     stats: {
@@ -20,11 +20,14 @@ interface HomeViewProps {
     currentUser?: User | null;
     onEditAbout?: () => void;
     onAuthorClick?: (userId: string) => void;
+    bulletins?: BulletinItem[];
+    onEditBulletin?: () => void;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({
     stats, recentPosts, isLoading, onNavigate, onPostClick,
-    aboutTitle, aboutContent, currentUser, onEditAbout, onAuthorClick
+    aboutTitle, aboutContent, currentUser, onEditAbout, onAuthorClick,
+    bulletins = [], onEditBulletin
 }) => {
     const isAdmin = currentUser?.role === 'ADMIN';
 
@@ -229,22 +232,41 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     })()}
 
                     {/* Bulletin Board - Styled */}
-                    <div className="border border-space-steel/30 rounded-xl p-5 bg-gradient-to-br from-space-dark/50 to-transparent">
+                    <div className="border border-space-steel/30 rounded-xl p-5 bg-gradient-to-br from-space-dark/50 to-transparent relative group">
+                        {isAdmin && onEditBulletin && (
+                            <button
+                                onClick={onEditBulletin}
+                                className="absolute top-2 right-2 p-2 bg-space-black/50 hover:bg-space-neon/20 rounded-full text-space-muted hover:text-space-neon transition-all opacity-0 group-hover:opacity-100"
+                                title="Editar Boletim"
+                            >
+                                <Edit3 size={14} />
+                            </button>
+                        )}
                         <h3 className="font-display font-bold text-white uppercase text-sm mb-4 border-b border-space-steel/30 pb-2 flex justify-between">
                             <span>Boletim Oficial</span>
                             <span className="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
                         </h3>
                         <div className="space-y-4">
-                            <div className="relative pl-4 border-l-2 border-space-neon group cursor-pointer">
-                                <div className="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-space-neon group-hover:scale-150 transition-transform" />
-                                <h4 className="font-bold text-xs text-white group-hover:text-space-neon transition-colors">Atualização v2.4</h4>
-                                <p className="text-[10px] text-space-muted mt-1 leading-relaxed">Novos módulos de engenharia adicionados ao wiki. Verifique a compatibilidade.</p>
-                            </div>
-                            <div className="relative pl-4 border-l-2 border-space-alert group cursor-pointer">
-                                <div className="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-space-alert group-hover:scale-150 transition-transform" />
-                                <h4 className="font-bold text-xs text-white group-hover:text-space-alert transition-colors">Alerta de Tempestade Solar</h4>
-                                <p className="text-[10px] text-space-muted mt-1 leading-relaxed">Interferência nas comunicações esperada no setor 7. Protocolo Gama ativo.</p>
-                            </div>
+                            {bulletins.length === 0 ? (
+                                <p className="text-xs text-space-muted font-mono italic">
+                                    Nenhum comunicado oficial no momento.
+                                </p>
+                            ) : (
+                                bulletins.map(item => (
+                                    <div key={item.id} className={`relative pl-4 border-l-2 group cursor-pointer ${item.type === 'alert' ? 'border-space-alert' : 'border-space-neon'
+                                        }`}>
+                                        <div className={`absolute -left-[5px] top-0 w-2 h-2 rounded-full group-hover:scale-150 transition-transform ${item.type === 'alert' ? 'bg-space-alert' : 'bg-space-neon'
+                                            }`} />
+                                        <h4 className={`font-bold text-xs text-white transition-colors ${item.type === 'alert' ? 'group-hover:text-space-alert' : 'group-hover:text-space-neon'
+                                            }`}>
+                                            {item.title}
+                                        </h4>
+                                        <p className="text-[10px] text-space-muted mt-1 leading-relaxed">
+                                            {item.content}
+                                        </p>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
 

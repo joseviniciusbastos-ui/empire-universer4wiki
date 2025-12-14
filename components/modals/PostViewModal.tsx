@@ -113,9 +113,16 @@ const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, cu
                                 </div>
                                 <span className="text-space-text">{post.authorName}</span>
                             </div>
-                            <span className="flex items-center gap-1">
-                                <Clock size={12} /> {new Date(post.createdAt).toLocaleDateString('pt-BR')}
-                            </span>
+                            <div className="flex flex-col gap-1">
+                                <span className="flex items-center gap-1">
+                                    <Clock size={12} /> {new Date(post.createdAt).toLocaleDateString('pt-BR')}
+                                </span>
+                                {post.lastEditedByName && post.updatedAt && (
+                                    <span className="flex items-center gap-1 text-[10px] text-space-neon">
+                                        <Edit size={10} /> Editado por {post.lastEditedByName} em {new Date(post.updatedAt).toLocaleDateString('pt-BR')}
+                                    </span>
+                                )}
+                            </div>
                             <span className="flex items-center gap-1">
                                 <Eye size={12} /> {post.views} visualizações
                             </span>

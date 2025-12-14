@@ -39,6 +39,8 @@ export interface Post {
   views?: number;
   reactions?: Record<ReactionType, number>;
   userReaction?: ReactionType | null;
+  lastEditedBy?: string;
+  lastEditedByName?: string;
 }
 
 export type ReactionType = 'LIKE' | 'ROCKET' | 'INTEL' | 'STAR' | 'WARNING';
@@ -66,6 +68,8 @@ export interface DB_Post {
   views: number;
   created_at: string;
   updated_at?: string;
+  last_edited_by?: string;
+  last_edited_by_name?: string;
   profiles?: {
     reputation: number;
   };
@@ -94,4 +98,12 @@ export interface ToolModule {
   name: string;
   status: 'active' | 'construction' | 'locked';
   description: string;
+}
+
+export interface BulletinItem {
+  id: string;
+  title: string;
+  content: string;
+  type: 'info' | 'alert';
+  createdAt: string;
 }

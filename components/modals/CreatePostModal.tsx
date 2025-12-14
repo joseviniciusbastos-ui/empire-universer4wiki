@@ -251,7 +251,9 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, post
                         content: finalContent,
                         category: category,
                         tags: tags,
-                        updated_at: new Date().toISOString()
+                        updated_at: new Date().toISOString(),
+                        last_edited_by: currentUser.id,
+                        last_edited_by_name: currentUser.username
                     })
                     .eq('id', initialData.id);
 

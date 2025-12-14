@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Filter, X } from 'lucide-react';
-import { Button, Input } from './Shared';
+import { Button, Input } from './ui/Shared';
 import { PostType } from '../types';
 
 export interface FilterState {

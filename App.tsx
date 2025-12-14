@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './lib/supabase';
 import { CATEGORIES } from './constants';
-import { Post, PostType, DB_Post } from './types';
+import { Post, PostType, DB_Post, BulletinItem } from './types';
 import { CacheManager, debounce } from './lib/cache';
 import Terminal from './components/Terminal';
 import Tools from './components/Tools';
@@ -11,6 +11,7 @@ import AdminPanel from './components/AdminPanel';
 import { HomeView } from './components/views/HomeView';
 import EditProfileModal from './components/modals/EditProfileModal';
 import EditWelcomeModal from './components/modals/EditWelcomeModal';
+import EditBulletinModal from './components/modals/EditBulletinModal';
 import PostViewModal from './components/modals/PostViewModal';
 import { MainLayout } from './components/layout/MainLayout';
 import { WikiView } from './components/views/WikiView';
@@ -51,6 +52,10 @@ export default function App() {
   const [welcomeContent, setWelcomeContent] = useState('');
   const [isEditWelcomeOpen, setIsEditWelcomeOpen] = useState(false);
 
+  // Bulletin State
+  const [bulletins, setBulletins] = useState<BulletinItem[]>([]);
+  const [isEditBulletinOpen, setIsEditBulletinOpen] = useState(false);
+
   // Fetch Categories and Settings
   useEffect(() => {
     const fetchSettings = async () => {
@@ -59,6 +64,7 @@ export default function App() {
         const newCats = { ...CATEGORIES };
         let wTitle = '';
         let wContent = '';
+        let currentBulletins: BulletinItem[] = [];
 
         data.forEach(setting => {
           // Categories
@@ -69,11 +75,14 @@ export default function App() {
           // Welcome Section
           if (setting.key === 'welcome_title') wTitle = setting.value;
           if (setting.key === 'welcome_content') wContent = setting.value;
+          // Bulletin
+          if (setting.key === 'official_bulletin') currentBulletins = setting.value;
         });
 
         setAppCategories(newCats);
         setWelcomeTitle(wTitle);
         setWelcomeContent(wContent);
+        setBulletins(currentBulletins);
       }
     };
     fetchSettings();
@@ -125,6 +134,8 @@ export default function App() {
         category: dbPost.category,
         authorId: dbPost.author_id,
         authorName: dbPost.author_name,
+        lastEditedBy: dbPost.last_edited_by,
+        lastEditedByName: dbPost.last_edited_by_name,
         authorReputation: dbPost.profiles?.reputation || 0,
         slug: dbPost.slug,
         tags: dbPost.tags || [],
@@ -241,6 +252,19 @@ export default function App() {
     }
   };
 
+  const handleSaveBulletin = async (newBulletins: BulletinItem[]) => {
+    try {
+      const { error } = await supabase.from('app_settings')
+        .upsert([{ key: 'official_bulletin', value: newBulletins }], { onConflict: 'key' });
+
+      if (error) throw error;
+      setBulletins(newBulletins);
+    } catch (error) {
+      console.error('Error saving bulletins:', error);
+      throw error;
+    }
+  };
+
   return (
     <MainLayout
       view={view}
@@ -301,8 +325,17 @@ export default function App() {
           currentUser={currentUser}
           onEditAbout={() => setIsEditWelcomeOpen(true)}
           onAuthorClick={handleProfileClick}
+          bulletins={bulletins}
+          onEditBulletin={() => setIsEditBulletinOpen(true)}
         />
       )}
+
+      <EditBulletinModal
+        isOpen={isEditBulletinOpen}
+        onClose={() => setIsEditBulletinOpen(false)}
+        currentBulletins={bulletins}
+        onSave={handleSaveBulletin}
+      />
 
       {view === 'wiki' && (
         <WikiView
