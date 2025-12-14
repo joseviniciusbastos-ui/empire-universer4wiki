@@ -22,6 +22,7 @@ import { PublicProfileView } from './components/views/PublicProfileView';
 import { useToast } from './contexts/ToastContext';
 import { useAuth } from './contexts/AuthContext';
 import { FilterState } from './components/SearchFilters';
+import { LoginRequiredView } from './components/views/LoginRequiredView';
 
 const CATEGORY_KEYS = {
   [PostType.WIKI]: 'categories_wiki',
@@ -265,6 +266,20 @@ export default function App() {
     }
   };
 
+  // Removed misplaced import
+
+  // ... (existing imports)
+
+  // ... (inside App component)
+
+  // Helper to restrict access
+  const RestrictedView = ({ children }: { children: React.ReactNode }) => {
+    if (!currentUser) {
+      return <LoginRequiredView onLoginClick={() => setIsLoginModalOpen(true)} />;
+    }
+    return <>{children}</>;
+  };
+
   return (
     <MainLayout
       view={view}
@@ -314,7 +329,7 @@ export default function App() {
             wikiCount: posts.filter(p => p.type === PostType.WIKI).length,
             logsCount: posts.filter(p => p.type !== PostType.WIKI).length,
             contributorsCount: new Set(posts.map(p => p.authorId)).size,
-            lastUpdate: posts.length > 0 ? 'Recente' : "N/A" // Simplified
+            lastUpdate: posts.length > 0 ? 'Recente' : "N/A"
           }}
           recentPosts={filteredPosts}
           isLoading={isLoading}
@@ -338,45 +353,53 @@ export default function App() {
       />
 
       {view === 'wiki' && (
-        <WikiView
-          posts={filteredPosts}
-          categories={appCategories[PostType.WIKI]}
-          activeCategory={searchFilters.category}
-          onCategoryClick={(cat) => setSearchFilters(prev => ({ ...prev, category: cat === searchFilters.category ? 'all' : cat }))}
-          onCreateClick={() => openCreateModal(PostType.WIKI)}
-          onPostClick={openPostView}
-          currentUser={currentUser}
-          onAuthorClick={handleProfileClick}
-        />
+        <RestrictedView>
+          <WikiView
+            posts={filteredPosts}
+            categories={appCategories[PostType.WIKI]}
+            activeCategory={searchFilters.category}
+            onCategoryClick={(cat) => setSearchFilters(prev => ({ ...prev, category: cat === searchFilters.category ? 'all' : cat }))}
+            onCreateClick={() => openCreateModal(PostType.WIKI)}
+            onPostClick={openPostView}
+            currentUser={currentUser}
+            onAuthorClick={handleProfileClick}
+          />
+        </RestrictedView>
       )}
 
       {view === 'articles' && (
-        <BlogView
-          posts={filteredPosts}
-          categories={appCategories[PostType.ARTICLE]}
-          onCategoryClick={applySearch}
-          onCreateClick={() => openCreateModal(PostType.ARTICLE)}
-          onPostClick={openPostView}
-          onAuthorClick={handleProfileClick}
-        />
+        <RestrictedView>
+          <BlogView
+            posts={filteredPosts}
+            categories={appCategories[PostType.ARTICLE]}
+            onCategoryClick={applySearch}
+            onCreateClick={() => openCreateModal(PostType.ARTICLE)}
+            onPostClick={openPostView}
+            onAuthorClick={handleProfileClick}
+          />
+        </RestrictedView>
       )}
 
       {view === 'forum' && (
-        <ForumView
-          posts={filteredPosts}
-          categories={appCategories[PostType.THREAD]}
-          onCategoryClick={applySearch}
-          onCreateClick={() => openCreateModal(PostType.THREAD)}
-          onPostClick={openPostView}
-          onAuthorClick={handleProfileClick}
-        />
+        <RestrictedView>
+          <ForumView
+            posts={filteredPosts}
+            categories={appCategories[PostType.THREAD]}
+            onCategoryClick={applySearch}
+            onCreateClick={() => openCreateModal(PostType.THREAD)}
+            onPostClick={openPostView}
+            onAuthorClick={handleProfileClick}
+          />
+        </RestrictedView>
       )}
 
       {view === 'tools' && (
-        <div className="space-y-6">
-          <h2 className="text-3xl font-display font-bold uppercase">Ferramentas de Engenharia</h2>
-          <Tools />
-        </div>
+        <RestrictedView>
+          <div className="space-y-6">
+            <h2 className="text-3xl font-display font-bold uppercase">Ferramentas de Engenharia</h2>
+            <Tools />
+          </div>
+        </RestrictedView>
       )}
 
       {view === 'admin' && currentUser && (
