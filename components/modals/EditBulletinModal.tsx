@@ -114,8 +114,8 @@ const EditBulletinModal: React.FC<EditBulletinModalProps> = ({ isOpen, onClose, 
                                     key={item.id}
                                     onClick={() => setSelectedId(item.id)}
                                     className={`p-3 rounded cursor-pointer border transition-all group relative ${selectedId === item.id
-                                            ? 'bg-lime-500/10 border-lime-500'
-                                            : 'bg-white/5 border-transparent hover:bg-white/10'
+                                        ? 'bg-lime-500/10 border-lime-500'
+                                        : 'bg-white/5 border-transparent hover:bg-white/10'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start mb-1">
@@ -163,8 +163,8 @@ const EditBulletinModal: React.FC<EditBulletinModalProps> = ({ isOpen, onClose, 
                                                 <button
                                                     onClick={() => handleChange(selectedItem.id, 'type', 'info')}
                                                     className={`flex-1 p-2 text-xs font-mono flex items-center justify-center gap-2 transition-colors ${selectedItem.type === 'info'
-                                                            ? 'bg-blue-500/20 text-blue-400 font-bold'
-                                                            : 'hover:bg-white/5 text-space-muted'
+                                                        ? 'bg-blue-500/20 text-blue-400 font-bold'
+                                                        : 'hover:bg-white/5 text-space-muted'
                                                         }`}
                                                 >
                                                     <Info size={12} /> INFO
@@ -173,14 +173,29 @@ const EditBulletinModal: React.FC<EditBulletinModalProps> = ({ isOpen, onClose, 
                                                 <button
                                                     onClick={() => handleChange(selectedItem.id, 'type', 'alert')}
                                                     className={`flex-1 p-2 text-xs font-mono flex items-center justify-center gap-2 transition-colors ${selectedItem.type === 'alert'
-                                                            ? 'bg-red-500/20 text-red-500 font-bold'
-                                                            : 'hover:bg-white/5 text-space-muted'
+                                                        ? 'bg-red-500/20 text-red-500 font-bold'
+                                                        : 'hover:bg-white/5 text-space-muted'
                                                         }`}
                                                 >
                                                     <AlertTriangle size={12} /> ALERTA
                                                 </button>
                                             </div>
                                         </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] uppercase text-space-muted font-mono">
+                                            Post ID (Opcional - Para tornar clicável)
+                                        </label>
+                                        <Input
+                                            value={selectedItem.postId || ''}
+                                            onChange={(e) => handleChange(selectedItem.id, 'postId', e.target.value)}
+                                            placeholder="Digite o ID do post para vincular"
+                                            className="font-mono text-sm"
+                                        />
+                                        <p className="text-[9px] text-space-muted/60 italic">
+                                            💡 Vincule este bulletin a um post existente para que usuários possam clicar e visualizá-lo. Deixe vazio para apenas exibir informação.
+                                        </p>
                                     </div>
 
                                     <div className="flex-1 flex flex-col min-h-[400px]">

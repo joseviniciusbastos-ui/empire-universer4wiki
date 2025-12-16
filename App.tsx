@@ -12,6 +12,7 @@ import { HomeView } from './components/views/HomeView';
 import EditProfileModal from './components/modals/EditProfileModal';
 import EditWelcomeModal from './components/modals/EditWelcomeModal';
 import EditBulletinModal from './components/modals/EditBulletinModal';
+import BulletinViewModal from './components/modals/BulletinViewModal';
 import PostViewModal from './components/modals/PostViewModal';
 import { MainLayout } from './components/layout/MainLayout';
 import { WikiView } from './components/views/WikiView';
@@ -56,6 +57,11 @@ export default function App() {
   // Bulletin State
   const [bulletins, setBulletins] = useState<BulletinItem[]>([]);
   const [isEditBulletinOpen, setIsEditBulletinOpen] = useState(false);
+  const [selectedBulletin, setSelectedBulletin] = useState<BulletinItem | null>(null);
+  const [isBulletinViewOpen, setIsBulletinViewOpen] = useState(false);
+
+  // Read Posts Tracking
+  const [readPosts, setReadPosts] = useState<Set<string>>(new Set());
 
   // Fetch Categories and Settings
   useEffect(() => {
@@ -88,6 +94,22 @@ export default function App() {
     };
     fetchSettings();
   }, []);
+
+  // Load read posts from localStorage when user changes
+  useEffect(() => {
+    if (currentUser) {
+      const stored = localStorage.getItem(`readPosts_${currentUser.id}`);
+      if (stored) {
+        try {
+          setReadPosts(new Set(JSON.parse(stored)));
+        } catch (e) {
+          console.error('Error loading read posts:', e);
+        }
+      }
+    } else {
+      setReadPosts(new Set());
+    }
+  }, [currentUser?.id]);
 
   // Search State with debounce
   const [searchQuery, setSearchQuery] = useState('');
@@ -266,6 +288,31 @@ export default function App() {
     }
   };
 
+  // Handle bulletin click (Post or Modal)
+  const handleBulletinClick = async (item: BulletinItem) => {
+    // If it has a postId, try to open the post
+    if (item.postId) {
+      const post = posts.find(p => p.id === item.postId);
+      if (post) {
+        openPostView(post);
+        // Mark as read
+        if (currentUser) {
+          setReadPosts(prev => {
+            const newSet = new Set(prev).add(item.postId!);
+            localStorage.setItem(`readPosts_${currentUser.id}`, JSON.stringify([...newSet]));
+            return newSet;
+          });
+        }
+        return;
+      }
+      // If post not found (maybe deleted), fall through to show the bulletin text content
+    }
+
+    // Default: Open BulletinViewModal
+    setSelectedBulletin(item);
+    setIsBulletinViewOpen(true);
+  };
+
   // Removed misplaced import
 
   // ... (existing imports)
@@ -342,6 +389,8 @@ export default function App() {
           onAuthorClick={handleProfileClick}
           bulletins={bulletins}
           onEditBulletin={() => setIsEditBulletinOpen(true)}
+          onBulletinClick={handleBulletinClick}
+          readPosts={readPosts}
         />
       )}
 
@@ -350,6 +399,12 @@ export default function App() {
         onClose={() => setIsEditBulletinOpen(false)}
         currentBulletins={bulletins}
         onSave={handleSaveBulletin}
+      />
+
+      <BulletinViewModal
+        isOpen={isBulletinViewOpen}
+        onClose={() => setIsBulletinViewOpen(false)}
+        bulletin={selectedBulletin}
       />
 
       {view === 'wiki' && (

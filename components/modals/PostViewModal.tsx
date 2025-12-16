@@ -134,6 +134,11 @@ const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, cu
                             <span className="flex items-center gap-1">
                                 <Heart size={12} /> {post.likes} curtidas
                             </span>
+                            {canDelete && (
+                                <span className="flex items-center gap-1 text-[10px] text-lime-400/80 border border-lime-500/30 px-2 py-0.5 rounded font-mono">
+                                    ID: {post.id}
+                                </span>
+                            )}
                         </div>
 
                         {/* Tags */}

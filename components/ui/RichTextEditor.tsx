@@ -32,8 +32,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             try {
                 // Check if already registered to avoid warning
                 if (!(Quill as any).imports['modules/blotFormatter']) {
-                    const BlotFormatter = (await import('quill-blot-formatter')).default;
-                    Quill.register('modules/blotFormatter', BlotFormatter);
+                    // const BlotFormatter = (await import('quill-blot-formatter')).default;
+                    // Quill.register('modules/blotFormatter', BlotFormatter);
                 }
             } catch (e) {
                 console.error('Failed to load blot formatter:', e);
