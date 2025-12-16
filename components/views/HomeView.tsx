@@ -175,8 +175,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     <div className="border border-space-steel/30 rounded-xl p-5 bg-gradient-to-br from-space-dark/50 to-transparent relative group">
                         {isAdmin && onEditBulletin && (
                             <button
-                                onClick={onEditBulletin}
-                                className="absolute top-2 right-2 p-2 bg-space-black/50 hover:bg-space-neon/20 rounded-full text-space-muted hover:text-space-neon transition-all opacity-0 group-hover:opacity-100"
+                                onClick={(e) => { e.stopPropagation(); onEditBulletin(); }}
+                                className="absolute top-2 right-2 z-50 p-2 bg-space-black/50 hover:bg-space-neon/20 rounded-full text-space-muted hover:text-space-neon transition-all opacity-0 group-hover:opacity-100"
                                 title="Editar Boletim"
                             >
                                 <Edit3 size={14} />
