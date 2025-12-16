@@ -51,7 +51,7 @@ const BulletinViewModal: React.FC<BulletinViewModalProps> = ({ isOpen, onClose, 
                 {/* Content */}
                 <div className="p-6 overflow-y-auto custom-scrollbar bg-space-black flex-1">
                     <div
-                        className="prose prose-invert prose-sm max-w-none font-mono text-space-muted/90 leading-relaxed"
+                        className="prose prose-invert prose-sm max-w-none font-mono text-space-muted/90 leading-relaxed whitespace-pre-line"
                         dangerouslySetInnerHTML={{ __html: bulletin.content }}
                     />
                 </div>

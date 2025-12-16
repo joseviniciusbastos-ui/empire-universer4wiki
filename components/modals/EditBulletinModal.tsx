@@ -200,11 +200,11 @@ const EditBulletinModal: React.FC<EditBulletinModalProps> = ({ isOpen, onClose, 
 
                                     <div className="flex-1 flex flex-col min-h-[400px]">
                                         <label className="text-[10px] uppercase text-space-muted font-mono mb-2">Conteúdo Detalhado</label>
-                                        <RichTextEditor
+                                        <textarea
                                             value={selectedItem.content}
-                                            onChange={(val) => handleChange(selectedItem.id, 'content', val)}
+                                            onChange={(e) => handleChange(selectedItem.id, 'content', e.target.value)}
                                             placeholder="Escreva os detalhes..."
-                                            className="flex-1 h-full min-h-[300px]"
+                                            className="flex-1 h-full min-h-[300px] w-full bg-space-dark border border-white/10 rounded p-4 text-white font-mono text-sm focus:border-space-neon focus:ring-1 focus:ring-space-neon outline-none resize-none"
                                         />
                                     </div>
                                 </div>
