@@ -32,8 +32,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             try {
                 // Check if already registered to avoid warning
                 if (!(Quill as any).imports['modules/blotFormatter']) {
-                    const BlotFormatter = (await import('quill-blot-formatter')).default;
-                    Quill.register('modules/blotFormatter', BlotFormatter);
+                    const blotFormatterModule = await import('quill-blot-formatter');
+                    const BlotFormatter = blotFormatterModule.default || blotFormatterModule;
+
+                    if (typeof BlotFormatter === 'function') {
+                        Quill.register('modules/blotFormatter', BlotFormatter);
+                    } else {
+                        console.warn('BlotFormatter import failed: Not a constructor', BlotFormatter);
+                    }
                 }
             } catch (e) {
                 console.error('Failed to load blot formatter:', e);
