@@ -109,4 +109,5 @@ export interface BulletinItem {
   content: string;
   type: 'info' | 'alert';
   createdAt: string;
+  postId?: string; // ID do post vinculado para abrir no modal
 }

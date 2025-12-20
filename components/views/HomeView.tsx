@@ -22,12 +22,14 @@ interface HomeViewProps {
     onAuthorClick?: (userId: string) => void;
     bulletins?: BulletinItem[];
     onEditBulletin?: () => void;
+    onBulletinClick?: (item: BulletinItem) => void;
+    readPosts?: Set<string>;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({
     stats, recentPosts, isLoading, onNavigate, onPostClick,
     aboutTitle, aboutContent, currentUser, onEditAbout, onAuthorClick,
-    bulletins = [], onEditBulletin
+    bulletins = [], onEditBulletin, onBulletinClick, readPosts
 }) => {
     const isAdmin = currentUser?.role === 'ADMIN';
 
@@ -169,6 +171,71 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 {/* Right Column: Featured & Sidebar Stats */}
                 <div className="space-y-6">
 
+                    {/* Bulletin Board - Moved to top with enhancements */}
+                    <div className="border border-space-steel/30 rounded-xl p-5 bg-gradient-to-br from-space-dark/50 to-transparent relative group">
+                        {isAdmin && onEditBulletin && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onEditBulletin(); }}
+                                className="absolute top-2 right-2 z-50 p-2 bg-space-black/50 hover:bg-space-neon/20 rounded-full text-space-muted hover:text-space-neon transition-all opacity-0 group-hover:opacity-100"
+                                title="Editar Boletim"
+                            >
+                                <Edit3 size={14} />
+                            </button>
+                        )}
+                        <h3 className="font-display font-bold text-white uppercase text-sm mb-4 border-b border-space-steel/30 pb-2 flex justify-between">
+                            <span>Boletim Oficial</span>
+                            <span className="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+                        </h3>
+                        <div className="space-y-3">
+                            {bulletins.length === 0 ? (
+                                <p className="text-xs text-space-muted font-mono italic">
+                                    Nenhum comunicado oficial no momento.
+                                </p>
+                            ) : (
+                                bulletins
+                                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                                    .map(item => {
+                                        const isNew = item.postId && !readPosts?.has(item.postId);
+                                        const preview = item.content.replace(/<[^>]*>/g, '').slice(0, 80);
+                                        const shouldTruncate = item.content.replace(/<[^>]*>/g, '').length > 80;
+
+                                        return (
+                                            <div
+                                                key={item.id}
+                                                onClick={() => onBulletinClick?.(item)}
+                                                className={`relative pl-4 border-l-2 group/item cursor-pointer hover:bg-space-dark/30 p-2 rounded-r transition-all ${item.type === 'alert' ? 'border-space-alert' : 'border-space-neon'
+                                                    }`}
+                                            >
+                                                <div className={`absolute -left-[5px] top-2 w-2 h-2 rounded-full group-hover/item:scale-150 transition-transform ${item.type === 'alert' ? 'bg-space-alert' : 'bg-space-neon'
+                                                    }`} />
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <h4 className={`font-bold text-xs text-white transition-colors ${item.type === 'alert' ? 'group-hover/item:text-space-alert' : 'group-hover/item:text-space-neon'
+                                                                }`}>
+                                                                {item.title}
+                                                            </h4>
+                                                            {isNew && (
+                                                                <Badge className="bg-space-alert text-white text-[8px] px-1.5 py-0.5 animate-pulse">
+                                                                    NEW
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-[10px] text-space-muted leading-relaxed line-clamp-2">
+                                                            {preview}{shouldTruncate && '...'}
+                                                        </p>
+                                                    </div>
+                                                    <ArrowRight
+                                                        size={12}
+                                                        className="text-space-muted group-hover/item:text-space-neon transition-colors flex-shrink-0 mt-1"
+                                                    />
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                            )}
+                        </div>
+                    </div>
 
                     {/* Featured Member - Top Contributor */}
                     {(() => {
@@ -230,46 +297,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
                             </div>
                         );
                     })()}
-
-                    {/* Bulletin Board - Styled */}
-                    <div className="border border-space-steel/30 rounded-xl p-5 bg-gradient-to-br from-space-dark/50 to-transparent relative group">
-                        {isAdmin && onEditBulletin && (
-                            <button
-                                onClick={onEditBulletin}
-                                className="absolute top-2 right-2 p-2 bg-space-black/50 hover:bg-space-neon/20 rounded-full text-space-muted hover:text-space-neon transition-all opacity-0 group-hover:opacity-100"
-                                title="Editar Boletim"
-                            >
-                                <Edit3 size={14} />
-                            </button>
-                        )}
-                        <h3 className="font-display font-bold text-white uppercase text-sm mb-4 border-b border-space-steel/30 pb-2 flex justify-between">
-                            <span>Boletim Oficial</span>
-                            <span className="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
-                        </h3>
-                        <div className="space-y-4">
-                            {bulletins.length === 0 ? (
-                                <p className="text-xs text-space-muted font-mono italic">
-                                    Nenhum comunicado oficial no momento.
-                                </p>
-                            ) : (
-                                bulletins.map(item => (
-                                    <div key={item.id} className={`relative pl-4 border-l-2 group cursor-pointer ${item.type === 'alert' ? 'border-space-alert' : 'border-space-neon'
-                                        }`}>
-                                        <div className={`absolute -left-[5px] top-0 w-2 h-2 rounded-full group-hover:scale-150 transition-transform ${item.type === 'alert' ? 'bg-space-alert' : 'bg-space-neon'
-                                            }`} />
-                                        <h4 className={`font-bold text-xs text-white transition-colors ${item.type === 'alert' ? 'group-hover:text-space-alert' : 'group-hover:text-space-neon'
-                                            }`}>
-                                            {item.title}
-                                        </h4>
-                                        <div
-                                            className="text-[10px] text-space-muted mt-1 leading-relaxed prose prose-invert max-w-none prose-p:my-1 prose-headings:my-1 prose-ul:my-1"
-                                            dangerouslySetInnerHTML={{ __html: item.content }}
-                                        />
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
 
                 </div>
             </div>

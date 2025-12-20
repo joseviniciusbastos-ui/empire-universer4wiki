@@ -88,7 +88,6 @@ export const ReactionButton: React.FC<ReactionButtonProps> = ({ post, currentUse
                         post_id: post.id,
                         user_id: currentUser.id,
                         reaction_type: type
-                        reaction_type: type
                     }, { onConflict: 'post_reactions_post_id_user_id_key' });
                 if (error) throw error;
             }
