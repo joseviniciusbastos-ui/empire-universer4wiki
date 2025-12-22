@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Button, Card, Badge, Input } from './ui/Shared';
 import {
     Users, Settings, Save, Trash2, Shield, ShieldAlert,
-    CheckCircle, X, ChevronUp, ChevronDown, FileText, MessageSquare
+    CheckCircle, X, ChevronUp, ChevronDown, FileText, MessageSquare, Search
 } from 'lucide-react';
 import { PostType, User } from '../types';
 import { useToast } from '../contexts/ToastContext';
@@ -37,6 +37,8 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
     const [categories, setCategories] = useState<Record<string, string[]>>({});
     const [isLoading, setIsLoading] = useState(false);
     const [loadingAction, setLoadingAction] = useState<string | null>(null);
+    const [pubSearch, setPubSearch] = useState('');
+    const [pubFilter, setPubFilter] = useState<'all' | PostType>('all');
 
     useEffect(() => {
         if (activeTab === 'users') fetchUsers();
@@ -140,19 +142,6 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
 
         if (data) setPosts(data);
         setIsLoading(false);
-    };
-
-    const updatePostOrder = async (postId: string, newOrder: number) => {
-        const { error } = await supabase
-            .from('posts')
-            .update({ display_order: newOrder })
-            .eq('id', postId);
-
-        if (error) {
-            showToast("Erro ao atualizar ordem: " + error.message, "error");
-        } else {
-            CacheManager.clearPosts();
-        }
     };
 
     const updatePostType = async (postId: string, newType: PostType) => {
@@ -432,75 +421,113 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
             )}
 
             {activeTab === 'publications' && (
-                <div className="space-y-8 animate-fade-in">
-                    {(Object.keys(CATEGORY_KEYS) as PostType[]).map(type => {
-                        const typePosts = posts.filter(p => p.type === type);
-                        const dbKey = CATEGORY_KEYS[type];
-                        const typeCategories = categories[dbKey] || [];
+                <div className="space-y-6 animate-fade-in text-white/90">
+                    {/* Filter Bar */}
+                    <div className="flex flex-col md:flex-row gap-4 bg-space-dark/30 p-4 rounded-xl border border-space-steel/20 sticky top-16 z-20 backdrop-blur-md">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-space-muted" size={16} />
+                            <input
+                                type="text"
+                                placeholder="PESQUISAR POR TÍTULO, AUTOR OU CONTEÚDO..."
+                                className="w-full bg-space-black border border-space-steel/30 rounded px-10 py-2 text-sm font-mono text-white focus:border-space-neon outline-none transition-all"
+                                value={pubSearch}
+                                onChange={(e) => setPubSearch(e.target.value)}
+                            />
+                        </div>
+                        <select
+                            className="bg-space-black border border-space-steel/30 rounded px-3 py-2 text-sm font-mono text-white focus:border-space-neon outline-none"
+                            value={pubFilter}
+                            onChange={(e) => setPubFilter(e.target.value as any)}
+                        >
+                            <option value="all">TODOS OS TIPOS</option>
+                            {Object.values(PostType).map(t => (
+                                <option key={t} value={t}>{POST_TYPE_LABELS[t]}</option>
+                            ))}
+                        </select>
+                    </div>
 
-                        return (
-                            <div key={type} className="space-y-4">
-                                <h3 className="text-xl font-display font-bold text-space-neon border-b border-space-steel/30 pb-2">{type}</h3>
-                                {typeCategories.map(cat => {
-                                    const catPosts = typePosts.filter(p => p.category === cat)
-                                        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+                    {(Object.keys(CATEGORY_KEYS) as PostType[])
+                        .filter(type => pubFilter === 'all' || pubFilter === type)
+                        .map(type => {
+                            let typePosts = posts.filter(p => p.type === type);
 
-                                    if (catPosts.length === 0) return null;
+                            if (pubSearch) {
+                                const query = pubSearch.toLowerCase();
+                                typePosts = typePosts.filter(p =>
+                                    p.title.toLowerCase().includes(query) ||
+                                    p.author_name.toLowerCase().includes(query) ||
+                                    p.content?.toLowerCase().includes(query)
+                                );
+                            }
 
-                                    return (
-                                        <div key={cat} className="ml-4 space-y-2">
-                                            <h4 className="text-sm font-mono text-space-muted uppercase tracking-wider">{cat}</h4>
-                                            <div className="grid grid-cols-1 gap-2">
-                                                {catPosts.map((post, index) => (
-                                                    <div key={post.id} className="flex justify-between items-center p-3 bg-space-dark/50 border border-space-steel rounded hover:border-space-neon transition-colors">
-                                                        <div className="flex flex-col">
-                                                            <span className="text-sm font-bold text-white">{post.title}</span>
-                                                            <span className="text-[10px] text-space-muted font-mono">{post.author_name} • {new Date(post.created_at).toLocaleDateString()}</span>
+                            const dbKey = CATEGORY_KEYS[type];
+                            const typeCategories = categories[dbKey] || [];
+
+                            if (typePosts.length === 0) return null;
+
+                            return (
+                                <div key={type} className="space-y-4">
+                                    <h3 className="text-xl font-display font-bold text-space-neon border-b border-space-steel/30 pb-2">{type}</h3>
+                                    {typeCategories.map(cat => {
+                                        const catPosts = typePosts.filter(p => p.category === cat)
+                                            .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+
+                                        if (catPosts.length === 0) return null;
+
+                                        return (
+                                            <div key={cat} className="ml-4 space-y-2">
+                                                <h4 className="text-sm font-mono text-space-muted uppercase tracking-wider">{cat}</h4>
+                                                <div className="grid grid-cols-1 gap-2">
+                                                    {catPosts.map((post, index) => (
+                                                        <div key={post.id} className="flex justify-between items-center p-3 bg-space-dark/50 border border-space-steel rounded hover:border-space-neon transition-colors">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-sm font-bold text-white">{post.title}</span>
+                                                                <span className="text-[10px] text-space-muted font-mono">{post.author_name} • {new Date(post.created_at).toLocaleDateString()}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-3 mr-4">
+                                                                <span className="text-[10px] text-space-muted uppercase font-mono">Tipo:</span>
+                                                                <select
+                                                                    className="bg-space-dark border border-space-steel rounded px-2 py-1 text-[10px] font-mono text-white focus:border-space-neon outline-none"
+                                                                    value={post.type}
+                                                                    onChange={(e) => {
+                                                                        const newType = e.target.value as PostType;
+                                                                        if (confirm(`Alterar tipo para ${newType}? A categoria será resetada.`)) {
+                                                                            updatePostType(post.id, newType);
+                                                                        }
+                                                                    }}
+                                                                    disabled={loadingAction === post.id}
+                                                                >
+                                                                    {Object.values(PostType).map(t => (
+                                                                        <option key={t} value={t}>{POST_TYPE_LABELS[t]}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <button
+                                                                    onClick={() => movePost(catPosts, index, 'up')}
+                                                                    disabled={index === 0 || loadingAction === post.id}
+                                                                    className="p-1 hover:text-space-neon disabled:opacity-30 transition-colors"
+                                                                >
+                                                                    <ChevronUp size={16} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => movePost(catPosts, index, 'down')}
+                                                                    disabled={index === catPosts.length - 1 || loadingAction === post.id}
+                                                                    className="p-1 hover:text-space-neon disabled:opacity-30 transition-colors"
+                                                                >
+                                                                    <ChevronDown size={16} />
+                                                                </button>
+                                                            </div>
+                                                            {loadingAction === post.id && <div className="w-4 h-4 rounded-full border-2 border-space-neon border-t-transparent animate-spin ml-2"></div>}
                                                         </div>
-                                                        <div className="flex items-center gap-3 mr-4">
-                                                            <span className="text-[10px] text-space-muted uppercase font-mono">Tipo:</span>
-                                                            <select
-                                                                className="bg-space-dark border border-space-steel rounded px-2 py-1 text-[10px] font-mono text-white focus:border-space-neon outline-none"
-                                                                value={post.type}
-                                                                onChange={(e) => {
-                                                                    const newType = e.target.value as PostType;
-                                                                    if (confirm(`Alterar tipo para ${newType}? A categoria será resetada.`)) {
-                                                                        updatePostType(post.id, newType);
-                                                                    }
-                                                                }}
-                                                                disabled={loadingAction === post.id}
-                                                            >
-                                                                {Object.values(PostType).map(t => (
-                                                                    <option key={t} value={t}>{POST_TYPE_LABELS[t]}</option>
-                                                                ))}
-                                                            </select>
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <button
-                                                                onClick={() => movePost(catPosts, index, 'up')}
-                                                                disabled={index === 0 || loadingAction === post.id}
-                                                                className="p-1 hover:text-space-neon disabled:opacity-30 transition-colors"
-                                                            >
-                                                                <ChevronUp size={16} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => movePost(catPosts, index, 'down')}
-                                                                disabled={index === catPosts.length - 1 || loadingAction === post.id}
-                                                                className="p-1 hover:text-space-neon disabled:opacity-30 transition-colors"
-                                                            >
-                                                                <ChevronDown size={16} />
-                                                            </button>
-                                                        </div>
-                                                        {loadingAction === post.id && <div className="w-4 h-4 rounded-full border-2 border-space-neon border-t-transparent animate-spin ml-2"></div>}
-                                                    </div>
-                                                ))}
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        );
-                    })}
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })}
                 </div>
             )}
 

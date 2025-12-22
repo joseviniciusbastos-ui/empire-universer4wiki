@@ -63,6 +63,7 @@ export default function App() {
 
   // Read Posts Tracking
   const [readPosts, setReadPosts] = useState<Set<string>>(new Set());
+  const [onlineCount, setOnlineCount] = useState(1); // Default to at least 1 (the current user)
 
   // Fetch Categories and Settings
   useEffect(() => {
@@ -107,10 +108,42 @@ export default function App() {
           console.error('Error loading read posts:', e);
         }
       }
+
+      // Heartbeat: Update last_seen every 3 minutes
+      updateLastSeen();
+      const heartbeat = setInterval(updateLastSeen, 3 * 60 * 1000);
+      return () => clearInterval(heartbeat);
     } else {
       setReadPosts(new Set());
     }
   }, [currentUser?.id]);
+
+  const updateLastSeen = async () => {
+    if (!currentUser) return;
+    await supabase
+      .from('profiles')
+      .update({ last_seen: new Date().toISOString() })
+      .eq('id', currentUser.id);
+  };
+
+  // Fetch Online Count
+  useEffect(() => {
+    fetchOnlineCount();
+    const interval = setInterval(fetchOnlineCount, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchOnlineCount = async () => {
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const { count, error } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .gt('last_seen', fiveMinutesAgo);
+
+    if (!error && count !== null) {
+      setOnlineCount(count);
+    }
+  };
 
   // Search State with debounce
   const [searchQuery, setSearchQuery] = useState('');
@@ -347,8 +380,6 @@ export default function App() {
       view={view}
       setView={setView}
       currentUser={currentUser}
-      searchQuery={searchQuery}
-      setSearchQuery={setSearchQuery}
       onLoginClick={() => setIsLoginModalOpen(true)}
       onFeedbackClick={() => setIsFeedbackModalOpen(true)}
     >
@@ -392,6 +423,7 @@ export default function App() {
             wikiCount: posts.filter(p => p.type === PostType.WIKI).length,
             logsCount: posts.filter(p => p.type !== PostType.WIKI).length,
             contributorsCount: new Set(posts.map(p => p.authorId)).size,
+            onlineCount: onlineCount,
             lastUpdate: posts.length > 0 ? 'Recente' : "N/A"
           }}
           recentPosts={filteredPosts}
@@ -434,6 +466,8 @@ export default function App() {
             onPostClick={openPostView}
             currentUser={currentUser}
             onAuthorClick={handleProfileClick}
+            searchQuery={searchQuery}
+            onSearchChange={applySearch}
           />
         </RestrictedView>
       )}
@@ -447,6 +481,8 @@ export default function App() {
             onCreateClick={() => openCreateModal(PostType.ARTICLE)}
             onPostClick={openPostView}
             onAuthorClick={handleProfileClick}
+            searchQuery={searchQuery}
+            onSearchChange={applySearch}
           />
         </RestrictedView>
       )}
@@ -460,6 +496,8 @@ export default function App() {
             onCreateClick={() => openCreateModal(PostType.THREAD)}
             onPostClick={openPostView}
             onAuthorClick={handleProfileClick}
+            searchQuery={searchQuery}
+            onSearchChange={applySearch}
           />
         </RestrictedView>
       )}

@@ -9,8 +9,6 @@ interface MainLayoutProps {
     view: string;
     setView: (view: string) => void;
     currentUser: User | null;
-    searchQuery: string;
-    setSearchQuery: (query: string) => void;
     onLoginClick: () => void;
     onFeedbackClick: () => void;
 }
@@ -20,13 +18,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     view,
     setView,
     currentUser,
-    searchQuery,
-    setSearchQuery,
     onLoginClick,
     onFeedbackClick
 }) => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+    const [isTerminalOpen, setIsTerminalOpen] = React.useState(false);
 
     return (
         <div className="min-h-screen bg-space-black text-space-text font-sans selection:bg-space-neon selection:text-black flex flex-col md:flex-row">
@@ -47,8 +43,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                 <Header
                     onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                     onToggleTerminal={() => setIsTerminalOpen(true)}
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
                     currentUser={currentUser}
                 />
 
