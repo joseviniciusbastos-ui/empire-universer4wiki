@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Button, Card, Badge, Input } from './ui/Shared';
-import { Users, Settings, Save, Trash2, Shield, ShieldAlert, CheckCircle, X } from 'lucide-react';
+import {
+    Users, Settings, Save, Trash2, Shield, ShieldAlert,
+    CheckCircle, X, ChevronUp, ChevronDown, FileText
+} from 'lucide-react';
 import { PostType, User } from '../types';
 import { useToast } from '../contexts/ToastContext';
 
@@ -18,8 +21,9 @@ const CATEGORY_KEYS = {
 
 export default function AdminPanel({ currentUser }: AdminPanelProps) {
     const { showToast } = useToast();
-    const [activeTab, setActiveTab] = useState<'users' | 'settings'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'settings' | 'publications'>('users');
     const [users, setUsers] = useState<any[]>([]);
+    const [posts, setPosts] = useState<any[]>([]);
     const [categories, setCategories] = useState<Record<string, string[]>>({});
     const [isLoading, setIsLoading] = useState(false);
     const [loadingAction, setLoadingAction] = useState<string | null>(null);
@@ -27,12 +31,12 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
     useEffect(() => {
         if (activeTab === 'users') fetchUsers();
         if (activeTab === 'settings') fetchSettings();
+        if (activeTab === 'publications') fetchPosts();
     }, [activeTab]);
 
     // --- USERS MANAGEMENT ---
     const fetchUsers = async () => {
         setIsLoading(true);
-        // Note: Fetching ALL profiles. In a real app, integrate pagination.
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
@@ -44,7 +48,6 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
 
     const updateUserRole = async (userId: string, newRole: string) => {
         setLoadingAction(userId);
-
         const { error } = await supabase.rpc('set_user_role', {
             target_user_id: userId,
             new_role: newRole
@@ -99,6 +102,72 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
         }
     };
 
+    const moveCategory = async (key: string, currentValue: string[], index: number, direction: 'up' | 'down') => {
+        const newValues = [...currentValue];
+        const newIndex = direction === 'up' ? index - 1 : index + 1;
+        if (newIndex < 0 || newIndex >= newValues.length) return;
+
+        [newValues[index], newValues[newIndex]] = [newValues[newIndex], newValues[index]];
+        updateCategory(key, newValues);
+    };
+
+    // --- PUBLICATIONS MANAGEMENT ---
+    const fetchPosts = async () => {
+        setIsLoading(true);
+        const { data, error } = await supabase
+            .from('posts')
+            .select('*')
+            .order('type', { ascending: true })
+            .order('category', { ascending: true })
+            .order('display_order', { ascending: true })
+            .order('created_at', { ascending: false });
+
+        if (data) setPosts(data);
+        setIsLoading(false);
+    };
+
+    const updatePostOrder = async (postId: string, newOrder: number) => {
+        const { error } = await supabase
+            .from('posts')
+            .update({ display_order: newOrder })
+            .eq('id', postId);
+
+        if (error) {
+            showToast("Erro ao atualizar ordem: " + error.message, "error");
+        }
+    };
+
+    const movePost = async (postsInCategory: any[], index: number, direction: 'up' | 'down') => {
+        const newIndex = direction === 'up' ? index - 1 : index + 1;
+        if (newIndex < 0 || newIndex >= postsInCategory.length) return;
+
+        const currentPost = postsInCategory[index];
+        const targetPost = postsInCategory[newIndex];
+
+        const currentOrder = currentPost.display_order || 0;
+        const targetOrder = targetPost.display_order || 0;
+
+        const finalCurrentOrder = targetOrder;
+        const finalTargetOrder = currentOrder === targetOrder ? targetOrder + 1 : currentOrder;
+
+        setLoadingAction(currentPost.id);
+
+        const updatedPosts = [...posts];
+        const idx1 = updatedPosts.findIndex(p => p.id === currentPost.id);
+        const idx2 = updatedPosts.findIndex(p => p.id === targetPost.id);
+        updatedPosts[idx1].display_order = finalCurrentOrder;
+        updatedPosts[idx2].display_order = finalTargetOrder;
+        setPosts(updatedPosts);
+
+        await Promise.all([
+            updatePostOrder(currentPost.id, finalCurrentOrder),
+            updatePostOrder(targetPost.id, finalTargetOrder)
+        ]);
+
+        fetchPosts();
+        setLoadingAction(null);
+    };
+
 
     if (currentUser?.role !== 'ADMIN') {
         return (
@@ -118,7 +187,8 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                 </h2>
                 <div className="flex gap-2">
                     <Button variant={activeTab === 'users' ? 'primary' : 'ghost'} onClick={() => setActiveTab('users')} icon={<Users size={16} />}>USUÁRIOS</Button>
-                    <Button variant={activeTab === 'settings' ? 'primary' : 'ghost'} onClick={() => setActiveTab('settings')} icon={<Settings size={16} />}>CONFIGURAÇÕES</Button>
+                    <Button variant={activeTab === 'publications' ? 'primary' : 'ghost'} onClick={() => setActiveTab('publications')} icon={<FileText size={16} />}>PUBLICAÇÕES</Button>
+                    <Button variant={activeTab === 'settings' ? 'primary' : 'ghost'} onClick={() => setActiveTab('settings')} icon={<Settings size={16} />}>CATEGORIAS</Button>
                 </div>
             </div>
 
@@ -184,12 +254,33 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                         return (
                             <Card key={type} title={`CATEGORIAS: ${type}`}>
                                 <div className="space-y-3">
-                                    <div className="flex flex-wrap gap-2">
-                                        {currentCats.map(cat => (
-                                            <span key={cat} className="px-2 py-1 bg-space-dark border border-space-steel rounded text-xs font-mono flex items-center gap-2 group hover:border-space-alert transition-colors">
-                                                {cat}
-                                                <button onClick={() => handleRemoveCategory(dbKey, currentCats, cat)} className="text-space-muted hover:text-space-alert"><X size={12} /></button>
-                                            </span>
+                                    <div className="flex flex-col gap-2">
+                                        {currentCats.map((cat, index) => (
+                                            <div key={cat} className="flex items-center justify-between p-2 bg-space-dark border border-space-steel rounded hover:border-space-neon group transition-colors">
+                                                <span className="text-xs font-mono text-white">{cat}</span>
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        onClick={() => moveCategory(dbKey, currentCats, index, 'up')}
+                                                        disabled={index === 0}
+                                                        className="p-1 hover:text-space-neon disabled:opacity-30 disabled:hover:text-space-muted transition-colors"
+                                                    >
+                                                        <ChevronUp size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => moveCategory(dbKey, currentCats, index, 'down')}
+                                                        disabled={index === currentCats.length - 1}
+                                                        className="p-1 hover:text-space-neon disabled:opacity-30 disabled:hover:text-space-muted transition-colors"
+                                                    >
+                                                        <ChevronDown size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleRemoveCategory(dbKey, currentCats, cat)}
+                                                        className="p-1 text-space-muted hover:text-space-alert ml-2 transition-colors"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
                                         ))}
                                     </div>
                                     <Button size="sm" variant="secondary" onClick={() => handleAddCategory(dbKey, currentCats)} icon={<CheckCircle size={14} />}>
@@ -198,6 +289,63 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                                 </div>
                             </Card>
                         )
+                    })}
+                </div>
+            )}
+
+            {activeTab === 'publications' && (
+                <div className="space-y-8 animate-fade-in">
+                    {(Object.keys(CATEGORY_KEYS) as PostType[]).map(type => {
+                        const typePosts = posts.filter(p => p.type === type);
+                        const dbKey = CATEGORY_KEYS[type];
+                        const typeCategories = categories[dbKey] || [];
+
+                        return (
+                            <div key={type} className="space-y-4">
+                                <h3 className="text-xl font-display font-bold text-space-neon border-b border-space-steel/30 pb-2">{type}</h3>
+                                {typeCategories.map(cat => {
+                                    const catPosts = typePosts.filter(p => p.category === cat)
+                                        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+
+                                    if (catPosts.length === 0) return null;
+
+                                    return (
+                                        <div key={cat} className="ml-4 space-y-2">
+                                            <h4 className="text-sm font-mono text-space-muted uppercase tracking-wider">{cat}</h4>
+                                            <div className="grid grid-cols-1 gap-2">
+                                                {catPosts.map((post, index) => (
+                                                    <div key={post.id} className="flex justify-between items-center p-3 bg-space-dark/50 border border-space-steel rounded hover:border-space-neon transition-colors">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-bold text-white">{post.title}</span>
+                                                            <span className="text-[10px] text-space-muted font-mono">{post.author_name} • {new Date(post.created_at).toLocaleDateString()}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="flex flex-col">
+                                                                <button
+                                                                    onClick={() => movePost(catPosts, index, 'up')}
+                                                                    disabled={index === 0 || loadingAction === post.id}
+                                                                    className="p-1 hover:text-space-neon disabled:opacity-30 transition-colors"
+                                                                >
+                                                                    <ChevronUp size={16} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => movePost(catPosts, index, 'down')}
+                                                                    disabled={index === catPosts.length - 1 || loadingAction === post.id}
+                                                                    className="p-1 hover:text-space-neon disabled:opacity-30 transition-colors"
+                                                                >
+                                                                    <ChevronDown size={16} />
+                                                                </button>
+                                                            </div>
+                                                            {loadingAction === post.id && <div className="w-4 h-4 rounded-full border-2 border-space-neon border-t-transparent animate-spin ml-2"></div>}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        );
                     })}
                 </div>
             )}

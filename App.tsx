@@ -144,6 +144,7 @@ export default function App() {
     const { data, error } = await supabase
       .from('posts')
       .select('*, profiles(reputation)')
+      .order('display_order', { ascending: true })
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -164,6 +165,7 @@ export default function App() {
         tags: dbPost.tags || [],
         likes: dbPost.likes,
         views: dbPost.views,
+        displayOrder: dbPost.display_order || 0,
         createdAt: dbPost.created_at,
         updatedAt: dbPost.updated_at
       }));
