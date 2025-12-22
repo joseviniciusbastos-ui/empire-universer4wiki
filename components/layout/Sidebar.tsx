@@ -31,7 +31,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                 ${isExpanded ? 'w-72' : 'w-20'} 
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}
         >
-            <div className={`px-8 py-6 border-b border-space-steel flex items-center transition-all duration-300 ${isExpanded ? 'justify-between' : 'justify-center'}`}>
+            <div className={`h-24 border-b border-space-steel flex items-center transition-all duration-300 ${isExpanded ? 'px-5 justify-between' : 'justify-center'}`}>
                 <div className="flex items-center gap-3 min-w-max">
                     <div className="w-10 h-10 rounded-full bg-space-dark border border-space-neon/50 flex items-center justify-center animate-pulse-slow shadow-[0_0_15px_rgba(0,194,255,0.3)] flex-shrink-0">
                         <img src="/favicon.png" className="w-7 h-7 object-contain" alt="EU4 Icon" />
@@ -58,9 +58,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                 )}
             </div>
 
-            <nav className="flex-1 p-4 space-y-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
+            <nav className="flex-1 py-4 space-y-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
                 <div className="mb-6">
-                    <p className={`text-xs text-space-muted font-mono mb-4 px-4 transition-opacity duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0'}`}>
+                    <p className={`text-[10px] text-space-muted font-mono mb-2 transition-opacity duration-300 ${isExpanded ? 'opacity-100 px-5 pl-8' : 'opacity-0'}`}>
                         {isExpanded ? 'NAVEGAÇÃO' : 'NAV'}
                     </p>
                     <div className="space-y-1">
@@ -74,14 +74,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                             <Button
                                 key={item.id}
                                 variant={view === item.id ? 'primary' : 'ghost'}
-                                className={`w-full mb-1 flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-4' : 'justify-center px-0'}`}
+                                className={`w-full mb-1 flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
                                 onClick={() => setView(item.id)}
                                 title={!isExpanded ? item.label : ''}
                             >
-                                <div className={`flex-shrink-0 ${isExpanded ? 'mr-3' : 'mr-0'}`}>
+                                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
                                     {item.icon}
                                 </div>
-                                <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'}`}>
+                                <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
                                     {item.label}
                                 </span>
                             </Button>
@@ -90,19 +90,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                 </div>
 
                 <div className="pt-4 border-t border-space-steel/30">
-                    <p className={`text-xs text-space-muted font-mono mb-4 px-4 transition-opacity duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0'}`}>
+                    <p className={`text-[10px] text-space-muted font-mono mb-2 transition-opacity duration-300 ${isExpanded ? 'opacity-100 px-5 pl-8' : 'opacity-0'}`}>
                         {isExpanded ? 'PESSOAL' : 'PERS'}
                     </p>
                     {currentUser ? (
                         <div className="space-y-1">
                             <Button
                                 variant={view === 'profile' ? 'primary' : 'ghost'}
-                                className={`w-full mb-1 flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-4' : 'justify-center px-0'}`}
+                                className={`w-full mb-1 flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
                                 onClick={() => setView('profile')}
                                 title={!isExpanded ? `PERFIL: ${currentUser.username.toUpperCase()}` : ''}
                             >
-                                <UserIcon size={20} className={`${isExpanded ? 'mr-3' : 'mr-0'} flex-shrink-0`} />
-                                <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'}`}>
+                                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                                    <UserIcon size={20} />
+                                </div>
+                                <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
                                     {currentUser.username.toUpperCase()}
                                 </span>
                             </Button>
@@ -110,19 +112,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                             {currentUser.role === 'ADMIN' && (
                                 <Button
                                     variant={view === 'admin' ? 'primary' : 'ghost'}
-                                    className={`w-full mb-1 text-space-neon flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-4' : 'justify-center px-0'}`}
+                                    className={`w-full mb-1 text-space-neon flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
                                     onClick={() => setView('admin')}
                                     title={!isExpanded ? 'COMANDO' : ''}
                                 >
-                                    <Shield size={20} className={`${isExpanded ? 'mr-3' : 'mr-0'} flex-shrink-0`} />
-                                    <span className={`flex-1 text-left transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'}`}>
+                                    <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                                        <Shield size={20} />
+                                    </div>
+                                    <span className={`flex-1 text-left transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
                                         COMANDO
                                     </span>
                                 </Button>
                             )}
 
                             <div className={`transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100 h-auto mt-2' : 'opacity-0 h-0 w-0'}`}>
-                                <div className="px-4 py-2">
+                                <div className="px-5 py-2">
                                     <div className="bg-space-darker rounded border border-space-steel p-3">
                                         {(() => {
                                             const reputation = currentUser.reputation || 0;
@@ -171,12 +175,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
 
                             <Button
                                 variant="ghost"
-                                className={`w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-all duration-300 ${isExpanded ? 'px-4' : 'justify-center px-0'}`}
+                                className={`w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-all duration-300 ${isExpanded ? 'px-5' : 'justify-center px-0'}`}
                                 onClick={() => supabase.auth.signOut()}
                                 title={!isExpanded ? 'SAIR' : ''}
                             >
-                                <LogOut size={20} className={`${isExpanded ? 'mr-3' : 'mr-0'} flex-shrink-0`} />
-                                <span className={`flex-1 text-left transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+                                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                                    <LogOut size={20} />
+                                </div>
+                                <span className={`flex-1 text-left transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0'}`}>
                                     ABORTAR SESSÃO
                                 </span>
                             </Button>
@@ -184,12 +190,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                     ) : (
                         <Button
                             variant="primary"
-                            className={`w-full animate-pulse-slow flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-4' : 'justify-center px-0'}`}
+                            className={`w-full animate-pulse-slow flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
                             onClick={onLoginClick}
                             title={!isExpanded ? 'ENTRAR' : ''}
                         >
-                            <LogIn size={20} className={`${isExpanded ? 'mr-3' : 'mr-0'} flex-shrink-0`} />
-                            <span className={`flex-1 text-left transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+                            <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                                <LogIn size={20} />
+                            </div>
+                            <span className={`flex-1 text-left transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0'}`}>
                                 ACESSAR
                             </span>
                         </Button>
@@ -198,12 +206,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                     <div className="mt-4 pt-4 border-t border-space-steel/30">
                         <Button
                             variant="ghost"
-                            className={`w-full flex items-center text-xs hover:text-white transition-all duration-300 ${isExpanded ? 'justify-start px-4' : 'justify-center px-0'}`}
+                            className={`w-full flex items-center text-xs hover:text-white transition-all duration-300 ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
                             onClick={onFeedbackClick}
                             title={!isExpanded ? 'FEEDBACK' : ''}
                         >
-                            <AlertTriangle size={18} className={`${isExpanded ? 'mr-3' : 'mr-0'} text-yellow-500 flex-shrink-0`} />
-                            <span className={`flex-1 text-left transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+                            <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                                <AlertTriangle size={18} className="text-yellow-500" />
+                            </div>
+                            <span className={`flex-1 text-left transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0'}`}>
                                 FEEDBACK
                             </span>
                         </Button>
