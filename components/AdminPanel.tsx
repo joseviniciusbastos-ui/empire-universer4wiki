@@ -137,6 +137,30 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
         }
     };
 
+    const updatePostType = async (postId: string, newType: PostType) => {
+        setLoadingAction(postId);
+        // Reset category to the first one of the new type or empty if none
+        const newTypeKey = CATEGORY_KEYS[newType];
+        const newTypeCats = categories[newTypeKey] || [];
+        const newCategory = newTypeCats.length > 0 ? newTypeCats[0] : '';
+
+        const { error } = await supabase
+            .from('posts')
+            .update({
+                type: newType,
+                category: newCategory
+            })
+            .eq('id', postId);
+
+        if (!error) {
+            showToast("Tipo de publicação alterado e categoria resetada.", "success");
+            fetchPosts(); // Refresh to move the post to the right section
+        } else {
+            showToast("Erro ao atualizar tipo: " + error.message, "error");
+        }
+        setLoadingAction(null);
+    };
+
     const movePost = async (postsInCategory: any[], index: number, direction: 'up' | 'down') => {
         const newIndex = direction === 'up' ? index - 1 : index + 1;
         if (newIndex < 0 || newIndex >= postsInCategory.length) return;
@@ -319,25 +343,41 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                                                             <span className="text-sm font-bold text-white">{post.title}</span>
                                                             <span className="text-[10px] text-space-muted font-mono">{post.author_name} • {new Date(post.created_at).toLocaleDateString()}</span>
                                                         </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="flex flex-col">
-                                                                <button
-                                                                    onClick={() => movePost(catPosts, index, 'up')}
-                                                                    disabled={index === 0 || loadingAction === post.id}
-                                                                    className="p-1 hover:text-space-neon disabled:opacity-30 transition-colors"
-                                                                >
-                                                                    <ChevronUp size={16} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => movePost(catPosts, index, 'down')}
-                                                                    disabled={index === catPosts.length - 1 || loadingAction === post.id}
-                                                                    className="p-1 hover:text-space-neon disabled:opacity-30 transition-colors"
-                                                                >
-                                                                    <ChevronDown size={16} />
-                                                                </button>
-                                                            </div>
-                                                            {loadingAction === post.id && <div className="w-4 h-4 rounded-full border-2 border-space-neon border-t-transparent animate-spin ml-2"></div>}
+                                                        <div className="flex items-center gap-3 mr-4">
+                                                            <span className="text-[10px] text-space-muted uppercase font-mono">Tipo:</span>
+                                                            <select
+                                                                className="bg-space-dark border border-space-steel rounded px-2 py-1 text-[10px] font-mono text-white focus:border-space-neon outline-none"
+                                                                value={post.type}
+                                                                onChange={(e) => {
+                                                                    const newType = e.target.value as PostType;
+                                                                    if (confirm(`Alterar tipo para ${newType}? A categoria será resetada.`)) {
+                                                                        updatePostType(post.id, newType);
+                                                                    }
+                                                                }}
+                                                                disabled={loadingAction === post.id}
+                                                            >
+                                                                {Object.values(PostType).map(t => (
+                                                                    <option key={t} value={t}>{t}</option>
+                                                                ))}
+                                                            </select>
                                                         </div>
+                                                        <div className="flex flex-col">
+                                                            <button
+                                                                onClick={() => movePost(catPosts, index, 'up')}
+                                                                disabled={index === 0 || loadingAction === post.id}
+                                                                className="p-1 hover:text-space-neon disabled:opacity-30 transition-colors"
+                                                            >
+                                                                <ChevronUp size={16} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => movePost(catPosts, index, 'down')}
+                                                                disabled={index === catPosts.length - 1 || loadingAction === post.id}
+                                                                className="p-1 hover:text-space-neon disabled:opacity-30 transition-colors"
+                                                            >
+                                                                <ChevronDown size={16} />
+                                                            </button>
+                                                        </div>
+                                                        {loadingAction === post.id && <div className="w-4 h-4 rounded-full border-2 border-space-neon border-t-transparent animate-spin ml-2"></div>}
                                                     </div>
                                                 ))}
                                             </div>
