@@ -31,7 +31,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                 ${isExpanded ? 'w-72' : 'w-20'} 
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}
         >
-            <div className={`p-6 border-b border-space-steel flex items-center transition-all duration-300 ${isExpanded ? 'justify-between' : 'justify-center'}`}>
+            <div className={`px-8 py-6 border-b border-space-steel flex items-center transition-all duration-300 ${isExpanded ? 'justify-between' : 'justify-center'}`}>
                 <div className="flex items-center gap-3 min-w-max">
                     <div className="w-10 h-10 rounded-full bg-space-dark border border-space-neon/50 flex items-center justify-center animate-pulse-slow shadow-[0_0_15px_rgba(0,194,255,0.3)] flex-shrink-0">
                         <img src="/favicon.png" className="w-7 h-7 object-contain" alt="EU4 Icon" />
@@ -60,7 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
 
             <nav className="flex-1 p-4 space-y-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
                 <div className="mb-6">
-                    <p className={`text-xs text-space-muted font-mono mb-4 px-2 transition-opacity duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0'}`}>
+                    <p className={`text-xs text-space-muted font-mono mb-4 px-4 transition-opacity duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0'}`}>
                         {isExpanded ? 'NAVEGAÇÃO' : 'NAV'}
                     </p>
                     <div className="space-y-1">
@@ -81,7 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                                 <div className={`flex-shrink-0 ${isExpanded ? 'mr-3' : 'mr-0'}`}>
                                     {item.icon}
                                 </div>
-                                <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-1' : 'opacity-0 w-0 overflow-hidden'}`}>
+                                <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'}`}>
                                     {item.label}
                                 </span>
                             </Button>
@@ -90,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                 </div>
 
                 <div className="pt-4 border-t border-space-steel/30">
-                    <p className={`text-xs text-space-muted font-mono mb-4 px-2 transition-opacity duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0'}`}>
+                    <p className={`text-xs text-space-muted font-mono mb-4 px-4 transition-opacity duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0'}`}>
                         {isExpanded ? 'PESSOAL' : 'PERS'}
                     </p>
                     {currentUser ? (
@@ -102,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                                 title={!isExpanded ? `PERFIL: ${currentUser.username.toUpperCase()}` : ''}
                             >
                                 <UserIcon size={20} className={`${isExpanded ? 'mr-3' : 'mr-0'} flex-shrink-0`} />
-                                <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-1' : 'opacity-0 w-0 overflow-hidden'}`}>
+                                <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'}`}>
                                     {currentUser.username.toUpperCase()}
                                 </span>
                             </Button>
@@ -115,14 +115,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                                     title={!isExpanded ? 'COMANDO' : ''}
                                 >
                                     <Shield size={20} className={`${isExpanded ? 'mr-3' : 'mr-0'} flex-shrink-0`} />
-                                    <span className={`flex-1 text-left transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-1' : 'opacity-0 w-0 overflow-hidden'}`}>
+                                    <span className={`flex-1 text-left transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'}`}>
                                         COMANDO
                                     </span>
                                 </Button>
                             )}
 
                             <div className={`transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100 h-auto mt-2' : 'opacity-0 h-0 w-0'}`}>
-                                <div className="px-2 py-2">
+                                <div className="px-4 py-2">
                                     <div className="bg-space-darker rounded border border-space-steel p-3">
                                         {(() => {
                                             const reputation = currentUser.reputation || 0;
