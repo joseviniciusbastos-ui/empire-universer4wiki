@@ -51,26 +51,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             {/* Hero Stats - Holographic Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-                {/* Wiki Entries Card */}
-                <div className="group relative bg-space-dark/40 border border-space-neon/30 p-6 overflow-hidden rounded-xl backdrop-blur-sm transition-all hover:border-space-neon hover:shadow-[0_0_20px_rgba(0,194,255,0.2)]">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
-                        <BookOpen size={120} />
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-br from-space-neon/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                    <div className="relative z-10">
-                        <div className="flex justify-between items-start mb-4">
-                            <h3 className="text-space-neon/70 font-mono text-xs tracking-widest uppercase">Entradas na Wiki</h3>
-                            <Activity size={16} className="text-space-neon animate-pulse" />
-                        </div>
-                        <p className="text-5xl font-display font-bold text-white tracking-tight">{stats.wikiCount}</p>
-                        <div className="mt-4 flex items-center gap-2 text-xs font-mono text-space-muted">
-                            <span className="text-space-neon">Enciclopédia Galáctica</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Featured Contributor Card - REPLACED Logs da Comunidade */}
+                {/* Featured Contributor Card */}
                 <div
                     onClick={() => topContributor && onAuthorClick?.(Object.keys(authorCounts).find(id => authorCounts[id].name === topContributor.name)!)}
                     className="group relative bg-space-dark/40 border border-violet-500/30 p-6 overflow-hidden rounded-xl backdrop-blur-sm transition-all hover:border-violet-500 hover:shadow-[0_0_20px_rgba(139,92,246,0.2)] cursor-pointer"
@@ -108,6 +89,25 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     </div>
                 </div>
 
+                {/* Wiki Entries Card */}
+                <div className="group relative bg-space-dark/40 border border-space-neon/30 p-6 overflow-hidden rounded-xl backdrop-blur-sm transition-all hover:border-space-neon hover:shadow-[0_0_20px_rgba(0,194,255,0.2)]">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+                        <BookOpen size={120} />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-space-neon/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                    <div className="relative z-10">
+                        <div className="flex justify-between items-start mb-4">
+                            <h3 className="text-space-neon/70 font-mono text-xs tracking-widest uppercase">Entradas na Wiki</h3>
+                            <Activity size={16} className="text-space-neon animate-pulse" />
+                        </div>
+                        <p className="text-5xl font-display font-bold text-white tracking-tight">{stats.wikiCount}</p>
+                        <div className="mt-4 flex items-center gap-2 text-xs font-mono text-space-muted">
+                            <span className="text-space-neon">Enciclopédia Galáctica</span>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Online People Card - REPLACED Contribuidores */}
                 <div className="group relative bg-space-dark/40 border border-space-alert/30 p-6 overflow-hidden rounded-xl backdrop-blur-sm transition-all hover:border-space-alert hover:shadow-[0_0_20px_rgba(255,59,48,0.2)]">
                     <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5"></div>
@@ -122,7 +122,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                         </div>
                         <p className="text-5xl font-display font-bold text-white tracking-tight">{stats.onlineCount}</p>
                         <div className="mt-4 text-xs text-space-muted font-mono border-l-2 border-space-alert pl-2">
-                            Usuários ativos nos últimos 5 min.<br />Sinal de rede estável.
+                            Usuários ativos nas últimas 24h.<br />Sinal de rede estável.
                         </div>
                     </div>
                 </div>

@@ -134,11 +134,11 @@ export default function App() {
   }, []);
 
   const fetchOnlineCount = async () => {
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { count, error } = await supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true })
-      .gt('last_seen', fiveMinutesAgo);
+      .gt('last_seen', twentyFourHoursAgo);
 
     if (!error && count !== null) {
       setOnlineCount(count);
