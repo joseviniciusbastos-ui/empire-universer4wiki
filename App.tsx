@@ -6,6 +6,7 @@ import { CacheManager, debounce } from './lib/cache';
 import Terminal from './components/Terminal';
 import Tools from './components/Tools';
 import CreatePostModal from './components/modals/CreatePostModal';
+import FeedbackModal from './components/modals/FeedbackModal';
 import LoginModal from './components/modals/LoginModal';
 import AdminPanel from './components/AdminPanel';
 import { HomeView } from './components/views/HomeView';
@@ -225,6 +226,7 @@ export default function App() {
     setEditingPost(undefined); // Ensure we are in create mode
   };
 
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | undefined>(undefined);
 
   const handleEditPost = (post: Post) => {
@@ -348,6 +350,7 @@ export default function App() {
       searchQuery={searchQuery}
       setSearchQuery={setSearchQuery}
       onLoginClick={() => setIsLoginModalOpen(true)}
+      onFeedbackClick={() => setIsFeedbackModalOpen(true)}
     >
       <LoginModal
         isOpen={isLoginModalOpen}
@@ -466,6 +469,12 @@ export default function App() {
           <div className="space-y-6">
             <h2 className="text-3xl font-display font-bold uppercase">Ferramentas de Engenharia</h2>
             <Tools />
+            {/* Feedback Modal */}
+            <FeedbackModal
+              isOpen={isFeedbackModalOpen}
+              onClose={() => setIsFeedbackModalOpen(false)}
+              currentUser={currentUser}
+            />
           </div>
         </RestrictedView>
       )}

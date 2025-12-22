@@ -1,5 +1,5 @@
 import React from 'react';
-import { Book, MessageSquare, Terminal as TerminalIcon, Wrench, LogOut, X, User as UserIcon, BookOpen, LogIn, Shield } from 'lucide-react';
+import { Book, MessageSquare, Terminal as TerminalIcon, Wrench, LogOut, X, User as UserIcon, BookOpen, LogIn, Shield, AlertTriangle } from 'lucide-react';
 import { Button } from '../ui/Shared';
 import { User } from '../../types';
 import { supabase } from '../../lib/supabase';
@@ -11,9 +11,10 @@ interface SidebarProps {
     setView: (view: string) => void;
     currentUser: User | null;
     onLoginClick: () => void;
+    onFeedbackClick: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, view, setView, currentUser, onLoginClick }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, view, setView, currentUser, onLoginClick, onFeedbackClick }) => {
     return (
         <aside
             className={`fixed inset-y-0 left-0 z-50 w-64 bg-space-dark border-r border-space-steel transition-transform transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 flex flex-col`}
@@ -86,6 +87,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, view, setVi
                             <LogIn size={18} className="mr-3 flex-shrink-0" /> <span className="flex-1 text-left">ACESSAR SISTEMA</span>
                         </Button>
                     )}
+
+                    <div className="mt-4 pt-4 border-t border-space-steel/30">
+                        <Button
+                            variant="ghost"
+                            className="w-full justify-start text-xs hover:text-white"
+                            onClick={onFeedbackClick}
+                        >
+                            <AlertTriangle size={16} className="mr-3 text-yellow-500" />
+                            <span className="flex-1 text-left">BUG / FEEDBACK</span>
+                        </Button>
+                    </div>
                 </div>
             </nav>
 

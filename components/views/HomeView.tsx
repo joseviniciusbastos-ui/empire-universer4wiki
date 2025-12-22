@@ -185,54 +185,91 @@ export const HomeView: React.FC<HomeViewProps> = ({
                             <span>Boletim Oficial</span>
                             <span className="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
                         </h3>
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {bulletins.length === 0 ? (
                                 <p className="text-xs text-space-muted font-mono italic">
                                     Nenhum comunicado oficial no momento.
                                 </p>
-                            ) : (
-                                bulletins
-                                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                                    .map(item => {
-                                        const isNew = item.postId && !readPosts?.has(item.postId);
-                                        const preview = item.content.replace(/<[^>]*>/g, '').slice(0, 80);
-                                        const shouldTruncate = item.content.replace(/<[^>]*>/g, '').length > 80;
+                            ) : (() => {
+                                const sorted = [...bulletins].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                                const featured = sorted.slice(0, 3);
+                                const archive = sorted.slice(3);
 
-                                        return (
-                                            <div
-                                                key={item.id}
-                                                onClick={() => onBulletinClick?.(item)}
-                                                className={`relative pl-4 border-l-2 group/item cursor-pointer hover:bg-space-dark/30 p-2 rounded-r transition-all ${item.type === 'alert' ? 'border-space-alert' : 'border-space-neon'
-                                                    }`}
-                                            >
-                                                <div className={`absolute -left-[5px] top-2 w-2 h-2 rounded-full group-hover/item:scale-150 transition-transform ${item.type === 'alert' ? 'bg-space-alert' : 'bg-space-neon'
-                                                    }`} />
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <h4 className={`font-bold text-xs text-white transition-colors ${item.type === 'alert' ? 'group-hover/item:text-space-alert' : 'group-hover/item:text-space-neon'
-                                                                }`}>
-                                                                {item.title}
-                                                            </h4>
-                                                            {isNew && (
-                                                                <Badge className="bg-space-alert text-white text-[8px] px-1.5 py-0.5 animate-pulse">
-                                                                    NEW
-                                                                </Badge>
-                                                            )}
+                                return (
+                                    <>
+                                        {/* Featured Bulletins */}
+                                        <div className="space-y-3">
+                                            {featured.map(item => {
+                                                const isNew = item.postId && !readPosts?.has(item.postId);
+                                                const preview = item.content.replace(/<[^>]*>/g, '').slice(0, 80);
+                                                const shouldTruncate = item.content.replace(/<[^>]*>/g, '').length > 80;
+
+                                                return (
+                                                    <div
+                                                        key={item.id}
+                                                        onClick={() => onBulletinClick?.(item)}
+                                                        className={`relative pl-4 border-l-2 group/item cursor-pointer hover:bg-space-dark/30 p-2 rounded-r transition-all ${item.type === 'alert' ? 'border-space-alert' : 'border-space-neon'
+                                                            }`}
+                                                    >
+                                                        <div className={`absolute -left-[5px] top-2 w-2 h-2 rounded-full group-hover/item:scale-150 transition-transform ${item.type === 'alert' ? 'bg-space-alert' : 'bg-space-neon'
+                                                            }`} />
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <h4 className={`font-bold text-xs text-white transition-colors ${item.type === 'alert' ? 'group-hover/item:text-space-alert' : 'group-hover/item:text-space-neon'
+                                                                        }`}>
+                                                                        {item.title}
+                                                                    </h4>
+                                                                    {isNew && (
+                                                                        <Badge className="bg-space-alert text-white text-[8px] px-1.5 py-0.5 animate-pulse">
+                                                                            NEW
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-[10px] text-space-muted leading-relaxed line-clamp-2">
+                                                                    {preview}{shouldTruncate && '...'}
+                                                                </p>
+                                                            </div>
+                                                            <ArrowRight
+                                                                size={12}
+                                                                className="text-space-muted group-hover/item:text-space-neon transition-colors flex-shrink-0 mt-1"
+                                                            />
                                                         </div>
-                                                        <p className="text-[10px] text-space-muted leading-relaxed line-clamp-2">
-                                                            {preview}{shouldTruncate && '...'}
-                                                        </p>
                                                     </div>
-                                                    <ArrowRight
-                                                        size={12}
-                                                        className="text-space-muted group-hover/item:text-space-neon transition-colors flex-shrink-0 mt-1"
-                                                    />
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Archive Section - Scrollable */}
+                                        {archive.length > 0 && (
+                                            <div className="mt-4 pt-4 border-t border-space-steel/20">
+                                                <h4 className="text-[10px] font-mono text-space-muted uppercase tracking-widest mb-3 flex items-center gap-2">
+                                                    <History size={10} /> Arquivo de Transmissões
+                                                </h4>
+                                                <div className="max-h-[200px] overflow-y-auto pr-2 custom-scrollbar space-y-2">
+                                                    {archive.map(item => (
+                                                        <div
+                                                            key={item.id}
+                                                            onClick={() => onBulletinClick?.(item)}
+                                                            className="group/archive flex items-center justify-between p-2 rounded border border-transparent hover:border-space-steel/30 hover:bg-space-dark/20 cursor-pointer transition-all"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div className={`w-1.5 h-1.5 rounded-full ${item.type === 'alert' ? 'bg-space-alert' : 'bg-white/20 group-hover/archive:bg-space-neon'}`} />
+                                                                <p className="text-[10px] text-space-muted group-hover/archive:text-white transition-colors truncate max-w-[150px]">
+                                                                    {item.title}
+                                                                </p>
+                                                            </div>
+                                                            <span className="text-[8px] font-mono text-space-muted opacity-0 group-hover/archive:opacity-100 transition-opacity">
+                                                                {new Date(item.createdAt).toLocaleDateString()}
+                                                            </span>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             </div>
-                                        );
-                                    })
-                            )}
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </div>
                     </div>
 

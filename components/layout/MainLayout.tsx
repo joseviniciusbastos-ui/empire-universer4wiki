@@ -12,6 +12,7 @@ interface MainLayoutProps {
     searchQuery: string;
     setSearchQuery: (query: string) => void;
     onLoginClick: () => void;
+    onFeedbackClick: () => void;
 }
 
 export const MainLayout: React.FC<MainLayoutProps> = ({
@@ -21,7 +22,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     currentUser,
     searchQuery,
     setSearchQuery,
-    onLoginClick
+    onLoginClick,
+    onFeedbackClick
 }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isTerminalOpen, setIsTerminalOpen] = useState(false);
@@ -38,6 +40,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                 setView={setView}
                 currentUser={currentUser}
                 onLoginClick={onLoginClick}
+                onFeedbackClick={onFeedbackClick}
             />
 
             <main className="flex-1 flex flex-col min-h-screen relative">

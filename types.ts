@@ -115,3 +115,22 @@ export interface BulletinItem {
   createdAt: string;
   postId?: string; // ID do post vinculado para abrir no modal
 }
+
+export enum ReportStatus {
+  OPEN = 'OPEN',
+  IN_PROGRESS = 'IN_PROGRESS',
+  RESOLVED = 'RESOLVED',
+  CLOSED = 'CLOSED'
+}
+
+export interface UserReport {
+  id: number;
+  userId: string;
+  type: 'BUG' | 'SUGGESTION' | 'MESSAGE' | 'OTHER';
+  title: string;
+  content: string;
+  images: string[];
+  status: ReportStatus;
+  createdAt: string;
+  updatedAt: string;
+}

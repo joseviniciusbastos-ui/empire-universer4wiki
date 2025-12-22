@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Button, Card, Badge, Input } from './ui/Shared';
 import {
     Users, Settings, Save, Trash2, Shield, ShieldAlert,
-    CheckCircle, X, ChevronUp, ChevronDown, FileText
+    CheckCircle, X, ChevronUp, ChevronDown, FileText, MessageSquare
 } from 'lucide-react';
 import { PostType, User } from '../types';
 import { useToast } from '../contexts/ToastContext';
@@ -29,9 +29,10 @@ const POST_TYPE_LABELS = {
 
 export default function AdminPanel({ currentUser }: AdminPanelProps) {
     const { showToast } = useToast();
-    const [activeTab, setActiveTab] = useState<'users' | 'settings' | 'publications' | 'trash'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'settings' | 'publications' | 'trash' | 'feedback'>('users');
     const [users, setUsers] = useState<any[]>([]);
     const [deletedPosts, setDeletedPosts] = useState<any[]>([]);
+    const [reports, setReports] = useState<any[]>([]);
     const [posts, setPosts] = useState<any[]>([]);
     const [categories, setCategories] = useState<Record<string, string[]>>({});
     const [isLoading, setIsLoading] = useState(false);
@@ -45,6 +46,7 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
             fetchPosts();
         }
         if (activeTab === 'trash') fetchDeletedPosts();
+        if (activeTab === 'feedback') fetchReports();
     }, [activeTab]);
 
     // --- USERS MANAGEMENT ---
@@ -219,6 +221,34 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
         setLoadingAction(null);
     };
 
+    // --- FEEDBACK MANAGEMENT ---
+    const fetchReports = async () => {
+        setIsLoading(true);
+        const { data, error } = await supabase
+            .from('user_reports')
+            .select('*, profiles:user_id(username, avatar_url)')
+            .order('created_at', { ascending: false });
+
+        if (data) setReports(data);
+        setIsLoading(false);
+    };
+
+    const updateReportStatus = async (reportId: number, newStatus: string) => {
+        setLoadingAction(reportId.toString());
+        const { error } = await supabase
+            .from('user_reports')
+            .update({ status: newStatus, updated_at: new Date().toISOString() })
+            .eq('id', reportId);
+
+        if (!error) {
+            setReports(reports.map(r => r.id === reportId ? { ...r, status: newStatus } : r));
+            showToast(`Status atualizado para ${newStatus}`, "success");
+        } else {
+            showToast("Erro ao atualizar status: " + error.message, "error");
+        }
+        setLoadingAction(null);
+    };
+
     // --- TRASH MANAGEMENT ---
     const fetchDeletedPosts = async () => {
         setIsLoading(true);
@@ -296,6 +326,7 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                     <Button variant={activeTab === 'publications' ? 'primary' : 'ghost'} onClick={() => setActiveTab('publications')} icon={<FileText size={16} />}>PUBLICAÇÕES</Button>
                     <Button variant={activeTab === 'settings' ? 'primary' : 'ghost'} onClick={() => setActiveTab('settings')} icon={<Settings size={16} />}>CATEGORIAS</Button>
                     <Button variant={activeTab === 'trash' ? 'primary' : 'ghost'} onClick={() => setActiveTab('trash')} icon={<Trash2 size={16} />} className="text-space-alert">LIXEIRA</Button>
+                    <Button variant={activeTab === 'feedback' ? 'primary' : 'ghost'} onClick={() => setActiveTab('feedback')} icon={<MessageSquare size={16} />} className="text-space-neon">FEEDBACKS</Button>
                 </div>
             </div>
 
@@ -526,6 +557,68 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                                             {loadingAction === post.id && <div className="w-4 h-4 rounded-full border-2 border-space-alert border-t-transparent animate-spin ml-2"></div>}
                                         </div>
                                     </div>
+                                ))}
+                            </div>
+                        )
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'feedback' && (
+                <div className="space-y-4 animate-fade-in">
+                    {isLoading ? <p className="text-mono text-space-muted">Coletando relatórios de campo...</p> : (
+                        reports.length === 0 ? (
+                            <div className="text-center py-12 border border-dashed border-space-steel rounded">
+                                <MessageSquare size={48} className="mx-auto text-space-steel mb-4 opacity-50" />
+                                <p className="text-space-muted font-mono">Nenhum feedback registrado.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {reports.map(report => (
+                                    <Card key={report.id} className="border-space-steel/50">
+                                        <div className="flex justify-between items-start gap-4">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <Badge color={report.type === 'BUG' ? 'bg-red-900/40 text-red-500 border border-red-500/50' : 'bg-space-dark border border-space-steel'}>
+                                                        {report.type}
+                                                    </Badge>
+                                                    <h4 className="font-bold text-white uppercase">{report.title}</h4>
+                                                    <Badge color={report.status === 'RESOLVED' ? 'bg-green-600/20 text-green-500' : 'bg-yellow-600/20 text-yellow-500'}>
+                                                        {report.status}
+                                                    </Badge>
+                                                </div>
+                                                <p className="text-sm text-space-muted font-mono whitespace-pre-wrap mb-4">{report.content}</p>
+
+                                                {report.images && report.images.length > 0 && (
+                                                    <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                                                        {report.images.map((img: string, i: number) => (
+                                                            <img key={i} src={img} className="h-24 w-24 object-cover rounded border border-space-steel hover:border-space-neon cursor-zoom-in" onClick={() => window.open(img, '_blank')} />
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                <div className="flex items-center gap-3 text-[10px] text-space-muted font-mono">
+                                                    <img src={report.profiles?.avatar_url} className="w-4 h-4 rounded-full" />
+                                                    <span>{report.profiles?.username} • {new Date(report.created_at).toLocaleString()}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-col gap-2">
+                                                <select
+                                                    className="bg-space-dark border border-space-steel rounded px-2 py-1 text-xs font-mono text-white"
+                                                    value={report.status}
+                                                    onChange={(e) => updateReportStatus(report.id, e.target.value)}
+                                                    disabled={loadingAction === report.id.toString()}
+                                                >
+                                                    <option value="OPEN">ABERTO</option>
+                                                    <option value="IN_PROGRESS">EM ANÁLISE</option>
+                                                    <option value="RESOLVED">RESOLVIDO</option>
+                                                    <option value="CLOSED">ARQUIVADO</option>
+                                                </select>
+                                                {loadingAction === report.id.toString() && <div className="w-4 h-4 rounded-full border-2 border-space-neon border-t-transparent animate-spin mx-auto"></div>}
+                                            </div>
+                                        </div>
+                                    </Card>
                                 ))}
                             </div>
                         )
