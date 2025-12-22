@@ -81,7 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                                 <div className={`flex-shrink-0 ${isExpanded ? 'mr-3' : 'mr-0'}`}>
                                     {item.icon}
                                 </div>
-                                <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+                                <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-1' : 'opacity-0 w-0 overflow-hidden'}`}>
                                     {item.label}
                                 </span>
                             </Button>
@@ -102,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                                 title={!isExpanded ? `PERFIL: ${currentUser.username.toUpperCase()}` : ''}
                             >
                                 <UserIcon size={20} className={`${isExpanded ? 'mr-3' : 'mr-0'} flex-shrink-0`} />
-                                <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+                                <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-1' : 'opacity-0 w-0 overflow-hidden'}`}>
                                     {currentUser.username.toUpperCase()}
                                 </span>
                             </Button>
@@ -115,7 +115,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                                     title={!isExpanded ? 'COMANDO' : ''}
                                 >
                                     <Shield size={20} className={`${isExpanded ? 'mr-3' : 'mr-0'} flex-shrink-0`} />
-                                    <span className={`flex-1 text-left transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+                                    <span className={`flex-1 text-left transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-1' : 'opacity-0 w-0 overflow-hidden'}`}>
                                         COMANDO
                                     </span>
                                 </Button>

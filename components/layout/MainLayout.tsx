@@ -21,7 +21,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     onLoginClick,
     onFeedbackClick
 }) => {
-    const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
     const [isSidebarPinned, setIsSidebarPinned] = React.useState(false);
     const [isTerminalOpen, setIsTerminalOpen] = React.useState(false);
 
@@ -44,7 +44,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
             <main className="flex-1 flex flex-col min-h-screen relative">
                 <Header
-                    onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+                    onToggleSidebar={() => {
+                        if (window.innerWidth >= 768) {
+                            setIsSidebarPinned(!isSidebarPinned);
+                        } else {
+                            setIsSidebarOpen(!isSidebarOpen);
+                        }
+                    }}
                     onToggleTerminal={() => setIsTerminalOpen(true)}
                     currentUser={currentUser}
                 />
