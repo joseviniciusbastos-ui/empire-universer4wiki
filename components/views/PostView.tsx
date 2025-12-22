@@ -2,10 +2,12 @@ import React, { useEffect } from 'react';
 import { Post, User, PostType } from '../../types';
 import { Button, Card, Badge } from '../ui/Shared';
 import { User as UserIcon, Clock, Eye, Heart, Share2, Trash2, Edit, ArrowLeft } from 'lucide-react';
+import { GameClock } from '../ui/GameClock';
 import { supabase } from '../../lib/supabase';
 import DOMPurify from 'isomorphic-dompurify';
 import Comments from '../Comments';
 import { useToast } from '../../contexts/ToastContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface PostViewProps {
     post: Post | null;
@@ -25,8 +27,10 @@ const POST_TYPE_LABELS: Record<PostType, string> = {
 
 export const PostView: React.FC<PostViewProps> = ({ post, onClose, currentUser, onDeleteConfirmed, onEdit, onAuthorClick }) => {
     const { showToast } = useToast();
+    const { language, translatePost, isTranslating: isGlobalTranslating } = useLanguage();
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [isConfirmingDelete, setIsConfirmingDelete] = React.useState(false);
+    const [translatedData, setTranslatedData] = React.useState<{ title: string; content: string } | null>(null);
 
     useEffect(() => {
         if (post) {
@@ -91,13 +95,14 @@ export const PostView: React.FC<PostViewProps> = ({ post, onClose, currentUser, 
     return (
         <div className="max-w-5xl mx-auto animate-fadeIn pb-20">
             {/* Navigation Back */}
-            <div className="mb-6">
+            <div className="mb-6 flex justify-between items-center">
                 <button
                     onClick={onClose}
                     className="flex items-center gap-2 text-space-muted hover:text-space-neon transition-colors font-mono text-xs uppercase tracking-widest"
                 >
-                    <ArrowLeft size={16} /> VOLTAR PARA O TERMINAL
+                    <ArrowLeft size={16} /> {language === 'pt' ? 'VOLTAR PARA O TERMINAL' : language === 'en' ? 'RETURN TO TERMINAL' : 'RETOUR AU TERMINAL'}
                 </button>
+                <GameClock className="bg-space-darker/50 px-4 py-1.5 rounded-full border border-space-steel/30 shadow-[0_0_15px_rgba(0,194,255,0.1)]" />
             </div>
 
             <Card className="bg-space-black/40 border-space-steel/30 p-8 md:p-12 relative overflow-hidden">
@@ -120,8 +125,11 @@ export const PostView: React.FC<PostViewProps> = ({ post, onClose, currentUser, 
                         ))}
                     </div>
 
-                    <h1 className="text-4xl md:text-6xl font-display font-bold text-white leading-tight tracking-tight">
-                        {post.title}
+                    <h1 className="text-4xl md:text-6xl font-display font-bold text-white leading-tight tracking-tight flex items-center gap-4">
+                        {translatedData ? translatedData.title : post.title}
+                        {isGlobalTranslating && (
+                            <span className="inline-block w-4 h-4 border-2 border-space-neon border-t-transparent rounded-full animate-spin" />
+                        )}
                     </h1>
 
                     <div className="flex flex-wrap items-center gap-6 pt-4 border-t border-space-steel/20">
@@ -144,7 +152,7 @@ export const PostView: React.FC<PostViewProps> = ({ post, onClose, currentUser, 
 
                         <div className="flex items-center gap-6 text-[10px] font-mono text-space-muted uppercase tracking-widest">
                             <span className="flex items-center gap-2">
-                                <Clock size={12} className="text-space-neon/50" /> {new Date(post.createdAt).toLocaleDateString('pt-BR')}
+                                <Clock size={12} className="text-space-neon/50" /> {new Date(post.createdAt).toLocaleDateString(language === 'pt' ? 'pt-BR' : language === 'en' ? 'en-US' : 'fr-FR')}
                             </span>
                             <span className="flex items-center gap-2">
                                 <Eye size={12} className="text-space-neon/50" /> {post.views} VIEWS
@@ -231,7 +239,7 @@ export const PostView: React.FC<PostViewProps> = ({ post, onClose, currentUser, 
                 {/* Footer / Last Edit */}
                 {post.lastEditedByName && post.updatedAt && (
                     <div className="mt-12 pt-6 border-t border-space-steel/20 text-[10px] font-mono text-space-neon/60 uppercase text-right italic">
-                        Última transmissão editada por {post.lastEditedByName} em {new Date(post.updatedAt).toLocaleString('pt-BR')}
+                        {language === 'pt' ? 'Última transmissão editada por' : language === 'en' ? 'Last transmission edited by' : 'Dernière transmission éditée par'} {post.lastEditedByName} {language === 'pt' ? 'em' : language === 'en' ? 'on' : 'le'} {new Date(post.updatedAt).toLocaleString(language === 'pt' ? 'pt-BR' : 'en-US')}
                     </div>
                 )}
             </Card>
@@ -239,7 +247,7 @@ export const PostView: React.FC<PostViewProps> = ({ post, onClose, currentUser, 
             {/* Comments Section */}
             <div className="mt-12">
                 <h3 className="text-xl font-display font-bold text-white uppercase mb-8 flex items-center gap-3">
-                    <Share2 className="text-space-neon" size={20} /> Transmissões de Feedback
+                    <Share2 className="text-space-neon" size={20} /> {language === 'pt' ? 'Transmissões de Feedback' : language === 'en' ? 'Feedback Transmissions' : 'Transmissions de Feedback'}
                 </h3>
                 <Comments postId={post.id} currentUser={currentUser} />
             </div>

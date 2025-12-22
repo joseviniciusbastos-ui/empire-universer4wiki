@@ -45,6 +45,7 @@ export interface Post {
   lastEditedByName?: string;
   displayOrder: number;
   deletedAt?: string | null;
+  translations?: Record<string, { title: string, content: string }>;
 }
 
 export type ReactionType = 'LIKE' | 'ROCKET' | 'INTEL' | 'STAR' | 'WARNING';
@@ -80,6 +81,7 @@ export interface DB_Post {
     reputation: number;
     rank: string;
   };
+  translations?: Record<string, { title: string, content: string }>;
 }
 
 export interface Comment {

@@ -4,6 +4,7 @@ import { Card, Badge } from './ui/Shared';
 import { ReactionButton } from './ui/ReactionButton';
 import { ReputationBadge } from './ui/ReputationBadge';
 import { Post, PostType, User } from '../types';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface PostCardProps {
     post: Post;
@@ -31,8 +32,27 @@ const POST_TYPE_LABELS: Record<PostType, string> = {
 };
 
 export const PostCard: React.FC<PostCardProps> = ({ post, onClick, currentUser, onAuthorClick }) => {
+    const { language, translatePost } = useLanguage();
+    const [translatedTitle, setTranslatedTitle] = React.useState(post.title);
+    const [translatedSnippet, setTranslatedSnippet] = React.useState('');
     const coverImageUrl = extractCoverImage(post.content);
     const contentWithoutCover = removeFirstImage(post.content);
+
+    React.useEffect(() => {
+        if (language === 'pt') {
+            setTranslatedTitle(post.title);
+            setTranslatedSnippet(contentWithoutCover.replace(/<[^>]*>?/gm, '').slice(0, 150));
+        } else if (post.translations && post.translations[language]) {
+            setTranslatedTitle(post.translations[language].title);
+            setTranslatedSnippet(post.translations[language].content.replace(/<[^>]*>?/gm, '').slice(0, 150));
+        } else {
+            // Background translation for snippet
+            translatePost(post).then(data => {
+                setTranslatedTitle(data.title);
+                setTranslatedSnippet(data.content.replace(/<[^>]*>?/gm, '').slice(0, 150));
+            });
+        }
+    }, [language, post, contentWithoutCover]);
 
     // Special layout for Data Logs (ARTICLE)
     if (post.type === PostType.ARTICLE) {
@@ -61,11 +81,12 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onClick, currentUser, 
                         </div>
 
                         <h3 className="text-lg font-display font-bold text-white group-hover:text-space-neon mb-2 line-clamp-1 transition-colors">
-                            {post.title}
+                            {translatedTitle}
                         </h3>
 
-                        <p className="text-xs text-space-muted line-clamp-2 font-mono mb-4 leading-relaxed opacity-70 group-hover:opacity-100 transition-opacity"
-                            dangerouslySetInnerHTML={{ __html: contentWithoutCover.replace(/<[^>]*>?/gm, '') }} />
+                        <p className="text-xs text-space-muted line-clamp-2 font-mono mb-4 leading-relaxed opacity-70 group-hover:opacity-100 transition-opacity">
+                            {translatedSnippet}
+                        </p>
 
                         <div className="flex items-center justify-between pt-3 border-t border-space-steel/10">
                             <div
@@ -117,16 +138,18 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onClick, currentUser, 
                                 <span key={tag} className="text-[10px] text-space-muted uppercase font-mono">#{tag}</span>
                             ))}
                         </div>
-                        <span className="text-[10px] text-space-muted font-mono whitespace-nowrap">{new Date(post.createdAt).toLocaleDateString('pt-BR')}</span>
+                        <span className="text-[10px] text-space-muted font-mono whitespace-nowrap">{new Date(post.createdAt).toLocaleDateString(language === 'pt' ? 'pt-BR' : 'en-US')}</span>
                     </div>
 
                     {/* Title */}
                     <h3 className="text-xl font-heading font-bold text-space-text group-hover:text-space-neon mb-2 line-clamp-2">
-                        {post.title}
+                        {translatedTitle}
                     </h3>
 
                     {/* Content Preview */}
-                    <p className="text-sm text-space-muted line-clamp-2 font-mono mb-4" dangerouslySetInnerHTML={{ __html: contentWithoutCover.replace(/<[^>]*>?/gm, '') }} />
+                    <p className="text-sm text-space-muted line-clamp-2 font-mono mb-4">
+                        {translatedSnippet}
+                    </p>
 
                     {/* Footer */}
                     <div className="flex justify-between items-center border-t border-space-steel pt-3">

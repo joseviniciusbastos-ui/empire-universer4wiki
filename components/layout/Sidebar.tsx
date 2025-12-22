@@ -4,6 +4,53 @@ import { Button } from '../ui/Shared';
 import { User } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { RANK_THRESHOLDS } from '../../constants';
+import { useLanguage, Language } from '../../contexts/LanguageContext';
+import { GameClock } from '../ui/GameClock';
+
+const STATIC_TEXT: Record<Language, any> = {
+    pt: {
+        nav: 'NAVEGAÇÃO',
+        mission: 'CONTROLE DA MISSÃO',
+        wiki: 'ENCYCLOPEDIA GALACTICA',
+        logs: 'DATA LOGS',
+        comms: 'REDE DE COMMS',
+        engineering: 'ENGENHARIA',
+        personal: 'PESSOAL',
+        command: 'COMANDO',
+        abort: 'ABORTAR SESSÃO',
+        access: 'ACESSAR',
+        feedback: 'FEEDBACK',
+        lang: 'IDIOMA / LANG'
+    },
+    en: {
+        nav: 'NAVIGATION',
+        mission: 'MISSION CONTROL',
+        wiki: 'GALACTIC ENCYCLOPEDIA',
+        logs: 'DATA LOGS',
+        comms: 'COMMS NETWORK',
+        engineering: 'ENGINEERING',
+        personal: 'PERSONAL',
+        command: 'COMMAND',
+        abort: 'ABORT SESSION',
+        access: 'LOGIN',
+        feedback: 'FEEDBACK',
+        lang: 'LANGUAGE / LINGUE'
+    },
+    fr: {
+        nav: 'NAVIGATION',
+        mission: 'CONTRÔLE MISSION',
+        wiki: 'ENCYCLOPÉDIE GALACTIQUE',
+        logs: 'JOURNAUX DE DONNÉES',
+        comms: 'RÉSEAU DE COMMS',
+        engineering: 'INGÉNIERIE',
+        personal: 'PERSONNEL',
+        command: 'COMMANDE',
+        abort: 'ABANDONNER SESSION',
+        access: 'ACCÉDER',
+        feedback: 'RETOUR D\'INFO',
+        lang: 'LANGUE / LANG'
+    }
+};
 
 interface SidebarProps {
     isOpen: boolean;
@@ -19,6 +66,8 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, setIsPinned, view, setView, currentUser, onLoginClick, onFeedbackClick }) => {
     const [isHovered, setIsHovered] = React.useState(false);
+    const { language, setLanguage } = useLanguage();
+    const t = STATIC_TEXT[language];
 
     // On mobile, use isOpen. On desktop, use isHovered or isPinned for width.
     const isExpanded = isOpen || isHovered || isPinned;
@@ -65,11 +114,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                     </p>
                     <div className="space-y-1">
                         {[
-                            { id: 'home', icon: <BookOpen size={20} />, label: 'CONTROLE DA MISSÃO' },
-                            { id: 'wiki', icon: <Book size={20} />, label: 'ENCYCLOPEDIA GALACTICA' },
-                            { id: 'articles', icon: <TerminalIcon size={20} />, label: 'DATA LOGS' },
-                            { id: 'forum', icon: <MessageSquare size={20} />, label: 'REDE DE COMMS' },
-                            { id: 'tools', icon: <Wrench size={20} />, label: 'ENGENHARIA' }
+                            { id: 'home', icon: <BookOpen size={20} />, label: t.mission },
+                            { id: 'wiki', icon: <Book size={20} />, label: t.wiki },
+                            { id: 'articles', icon: <TerminalIcon size={20} />, label: t.logs },
+                            { id: 'forum', icon: <MessageSquare size={20} />, label: t.comms },
+                            { id: 'tools', icon: <Wrench size={20} />, label: t.engineering }
                         ].map((item) => (
                             <Button
                                 key={item.id}
@@ -183,7 +232,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                                     <LogOut size={20} />
                                 </div>
                                 <span className={`flex-1 text-left transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0'}`}>
-                                    ABORTAR SESSÃO
+                                    {t.abort}
                                 </span>
                             </Button>
                         </div>
@@ -198,10 +247,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                                 <LogIn size={20} />
                             </div>
                             <span className={`flex-1 text-left transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0'}`}>
-                                ACESSAR
+                                {t.access}
                             </span>
                         </Button>
                     )}
+
+                    <div className="mt-4 pt-4 border-t border-space-steel/30">
+                        <p className={`text-[10px] text-space-muted font-mono mb-3 transition-opacity duration-300 ${isExpanded ? 'opacity-100 px-5 pl-8' : 'opacity-0'}`}>
+                            {isExpanded ? t.lang : 'LANG'}
+                        </p>
+                        <div className={`flex gap-2 transition-all duration-300 ${isExpanded ? 'px-5' : 'flex-col items-center gap-4'}`}>
+                            {(['pt', 'en', 'fr'] as Language[]).map(lang => (
+                                <button
+                                    key={lang}
+                                    onClick={() => setLanguage(lang)}
+                                    className={`w-8 h-8 rounded border flex items-center justify-center text-[10px] font-bold transition-all ${language === lang ? 'bg-space-neon border-space-neon text-black shadow-[0_0_10px_rgba(0,194,255,0.5)]' : 'bg-space-darker border-space-steel text-space-muted hover:border-space-neon/50'}`}
+                                >
+                                    {lang.toUpperCase()}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
                     <div className="mt-4 pt-4 border-t border-space-steel/30">
                         <Button
@@ -222,10 +288,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
             </nav>
 
             <div className={`p-4 border-t border-space-steel transition-all duration-300 ${isExpanded ? 'opacity-100 h-auto' : 'opacity-0 h-0 p-0 hidden'}`}>
-                <div className="bg-space-darker rounded p-3 border border-space-steel/50 text-center">
-                    <div className="flex items-center justify-center gap-2 mb-1">
+                <div className="bg-space-darker rounded p-4 border border-space-steel/50 space-y-4">
+                    <GameClock className="justify-center" />
+
+                    <div className="flex items-center justify-center gap-2 pt-2 border-t border-space-steel/20">
                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                        <span className="text-[10px] text-space-neon font-mono uppercase">Online</span>
+                        <span className="text-[10px] text-space-neon font-mono uppercase tracking-widest">Link Online</span>
                     </div>
                 </div>
             </div>
