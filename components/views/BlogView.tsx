@@ -14,7 +14,7 @@ interface BlogViewProps {
 }
 
 export const BlogView: React.FC<BlogViewProps> = ({ posts, categories, onCategoryClick, onCreateClick, onPostClick, currentUser, onAuthorClick }) => {
-    const blogPosts = posts.filter(p => p.type === PostType.ARTICLE);
+    const blogPosts = posts.filter(p => p.type === PostType.ARTICLE || p.type === PostType.BLOG);
 
     return (
         <div className="space-y-6">

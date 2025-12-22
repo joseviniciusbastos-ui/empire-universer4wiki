@@ -44,6 +44,7 @@ export interface Post {
   lastEditedBy?: string;
   lastEditedByName?: string;
   displayOrder: number;
+  deletedAt?: string | null;
 }
 
 export type ReactionType = 'LIKE' | 'ROCKET' | 'INTEL' | 'STAR' | 'WARNING';
@@ -74,6 +75,7 @@ export interface DB_Post {
   last_edited_by?: string;
   last_edited_by_name?: string;
   display_order: number;
+  deleted_at?: string | null;
   profiles?: {
     reputation: number;
     rank: string;

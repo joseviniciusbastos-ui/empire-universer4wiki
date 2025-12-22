@@ -166,6 +166,7 @@ export default function App() {
         likes: dbPost.likes,
         views: dbPost.views,
         displayOrder: dbPost.display_order || 0,
+        deletedAt: dbPost.deleted_at,
         createdAt: dbPost.created_at,
         updatedAt: dbPost.updated_at
       }));
@@ -176,6 +177,9 @@ export default function App() {
   };
 
   const filteredPosts = posts.filter(post => {
+    // Exclude soft-deleted posts from normal views
+    if (post.deletedAt) return false;
+
     const matchesSearch = post.title.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
       post.content.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
       post.tags.some(tag => tag.toLowerCase().includes(debouncedQuery.toLowerCase()));
@@ -240,8 +244,15 @@ export default function App() {
   };
 
   const handlePostDelete = async (deletedPostId: string) => {
-    const { error } = await supabase.from('posts').delete().eq('id', deletedPostId);
+    // Change hard-delete to soft-delete
+    const { error } = await supabase
+      .from('posts')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', deletedPostId);
+
     if (error) throw error;
+
+    // Optimistic UI: Remove from local state
     setPosts(posts.filter(p => p.id !== deletedPostId));
     CacheManager.clearPosts();
   };
@@ -428,7 +439,7 @@ export default function App() {
         <RestrictedView>
           <BlogView
             posts={filteredPosts}
-            categories={appCategories[PostType.ARTICLE]}
+            categories={[...appCategories[PostType.ARTICLE], ...appCategories[PostType.BLOG]]}
             onCategoryClick={(cat) => setSearchFilters(prev => ({ ...prev, category: cat || 'all' }))}
             onCreateClick={() => openCreateModal(PostType.ARTICLE)}
             onPostClick={openPostView}

@@ -29,8 +29,9 @@ const POST_TYPE_LABELS = {
 
 export default function AdminPanel({ currentUser }: AdminPanelProps) {
     const { showToast } = useToast();
-    const [activeTab, setActiveTab] = useState<'users' | 'settings' | 'publications'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'settings' | 'publications' | 'trash'>('users');
     const [users, setUsers] = useState<any[]>([]);
+    const [deletedPosts, setDeletedPosts] = useState<any[]>([]);
     const [posts, setPosts] = useState<any[]>([]);
     const [categories, setCategories] = useState<Record<string, string[]>>({});
     const [isLoading, setIsLoading] = useState(false);
@@ -43,6 +44,7 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
             fetchSettings(); // Needed for categories grouping
             fetchPosts();
         }
+        if (activeTab === 'trash') fetchDeletedPosts();
     }, [activeTab]);
 
     // --- USERS MANAGEMENT ---
@@ -200,12 +202,75 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
         updatedPosts[idx2].display_order = finalTargetOrder;
         setPosts(updatedPosts);
 
-        await Promise.all([
-            updatePostOrder(currentPost.id, finalCurrentOrder),
-            updatePostOrder(targetPost.id, finalTargetOrder)
+        // Optimization: Run updates in parallel
+        const results = await Promise.all([
+            supabase.from('posts').update({ display_order: finalCurrentOrder }).eq('id', currentPost.id),
+            supabase.from('posts').update({ display_order: finalTargetOrder }).eq('id', targetPost.id)
         ]);
 
-        fetchPosts();
+        const hasError = results.some(r => r.error);
+        if (hasError) {
+            showToast("Sincronização falhou parcialemente. Atualizando...", "warning");
+            fetchPosts();
+        } else {
+            CacheManager.clearPosts();
+        }
+
+        setLoadingAction(null);
+    };
+
+    // --- TRASH MANAGEMENT ---
+    const fetchDeletedPosts = async () => {
+        setIsLoading(true);
+
+        // Lazy auto-cleanup: Delete posts older than 30 days
+        await supabase
+            .from('posts')
+            .delete()
+            .lt('deleted_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+
+        const { data, error } = await supabase
+            .from('posts')
+            .select('*')
+            .not('deleted_at', 'is', null)
+            .order('deleted_at', { ascending: false });
+
+        if (data) setDeletedPosts(data);
+        setIsLoading(false);
+    };
+
+    const restorePost = async (postId: string) => {
+        setLoadingAction(postId);
+        const { error } = await supabase
+            .from('posts')
+            .update({ deleted_at: null })
+            .eq('id', postId);
+
+        if (!error) {
+            showToast("Publicação restaurada com sucesso.", "success");
+            setDeletedPosts(deletedPosts.filter(p => p.id !== postId));
+            CacheManager.clearPosts();
+        } else {
+            showToast("Erro ao restaurar: " + error.message, "error");
+        }
+        setLoadingAction(null);
+    };
+
+    const permanentDeletePost = async (postId: string) => {
+        if (!confirm("TEM CERTEZA? Esta ação é irreversível e apagará o post permanentemente do banco de dados.")) return;
+
+        setLoadingAction(postId);
+        const { error } = await supabase
+            .from('posts')
+            .delete()
+            .eq('id', postId);
+
+        if (!error) {
+            showToast("Publicação excluída permanentemente.", "success");
+            setDeletedPosts(deletedPosts.filter(p => p.id !== postId));
+        } else {
+            showToast("Erro ao excluir: " + error.message, "error");
+        }
         setLoadingAction(null);
     };
 
@@ -230,6 +295,7 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                     <Button variant={activeTab === 'users' ? 'primary' : 'ghost'} onClick={() => setActiveTab('users')} icon={<Users size={16} />}>USUÁRIOS</Button>
                     <Button variant={activeTab === 'publications' ? 'primary' : 'ghost'} onClick={() => setActiveTab('publications')} icon={<FileText size={16} />}>PUBLICAÇÕES</Button>
                     <Button variant={activeTab === 'settings' ? 'primary' : 'ghost'} onClick={() => setActiveTab('settings')} icon={<Settings size={16} />}>CATEGORIAS</Button>
+                    <Button variant={activeTab === 'trash' ? 'primary' : 'ghost'} onClick={() => setActiveTab('trash')} icon={<Trash2 size={16} />} className="text-space-alert">LIXEIRA</Button>
                 </div>
             </div>
 
@@ -404,6 +470,66 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                             </div>
                         );
                     })}
+                </div>
+            )}
+
+            {activeTab === 'trash' && (
+                <div className="space-y-4 animate-fade-in">
+                    <div className="bg-space-alert/10 border border-space-alert/30 p-4 rounded mb-6">
+                        <p className="text-xs text-space-alert font-mono uppercase tracking-widest flex items-center gap-2">
+                            <ShieldAlert size={14} /> Protocolo de Retenção de Dados: 30 Dias
+                        </p>
+                        <p className="text-[10px] text-space-muted font-mono mt-1">
+                            Arquivos nesta área serão removidos permanentemente após 30 dias do registro de exclusão.
+                        </p>
+                    </div>
+
+                    {isLoading ? <p className="text-mono text-space-muted">Escaneando setores de dados...</p> : (
+                        deletedPosts.length === 0 ? (
+                            <div className="text-center py-12 border border-dashed border-space-steel rounded">
+                                <Trash2 size={48} className="mx-auto text-space-steel mb-4 opacity-50" />
+                                <p className="text-space-muted font-mono">Lixeira vazia. Nenhum dado descartado encontrado.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-3">
+                                {deletedPosts.map(post => (
+                                    <div key={post.id} className="flex justify-between items-center p-4 bg-space-dark/50 border border-space-alert/20 rounded hover:border-space-alert/50 transition-colors">
+                                        <div className="flex flex-col">
+                                            <div className="flex items-center gap-2">
+                                                <Badge color="bg-space-steel">{post.type}</Badge>
+                                                <span className="text-sm font-bold text-white">{post.title}</span>
+                                            </div>
+                                            <span className="text-[10px] text-space-muted font-mono mt-1">
+                                                DELETADO EM: {new Date(post.deleted_at).toLocaleString('pt-BR')} • POR: {post.author_name}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                onClick={() => restorePost(post.id)}
+                                                disabled={loadingAction === post.id}
+                                                icon={<CheckCircle size={14} />}
+                                            >
+                                                RESTAURAR
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                className="text-space-alert hover:bg-space-alert/20"
+                                                onClick={() => permanentDeletePost(post.id)}
+                                                disabled={loadingAction === post.id}
+                                                icon={<Trash2 size={14} />}
+                                            >
+                                                EXCLUIR
+                                            </Button>
+                                            {loadingAction === post.id && <div className="w-4 h-4 rounded-full border-2 border-space-alert border-t-transparent animate-spin ml-2"></div>}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )
+                    )}
                 </div>
             )}
         </div>
