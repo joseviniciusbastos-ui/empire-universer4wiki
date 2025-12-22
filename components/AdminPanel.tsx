@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { PostType, User } from '../types';
 import { useToast } from '../contexts/ToastContext';
+import { CacheManager } from '../lib/cache';
 
 interface AdminPanelProps {
     currentUser: User | null;
@@ -31,7 +32,10 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
     useEffect(() => {
         if (activeTab === 'users') fetchUsers();
         if (activeTab === 'settings') fetchSettings();
-        if (activeTab === 'publications') fetchPosts();
+        if (activeTab === 'publications') {
+            fetchSettings(); // Needed for categories grouping
+            fetchPosts();
+        }
     }, [activeTab]);
 
     // --- USERS MANAGEMENT ---
@@ -85,6 +89,7 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
 
         if (!error) {
             setCategories({ ...categories, [key]: newValues });
+            CacheManager.clearPosts(); // Categories changed, clear cache
         }
         setLoadingAction(null);
     };
@@ -134,6 +139,8 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
 
         if (error) {
             showToast("Erro ao atualizar ordem: " + error.message, "error");
+        } else {
+            CacheManager.clearPosts();
         }
     };
 
@@ -154,6 +161,7 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
 
         if (!error) {
             showToast("Tipo de publicação alterado e categoria resetada.", "success");
+            CacheManager.clearPosts();
             fetchPosts(); // Refresh to move the post to the right section
         } else {
             showToast("Erro ao atualizar tipo: " + error.message, "error");
@@ -172,7 +180,9 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
         const targetOrder = targetPost.display_order || 0;
 
         const finalCurrentOrder = targetOrder;
-        const finalTargetOrder = currentOrder === targetOrder ? targetOrder + 1 : currentOrder;
+        const finalTargetOrder = currentOrder === targetOrder
+            ? (direction === 'up' ? targetOrder + 1 : targetOrder - 1)
+            : currentOrder;
 
         setLoadingAction(currentPost.id);
 
