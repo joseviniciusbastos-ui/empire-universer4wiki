@@ -28,12 +28,27 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const translateText = async (text: string, targetLang: string) => {
         if (!text || targetLang === 'pt') return text;
 
+        // Split text into chunks to avoid URL length limits (approx 2000 chars)
+        const chunks: string[] = [];
+        const maxLength = 1000;
+        let currentPos = 0;
+        while (currentPos < text.length) {
+            chunks.push(text.slice(currentPos, currentPos + maxLength));
+            currentPos += maxLength;
+        }
+
         try {
-            const response = await fetch(
-                `https://translate.googleapis.com/translate_a/single?client=gtx&sl=pt&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`
+            const translatedChunks = await Promise.all(
+                chunks.map(async (chunk) => {
+                    const response = await fetch(
+                        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=pt&tl=${targetLang}&dt=t&q=${encodeURIComponent(chunk)}`
+                    );
+                    if (!response.ok) throw new Error('Translation API failed');
+                    const data = await response.json();
+                    return data[0].map((item: any) => item[0] || '').join('');
+                })
             );
-            const data = await response.json();
-            return data[0].map((item: any) => item[0]).join('');
+            return translatedChunks.join('');
         } catch (error) {
             console.error('Translation error:', error);
             return text;
@@ -55,12 +70,15 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
             const translation = { title: translatedTitle, content: translatedContent };
 
-            // Update database cache
+            // Update database cache (optional, don't block if RLS fails)
             const newTranslations = { ...(post.translations || {}), [language]: translation };
-            await supabase
+            supabase
                 .from('posts')
                 .update({ translations: newTranslations })
-                .eq('id', post.id);
+                .eq('id', post.id)
+                .then(({ error }) => {
+                    if (error) console.warn('Could not cache translation (likely RLS):', error.message);
+                });
 
             return translation;
         } catch (error) {

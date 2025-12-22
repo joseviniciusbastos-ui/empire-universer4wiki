@@ -34,19 +34,25 @@ export const PostView: React.FC<PostViewProps> = ({ post, onClose, currentUser, 
 
     useEffect(() => {
         if (post) {
-            // Scroll to top on load
             window.scrollTo(0, 0);
+
+            // Handle translation
+            if (language === 'pt') {
+                setTranslatedData({ title: post.title, content: post.content });
+            } else {
+                translatePost(post).then(data => {
+                    setTranslatedData(data);
+                });
+            }
 
             // Increment view count
             supabase
                 .from('posts')
                 .update({ views: (post.views || 0) + 1 })
                 .eq('id', post.id)
-                .then(() => {
-                    // View count updated
-                });
+                .then(() => { });
         }
-    }, [post?.id]);
+    }, [post?.id, language]);
 
     if (!post) {
         return (
@@ -87,7 +93,8 @@ export const PostView: React.FC<PostViewProps> = ({ post, onClose, currentUser, 
         }
     };
 
-    const sanitizedContent = DOMPurify.sanitize(post.content, {
+    const contentToSanitize = translatedData ? translatedData.content : post.content;
+    const sanitizedContent = DOMPurify.sanitize(contentToSanitize, {
         ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre', 'span', 'div'],
         ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'style', 'target']
     });
