@@ -15,6 +15,7 @@ import EditWelcomeModal from './components/modals/EditWelcomeModal';
 import EditBulletinModal from './components/modals/EditBulletinModal';
 import BulletinViewModal from './components/modals/BulletinViewModal';
 import PostViewModal from './components/modals/PostViewModal';
+import { PostView } from './components/views/PostView';
 import { MainLayout } from './components/layout/MainLayout';
 import { WikiView } from './components/views/WikiView';
 import { BlogView } from './components/views/BlogView';
@@ -275,7 +276,7 @@ export default function App() {
 
   const openPostView = (post: Post) => {
     setSelectedPost(post);
-    setIsPostViewOpen(true);
+    setView('post-view');
   };
 
   const handlePostDelete = async (deletedPostId: string) => {
@@ -406,15 +407,7 @@ export default function App() {
         onUpdate={refreshProfile}
       />
 
-      <PostViewModal
-        post={selectedPost}
-        isOpen={isPostViewOpen}
-        onClose={() => setIsPostViewOpen(false)}
-        currentUser={currentUser}
-        onDeleteConfirmed={async (id) => handlePostDelete(id)}
-        onEdit={handleEditPost}
-        onAuthorClick={handleProfileClick}
-      />
+      {/* Removed PostViewModal for dedicated PostView */}
 
       {/* RENDER CURRENT VIEW */}
       {view === 'home' && (
@@ -535,6 +528,19 @@ export default function App() {
           onClose={() => setView('home')}
           onPostClick={openPostView}
         />
+      )}
+
+      {view === 'post-view' && selectedPost && (
+        <div className="container mx-auto px-4 py-8">
+          <PostView
+            post={selectedPost}
+            onClose={() => setView('home')} // Default back to home
+            currentUser={currentUser}
+            onDeleteConfirmed={handlePostDelete}
+            onEdit={handleEditPost}
+            onAuthorClick={handleProfileClick}
+          />
+        </div>
       )}
 
       <EditWelcomeModal

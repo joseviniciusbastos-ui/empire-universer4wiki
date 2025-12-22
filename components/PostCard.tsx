@@ -1,5 +1,5 @@
 import React from 'react';
-import { User as UserIcon } from 'lucide-react';
+import { User as UserIcon, Eye, Heart } from 'lucide-react';
 import { Card, Badge } from './ui/Shared';
 import { ReactionButton } from './ui/ReactionButton';
 import { ReputationBadge } from './ui/ReputationBadge';
@@ -34,6 +34,61 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onClick, currentUser, 
     const coverImageUrl = extractCoverImage(post.content);
     const contentWithoutCover = removeFirstImage(post.content);
 
+    // Special layout for Data Logs (ARTICLE)
+    if (post.type === PostType.ARTICLE) {
+        return (
+            <Card className="hover:border-space-neon/50 bg-space-dark/20 transition-all cursor-pointer group mb-4 border-space-steel/20" onClick={onClick}>
+                <div className="flex gap-6 items-start">
+                    {/* Compact Image for Data Log */}
+                    {coverImageUrl && (
+                        <div className="flex-shrink-0 w-32 h-32 overflow-hidden rounded-lg border border-space-steel/30 relative group/img mt-1">
+                            <img
+                                src={coverImageUrl}
+                                alt={post.title}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0"
+                            />
+                            <div className="absolute inset-0 bg-space-neon/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                    )}
+
+                    <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start mb-1">
+                            <div className="flex gap-2 items-center">
+                                <span className="text-[9px] font-mono text-space-neon border border-space-neon/20 bg-space-neon/5 px-2 py-0.5 rounded uppercase tracking-tighter">DATA LOG</span>
+                                <span className="text-[10px] text-space-muted font-mono uppercase">/ {post.category}</span>
+                            </div>
+                            <span className="text-[9px] text-space-muted font-mono">{new Date(post.createdAt).toLocaleDateString('pt-BR')}</span>
+                        </div>
+
+                        <h3 className="text-lg font-display font-bold text-white group-hover:text-space-neon mb-2 line-clamp-1 transition-colors">
+                            {post.title}
+                        </h3>
+
+                        <p className="text-xs text-space-muted line-clamp-2 font-mono mb-4 leading-relaxed opacity-70 group-hover:opacity-100 transition-opacity"
+                            dangerouslySetInnerHTML={{ __html: contentWithoutCover.replace(/<[^>]*>?/gm, '') }} />
+
+                        <div className="flex items-center justify-between pt-3 border-t border-space-steel/10">
+                            <div
+                                className="flex items-center gap-2 text-[10px] text-space-muted hover:text-white transition-colors cursor-pointer z-10"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onAuthorClick && onAuthorClick(post.authorId);
+                                }}
+                            >
+                                <span className="text-space-neon">BY:</span> {post.authorName}
+                            </div>
+                            <div className="flex items-center gap-4 text-[9px] font-mono text-space-muted">
+                                <span className="flex items-center gap-1"><Eye size={10} /> {post.views}</span>
+                                <span className="flex items-center gap-1"><Heart size={10} /> {post.likes}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Card>
+        );
+    }
+
+    // Default layout for Forum (THREAD) and others
     return (
         <Card className="hover:border-space-muted transition-colors cursor-pointer group mb-4" onClick={onClick}>
             <div className="flex gap-4">
