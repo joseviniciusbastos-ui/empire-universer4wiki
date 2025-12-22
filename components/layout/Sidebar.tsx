@@ -1,5 +1,5 @@
 import React from 'react';
-import { Book, MessageSquare, Terminal as TerminalIcon, Wrench, LogOut, X, User as UserIcon, BookOpen, LogIn, Shield, AlertTriangle } from 'lucide-react';
+import { Book, MessageSquare, Terminal as TerminalIcon, Wrench, LogOut, X, User as UserIcon, BookOpen, LogIn, Shield, AlertTriangle, Pin, PinOff } from 'lucide-react';
 import { Button } from '../ui/Shared';
 import { User } from '../../types';
 import { supabase } from '../../lib/supabase';
@@ -8,6 +8,8 @@ import { RANK_THRESHOLDS } from '../../constants';
 interface SidebarProps {
     isOpen: boolean;
     setIsOpen: (isOpen: boolean) => void;
+    isPinned: boolean;
+    setIsPinned: (isPinned: boolean) => void;
     view: string;
     setView: (view: string) => void;
     currentUser: User | null;
@@ -15,18 +17,18 @@ interface SidebarProps {
     onFeedbackClick: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, view, setView, currentUser, onLoginClick, onFeedbackClick }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, setIsPinned, view, setView, currentUser, onLoginClick, onFeedbackClick }) => {
     const [isHovered, setIsHovered] = React.useState(false);
 
-    // On mobile, use isOpen. On desktop, use isHovered for width.
-    const isExpanded = isOpen || isHovered;
+    // On mobile, use isOpen. On desktop, use isHovered or isPinned for width.
+    const isExpanded = isOpen || isHovered || isPinned;
 
     return (
         <aside
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             className={`fixed inset-y-0 left-0 z-50 bg-space-dark border-r border-space-steel transition-all duration-300 ease-in-out flex flex-col overflow-hidden
-                ${isExpanded ? 'w-64' : 'w-20'} 
+                ${isExpanded ? 'w-72' : 'w-20'} 
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}
         >
             <div className={`p-6 border-b border-space-steel flex items-center transition-all duration-300 ${isExpanded ? 'justify-between' : 'justify-center'}`}>
@@ -39,10 +41,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, view, setVi
                         <span className="text-[10px] text-space-neon tracking-[0.2em]">SPACE WIKI</span>
                     </div>
                 </div>
+
                 {isExpanded && (
-                    <button onClick={() => setIsOpen(false)} className="md:hidden text-space-muted flex-shrink-0">
-                        <X size={20} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setIsPinned(!isPinned)}
+                            className={`p-1.5 rounded border transition-colors ${isPinned ? 'bg-space-neon/20 border-space-neon text-space-neon' : 'border-space-steel text-space-muted hover:text-white'}`}
+                            title={isPinned ? 'Desafixar Sidebar' : 'Fixar Sidebar'}
+                        >
+                            {isPinned ? <PinOff size={16} /> : <Pin size={16} />}
+                        </button>
+                        <button onClick={() => setIsOpen(false)} className="md:hidden text-space-muted flex-shrink-0 p-1.5">
+                            <X size={20} />
+                        </button>
+                    </div>
                 )}
             </div>
 

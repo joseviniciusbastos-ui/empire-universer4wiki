@@ -22,6 +22,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     onFeedbackClick
 }) => {
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+    const [isSidebarPinned, setIsSidebarPinned] = React.useState(false);
     const [isTerminalOpen, setIsTerminalOpen] = React.useState(false);
 
     return (
@@ -32,6 +33,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
             <Sidebar
                 isOpen={isSidebarOpen}
                 setIsOpen={setIsSidebarOpen}
+                isPinned={isSidebarPinned}
+                setIsPinned={setIsSidebarPinned}
                 view={view}
                 setView={setView}
                 currentUser={currentUser}
