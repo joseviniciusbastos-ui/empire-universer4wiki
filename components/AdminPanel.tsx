@@ -20,6 +20,13 @@ const CATEGORY_KEYS = {
     [PostType.ARTICLE]: 'categories_article',
 };
 
+const POST_TYPE_LABELS = {
+    [PostType.WIKI]: 'ENCYCLOPEDIA',
+    [PostType.BLOG]: 'BLOG',
+    [PostType.THREAD]: 'FORUM',
+    [PostType.ARTICLE]: 'ARTICLES',
+};
+
 export default function AdminPanel({ currentUser }: AdminPanelProps) {
     const { showToast } = useToast();
     const [activeTab, setActiveTab] = useState<'users' | 'settings' | 'publications'>('users');
@@ -367,7 +374,7 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                                                                 disabled={loadingAction === post.id}
                                                             >
                                                                 {Object.values(PostType).map(t => (
-                                                                    <option key={t} value={t}>{t}</option>
+                                                                    <option key={t} value={t}>{POST_TYPE_LABELS[t]}</option>
                                                                 ))}
                                                             </select>
                                                         </div>
