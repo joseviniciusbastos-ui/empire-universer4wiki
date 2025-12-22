@@ -16,13 +16,12 @@ export const ReputationBadge: React.FC<ReputationBadgeProps> = ({ reputation, sh
     // Icon Map
     const getIcon = () => {
         const props = { size: size === 'sm' ? 12 : size === 'md' ? 16 : 24, className: rank.color };
-        switch (rank.title) {
-            case 'Almirante': return <Crown {...props} />;
-            case 'Capitão': return <Zap {...props} />;
-            case 'Comandante': return <Star {...props} />;
-            case 'Oficial': return <Award {...props} />;
-            default: return <Shield {...props} />;
-        }
+
+        if (rank.title.includes('Almirante')) return <Crown {...props} />;
+        if (rank.title.includes('Capitão') || rank.title.includes('Comodoro')) return <Zap {...props} />;
+        if (rank.title.includes('Comandante')) return <Star {...props} />;
+        if (rank.title.includes('Oficial') || rank.title.includes('Alferes') || rank.title.includes('Tenente')) return <Award {...props} />;
+        return <Shield {...props} />;
     };
 
     return (
