@@ -3,6 +3,7 @@ import { Book, MessageSquare, Terminal as TerminalIcon, Wrench, LogOut, X, User 
 import { Button } from '../ui/Shared';
 import { User } from '../../types';
 import { supabase } from '../../lib/supabase';
+import { RANK_THRESHOLDS } from '../../constants';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -30,8 +31,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, view, setVi
         >
             <div className={`p-6 border-b border-space-steel flex items-center transition-all duration-300 ${isExpanded ? 'justify-between' : 'justify-center'}`}>
                 <div className="flex items-center gap-3 min-w-max">
-                    <div className="w-10 h-10 rounded-full bg-space-neon flex items-center justify-center animate-pulse-slow shadow-[0_0_15px_rgba(0,194,255,0.5)] flex-shrink-0">
-                        <TerminalIcon className="text-black" size={20} />
+                    <div className="w-10 h-10 rounded-full bg-space-dark border border-space-neon/50 flex items-center justify-center animate-pulse-slow shadow-[0_0_15px_rgba(0,194,255,0.3)] flex-shrink-0">
+                        <img src="/favicon.png" className="w-7 h-7 object-contain" alt="EU4 Icon" />
                     </div>
                     <div className={`transition-all duration-300 ${isExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 w-0 hidden'}`}>
                         <h1 className="font-display font-bold text-xl tracking-wider text-white leading-none">EU4</h1>
@@ -111,13 +112,47 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, view, setVi
                             <div className={`transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100 h-auto mt-2' : 'opacity-0 h-0 w-0'}`}>
                                 <div className="px-2 py-2">
                                     <div className="bg-space-darker rounded border border-space-steel p-3">
-                                        <div className="flex justify-between text-xs text-space-muted mb-1">
-                                            <span>REPUTAÇÃO</span>
-                                            <span className="text-space-neon font-bold uppercase">{currentUser.rank || 'Civil'}</span>
-                                        </div>
-                                        <div className="w-full bg-space-steel h-1 rounded-full overflow-hidden">
-                                            <div className="bg-space-neon h-full w-[45%]"></div>
-                                        </div>
+                                        {(() => {
+                                            const reputation = currentUser.reputation || 0;
+                                            const currentRank = [...RANK_THRESHOLDS].reverse().find(r => reputation >= r.min) || RANK_THRESHOLDS[0];
+                                            const nextRankIndex = RANK_THRESHOLDS.findIndex(r => r === currentRank) + 1;
+                                            const nextRank = nextRankIndex < RANK_THRESHOLDS.length ? RANK_THRESHOLDS[nextRankIndex] : null;
+
+                                            let progress = 100;
+                                            let pointsToNext = 0;
+
+                                            if (nextRank) {
+                                                const range = nextRank.min - currentRank.min;
+                                                const earned = reputation - currentRank.min;
+                                                progress = Math.min(Math.max((earned / range) * 100, 5), 100);
+                                                pointsToNext = nextRank.min - reputation;
+                                            }
+
+                                            return (
+                                                <>
+                                                    <div className="flex justify-between text-[10px] text-space-muted mb-1 font-mono uppercase">
+                                                        <span>{currentRank.title}</span>
+                                                        <span className={currentRank.color}>{reputation} PTS</span>
+                                                    </div>
+                                                    <div className="w-full bg-space-steel h-1.5 rounded-full overflow-hidden mb-2">
+                                                        <div
+                                                            className={`h-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(0,194,255,0.3)] ${currentRank.color.replace('text-', 'bg-')}`}
+                                                            style={{ width: `${progress}%` }}
+                                                        ></div>
+                                                    </div>
+                                                    {nextRank ? (
+                                                        <div className="flex justify-between text-[9px] text-space-muted font-mono italic">
+                                                            <span>Próximo: {nextRank.title}</span>
+                                                            <span className="text-space-neon">-{pointsToNext}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-[9px] text-center text-yellow-500 font-mono italic uppercase">
+                                                            PATENTE MÁXIMA ALCANÇADA
+                                                        </div>
+                                                    )}
+                                                </>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
                             </div>

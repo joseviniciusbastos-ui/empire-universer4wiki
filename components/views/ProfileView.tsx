@@ -3,6 +3,8 @@ import { Wrench } from 'lucide-react';
 import { Button, Badge } from '../ui/Shared';
 import { ReputationBadge } from '../ui/ReputationBadge';
 import { User } from '../../types';
+import { supabase } from '../../lib/supabase';
+import { RANK_THRESHOLDS } from '../../constants';
 
 interface ProfileViewProps {
     currentUser: User | null;
@@ -81,6 +83,74 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onEditPro
                             <p className="text-[10px] text-space-muted uppercase tracking-widest group-hover:text-space-neon transition-colors">ID do Agente</p>
                             <p className="font-mono text-space-muted text-xs">{currentUser.id.split('-')[0]}</p>
                         </div>
+                    </div>
+
+                    {/* Detailed Reputation Progress Bar */}
+                    <div className="mt-8 bg-space-darker/50 rounded-lg p-6 border border-space-steel/30 backdrop-blur-md relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-space-neon/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        {(() => {
+                            const reputation = currentUser.reputation || 0;
+                            const currentRank = [...RANK_THRESHOLDS].reverse().find(r => reputation >= r.min) || RANK_THRESHOLDS[0];
+                            const nextRankIndex = RANK_THRESHOLDS.findIndex(r => r === currentRank) + 1;
+                            const nextRank = nextRankIndex < RANK_THRESHOLDS.length ? RANK_THRESHOLDS[nextRankIndex] : null;
+
+                            let progress = 100;
+                            let pointsToNext = 0;
+
+                            if (nextRank) {
+                                const range = nextRank.min - currentRank.min;
+                                const earned = reputation - currentRank.min;
+                                progress = Math.min(Math.max((earned / range) * 100, 2), 100);
+                                pointsToNext = nextRank.min - reputation;
+                            }
+
+                            return (
+                                <div className="relative z-10">
+                                    <div className="flex justify-between items-end mb-4">
+                                        <div>
+                                            <p className="text-[10px] text-space-muted font-mono uppercase tracking-[0.2em] mb-1">Status de Progressão</p>
+                                            <h4 className={`text-2xl font-display font-bold uppercase tracking-tight ${currentRank.color}`}>
+                                                {currentRank.title}
+                                            </h4>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[10px] text-space-muted font-mono uppercase mb-1">Pontuação Total</p>
+                                            <p className="text-2xl font-mono font-bold text-white">{reputation} <span className="text-xs text-space-muted font-normal">PTS</span></p>
+                                        </div>
+                                    </div>
+
+                                    <div className="relative h-4 bg-space-black rounded-full border border-space-steel/30 p-1 mb-4 overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-1000 ease-out relative shadow-[0_0_15px_rgba(0,194,255,0.4)] ${currentRank.color.replace('text-', 'bg-')}`}
+                                            style={{ width: `${progress}%` }}
+                                        >
+                                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center bg-space-black/40 p-3 rounded border border-space-steel/20">
+                                        {nextRank ? (
+                                            <>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[9px] text-space-muted font-mono uppercase">Próximo Nível</span>
+                                                    <span className="text-xs font-bold text-white uppercase">{nextRank.title}</span>
+                                                </div>
+                                                <div className="text-right flex flex-col">
+                                                    <span className="text-[9px] text-space-muted font-mono uppercase">Necessário para avançar</span>
+                                                    <span className="text-xs font-bold text-space-neon font-mono">+{pointsToNext} PTS</span>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="w-full text-center py-1">
+                                                <span className="text-xs font-bold text-yellow-500 font-display tracking-widest animate-pulse">
+                                                    COMMANDER-IN-CHIEF: NÍVEL MÁXIMO ATINGIDO
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })()}
                     </div>
                 </div>
 
