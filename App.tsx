@@ -429,7 +429,7 @@ export default function App() {
           <BlogView
             posts={filteredPosts}
             categories={appCategories[PostType.ARTICLE]}
-            onCategoryClick={applySearch}
+            onCategoryClick={(cat) => setSearchFilters(prev => ({ ...prev, category: cat || 'all' }))}
             onCreateClick={() => openCreateModal(PostType.ARTICLE)}
             onPostClick={openPostView}
             onAuthorClick={handleProfileClick}
@@ -442,7 +442,7 @@ export default function App() {
           <ForumView
             posts={filteredPosts}
             categories={appCategories[PostType.THREAD]}
-            onCategoryClick={applySearch}
+            onCategoryClick={(cat) => setSearchFilters(prev => ({ ...prev, category: cat || 'all' }))}
             onCreateClick={() => openCreateModal(PostType.THREAD)}
             onPostClick={openPostView}
             onAuthorClick={handleProfileClick}

@@ -19,7 +19,7 @@ export const BlogView: React.FC<BlogViewProps> = ({ posts, categories, onCategor
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-display font-bold uppercase">Data Logs (Blog)</h2>
+                <h2 className="text-3xl font-display font-bold uppercase">Data Logs</h2>
                 <Button variant="primary" onClick={onCreateClick}>NOVO LOG</Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

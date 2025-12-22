@@ -24,7 +24,7 @@ const POST_TYPE_LABELS = {
     [PostType.WIKI]: 'ENCYCLOPEDIA',
     [PostType.BLOG]: 'BLOG',
     [PostType.THREAD]: 'FORUM',
-    [PostType.ARTICLE]: 'ARTICLES',
+    [PostType.ARTICLE]: 'DATA LOGS',
 };
 
 export default function AdminPanel({ currentUser }: AdminPanelProps) {

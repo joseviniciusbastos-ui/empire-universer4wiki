@@ -20,7 +20,14 @@ const extractCoverImage = (htmlContent: string): string | null => {
 
 // Helper function to remove first image from content (to avoid duplication in preview)
 const removeFirstImage = (htmlContent: string): string => {
-    return htmlContent.replace(/<img[^>]*>/, '');
+    return htmlContent.replace(/<img[^]*>/, '');
+};
+
+const POST_TYPE_LABELS: Record<PostType, string> = {
+    [PostType.WIKI]: 'ENCYCLOPEDIA',
+    [PostType.BLOG]: 'BLOG',
+    [PostType.THREAD]: 'FORUM',
+    [PostType.ARTICLE]: 'DATA LOGS',
 };
 
 export const PostCard: React.FC<PostCardProps> = ({ post, onClick, currentUser, onAuthorClick }) => {
@@ -47,8 +54,8 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onClick, currentUser, 
                     {/* Badges and Date */}
                     <div className="flex justify-between items-start mb-2">
                         <div className="flex gap-2 flex-wrap">
-                            <Badge color={post.type === PostType.BLOG ? 'bg-space-neon text-black' : 'bg-space-steel'}>
-                                {post.type}
+                            <Badge color={post.type === PostType.ARTICLE ? 'bg-space-neon text-black' : 'bg-space-steel'}>
+                                {POST_TYPE_LABELS[post.type]}
                             </Badge>
                             <span className="text-[10px] text-space-neon/80 uppercase font-mono border border-space-steel px-1">{post.category}</span>
                             {post.tags.slice(0, 3).map(tag => (

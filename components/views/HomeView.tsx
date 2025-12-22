@@ -71,8 +71,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                         </div>
                         <p className="text-5xl font-display font-bold text-white tracking-tight">{stats.logsCount}</p>
                         <div className="mt-4 flex items-center gap-2 text-xs font-mono text-violet-300">
-                            <span className="text-space-muted">Última atualização:</span>
-                            <span>{stats.lastUpdate}</span>
+                            <span className="text-space-neon">Data Logs</span>
                         </div>
                     </div>
                 </div>
