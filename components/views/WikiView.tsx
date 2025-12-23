@@ -3,6 +3,67 @@ import { Button, Card, Badge } from '../ui/Shared';
 import { WikiGridCard } from '../WikiGridCard';
 import { Post, PostType, User } from '../../types';
 import { Database, FolderOpen, Star, Search, Menu, X, Filter, ChevronRight } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
+
+const STATIC_TEXT = {
+    pt: {
+        encyclopedia: 'Encyclopedia',
+        galactica: 'Galactica',
+        status: 'Status: Sincronizado com Nucleo Central',
+        categories: 'Categorias',
+        newEntry: 'Nova Entrada',
+        featured: 'DESTAQUE RECENTE',
+        author: 'Autor',
+        transmission: 'Transmissão',
+        searchPlaceholder: 'PESQUISAR NA BASE DE DADOS...',
+        filteringBy: 'Filtrando por:',
+        noResults: 'Nenhum Registro Localizado',
+        noResultsDesc: 'A base de dados não retornou resultados para esta consulta. Tente limpar os filtros de busca.',
+        resetSensors: 'Reiniciar Sensores de Busca',
+        directories: 'Diretórios',
+        classification: 'Classificação Galáctica',
+        index: 'INDEX GLOBAL',
+        quote: '"O conhecimento é o único recurso que aumenta quando é compartilhado."'
+    },
+    en: {
+        encyclopedia: 'Encyclopedia',
+        galactica: 'Galactica',
+        status: 'Status: Synced with Central Core',
+        categories: 'Categories',
+        newEntry: 'New Entry',
+        featured: 'RECENT FEATURED',
+        author: 'Author',
+        transmission: 'Transmission',
+        searchPlaceholder: 'SEARCH DATABASE...',
+        filteringBy: 'Filtering by:',
+        noResults: 'No Records Located',
+        noResultsDesc: 'The database returned no results for this query. Try clearing search filters.',
+        resetSensors: 'Reset Search Sensors',
+        directories: 'Directories',
+        classification: 'Galactic Classification',
+        index: 'GLOBAL INDEX',
+        quote: '"Knowledge is the only resource that increases when shared."'
+    },
+    fr: {
+        encyclopedia: 'Encyclopédie',
+        galactica: 'Galactique',
+        status: 'Statut: Synchronisé avec le Noyau Central',
+        categories: 'Catégories',
+        newEntry: 'Nouvelle Entrée',
+        featured: 'VEDETTE RÉCENTE',
+        author: 'Auteur',
+        transmission: 'Transmission',
+        searchPlaceholder: 'RECHERCHER DANS LA BASE DE DONNÉES...',
+        filteringBy: 'Filtrage par :',
+        noResults: 'Aucun Enregistrement Localisé',
+        noResultsDesc: 'La base de données n\'a retourné aucun résultat pour cette requête. Essayez d\'effacer les filtres de recherche.',
+        resetSensors: 'Réinitialiser les Capteurs de Recherche',
+        directories: 'Répertoires',
+        classification: 'Classification Galactique',
+        index: 'INDEX GLOBAL',
+        quote: '"La connaissance est la seule ressource qui augmente lorsqu\'elle est partagée."'
+    }
+};
 
 interface WikiViewProps {
     posts: Post[];
@@ -23,6 +84,8 @@ export const WikiView: React.FC<WikiViewProps> = ({
     searchQuery, onSearchChange
 }) => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const { language } = useLanguage();
+    const t = STATIC_TEXT[language];
 
     // Filter only WIKI posts
     const wikiPosts = useMemo(() => {
@@ -56,10 +119,10 @@ export const WikiView: React.FC<WikiViewProps> = ({
                     </div>
                     <div>
                         <h2 className="text-3xl font-display font-bold uppercase text-white tracking-widest leading-none mb-1">
-                            Encyclopedia<span className="text-space-neon">Galactica</span>
+                            {t.encyclopedia}<span className="text-space-neon">{t.galactica}</span>
                         </h2>
                         <div className="flex items-center gap-2 text-[10px] font-mono text-space-muted uppercase">
-                            <span className="text-space-neon">Status:</span> Sincronizado com Nucleo Central
+                            <span className="text-space-neon">Status:</span> {t.status}
                         </div>
                     </div>
                 </div>
@@ -69,10 +132,10 @@ export const WikiView: React.FC<WikiViewProps> = ({
                         onClick={() => setIsDrawerOpen(true)}
                         className="border border-space-steel/30 px-4 flex items-center gap-2 hover:border-space-neon/50 text-xs font-mono uppercase"
                     >
-                        <Filter size={14} /> Categorias
+                        <Filter size={14} /> {t.categories}
                     </Button>
                     <Button variant="primary" onClick={onCreateClick} className="shadow-[0_0_20px_rgba(0,194,255,0.2)] text-xs font-mono uppercase tracking-widest px-6">
-                        Nova Entrada
+                        {t.newEntry}
                     </Button>
                 </div>
             </div>
@@ -95,7 +158,7 @@ export const WikiView: React.FC<WikiViewProps> = ({
 
                     {/* Badge */}
                     <div className="absolute top-6 left-6 z-10 flex items-center gap-2">
-                        <Badge className="bg-space-neon text-black font-bold text-[10px] px-3 py-1 ring-4 ring-space-neon/10">DESTAQUE RECENTE</Badge>
+                        <Badge className="bg-space-neon text-black font-bold text-[10px] px-3 py-1 ring-4 ring-space-neon/10">{t.featured}</Badge>
                         <span className="text-space-neon/70 font-mono text-xs uppercase tracking-[0.2em] bg-space-black/80 px-2 py-1 rounded backdrop-blur-sm border border-space-neon/20">
                             {featuredPost.category}
                         </span>
@@ -111,10 +174,10 @@ export const WikiView: React.FC<WikiViewProps> = ({
                         />
                         <div className="flex items-center gap-6 text-[10px] font-mono text-space-steel uppercase tracking-widest">
                             <span className="flex items-center gap-2">
-                                <span className="text-space-neon opacity-50">Autor:</span> {featuredPost.authorName}
+                                <span className="text-space-neon opacity-50">{t.author}:</span> {featuredPost.authorName}
                             </span>
                             <span className="flex items-center gap-2">
-                                <span className="text-space-neon opacity-50">Transmissão:</span> {new Date(featuredPost.createdAt).toLocaleDateString()}
+                                <span className="text-space-neon opacity-50">{t.transmission}:</span> {new Date(featuredPost.createdAt).toLocaleDateString(language === 'pt' ? 'pt-BR' : 'en-US')}
                             </span>
                         </div>
                     </div>
@@ -132,7 +195,7 @@ export const WikiView: React.FC<WikiViewProps> = ({
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-space-muted group-focus-within:text-space-neon transition-colors" size={18} />
                 <input
                     type="text"
-                    placeholder="PESQUISAR NA BASE DE DADOS..."
+                    placeholder={t.searchPlaceholder}
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
                     className="w-full bg-space-dark/40 border border-space-steel/20 rounded-xl py-4 pl-12 pr-4 text-sm font-mono text-white focus:outline-none focus:border-space-neon/50 focus:bg-space-dark/60 transition-all placeholder:text-space-muted/50"
@@ -140,17 +203,15 @@ export const WikiView: React.FC<WikiViewProps> = ({
             </div>
 
             {/* Category Breadcrumb/Status if filtering */}
-            {activeCategory !== 'all' && (
-                <div className="flex items-center gap-3 py-2">
-                    <span className="text-[10px] font-mono text-space-muted uppercase tracking-widest">Filtrando por:</span>
-                    <Badge
-                        className="bg-space-neon/10 border border-space-neon text-space-neon px-3 py-1 flex items-center gap-2 cursor-pointer hover:bg-space-neon/20 transition-colors"
-                        onClick={() => onCategoryClick('all')}
-                    >
-                        {activeCategory.toUpperCase()} <X size={12} />
-                    </Badge>
-                </div>
-            )}
+            <div className="flex items-center gap-3 py-2">
+                <span className="text-[10px] font-mono text-space-muted uppercase tracking-widest">{t.filteringBy}</span>
+                <Badge
+                    className="bg-space-neon/10 border border-space-neon text-space-neon px-3 py-1 flex items-center gap-2 cursor-pointer hover:bg-space-neon/20 transition-colors"
+                    onClick={() => onCategoryClick('all')}
+                >
+                    {activeCategory.toUpperCase()} <X size={12} />
+                </Badge>
+            </div>
 
             {/* Post Grid Section */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -168,16 +229,16 @@ export const WikiView: React.FC<WikiViewProps> = ({
                         <div className="w-20 h-20 bg-space-steel/10 rounded-full flex items-center justify-center mx-auto mb-6">
                             <Database size={40} className="text-space-steel opacity-40" />
                         </div>
-                        <p className="text-space-neon font-display text-xl uppercase tracking-widest mb-2">Nenhum Registro Localizado</p>
+                        <p className="text-space-neon font-display text-xl uppercase tracking-widest mb-2">{t.noResults}</p>
                         <p className="text-space-muted font-mono text-xs max-w-sm mx-auto leading-relaxed">
-                            A base de dados não retornou resultados para esta consulta. Tente limpar os filtros de busca.
+                            {t.noResultsDesc}
                         </p>
                         <Button
                             variant="ghost"
                             className="mt-8 text-xs font-mono uppercase text-space-neon"
                             onClick={() => { onSearchChange(''); onCategoryClick('all'); }}
                         >
-                            Reiniciar Sensores de Busca
+                            {t.resetSensors}
                         </Button>
                     </div>
                 )}
@@ -190,8 +251,8 @@ export const WikiView: React.FC<WikiViewProps> = ({
                     <div className="relative w-full max-w-md bg-space-dark border-l border-space-neon/30 h-full p-8 shadow-2xl animate-slideLeft">
                         <div className="flex justify-between items-center mb-10">
                             <div>
-                                <h3 className="text-2xl font-display font-bold text-white uppercase tracking-wider">Diretórios</h3>
-                                <p className="text-[10px] font-mono text-space-neon uppercase tracking-[0.2em] mt-1">Classificação Galáctica</p>
+                                <h3 className="text-2xl font-display font-bold text-white uppercase tracking-wider">{t.directories}</h3>
+                                <p className="text-[10px] font-mono text-space-neon uppercase tracking-[0.2em] mt-1">{t.classification}</p>
                             </div>
                             <button onClick={() => setIsDrawerOpen(false)} className="p-3 hover:bg-space-steel/10 rounded-full text-space-muted hover:text-white transition-colors">
                                 <X size={24} />
@@ -205,7 +266,7 @@ export const WikiView: React.FC<WikiViewProps> = ({
                             >
                                 <div className="flex items-center gap-4">
                                     <Database size={20} className={activeCategory === 'all' ? 'text-space-neon' : 'text-space-steel'} />
-                                    <span className="font-display font-bold text-sm tracking-widest">INDEX GLOBAL</span>
+                                    <span className="font-display font-bold text-sm tracking-widest">{t.index}</span>
                                 </div>
                                 <ChevronRight size={16} className={`transition-transform duration-300 ${activeCategory === 'all' ? 'translate-x-1' : 'opacity-0'}`} />
                             </button>
@@ -228,7 +289,7 @@ export const WikiView: React.FC<WikiViewProps> = ({
                         <div className="absolute bottom-8 left-8 right-8">
                             <div className="bg-space-black/50 border border-space-steel/20 rounded-xl p-6">
                                 <p className="text-[10px] font-mono text-space-muted italic leading-relaxed">
-                                    "O conhecimento é o único recurso que aumenta quando é compartilhado."
+                                    {t.quote}
                                 </p>
                             </div>
                         </div>

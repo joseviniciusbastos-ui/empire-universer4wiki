@@ -3,6 +3,73 @@ import { Card, Badge, Button } from '../ui/Shared';
 import { Users, BookOpen, Clock, History, AlertTriangle, Star, Activity, ArrowRight, Zap, Edit3, Rocket } from 'lucide-react';
 import { PostCard } from '../PostCard';
 import { Post, User, BulletinItem } from '../../types';
+import { useLanguage } from '../../contexts/LanguageContext';
+
+const STATIC_TEXT = {
+    pt: {
+        featured: 'Contribuidor de Destaque',
+        transmissions: 'TRANSMISSÕES',
+        official: 'Oficial de Campo',
+        wikiEntries: 'Entradas na Wiki',
+        encyclopedia: 'Enciclopédia Galáctica',
+        online: 'Pessoas Online na Wiki',
+        activeUsers: 'Usuários ativos nas últimas 24h.',
+        networkSignal: 'Sinal de rede estável.',
+        welcome: 'Bem-vindo à Wiki EU4',
+        defaultAbout: 'Esta é a enciclopédia colaborativa dedicada ao universo de Empire Universe 4.',
+        edit: 'EDITAR',
+        recentTransmissions: 'Transmissões Recentes',
+        viewArchive: 'VER ARQUIVO COMPLETO',
+        decoding: 'DECODIFICANDO SINAL...',
+        signalLost: 'SINAL PERDIDO. Nenhuma transmissão encontrada.',
+        bulletin: 'Boletim Oficial',
+        noBulletins: 'Nenhum comunicado oficial no momento.',
+        archive: 'Arquivo de Transmissões',
+        error: 'SEM DADOS'
+    },
+    en: {
+        featured: 'Featured Contributor',
+        transmissions: 'TRANSMISSIONS',
+        official: 'Field Officer',
+        wikiEntries: 'Wiki Entries',
+        encyclopedia: 'Galactic Encyclopedia',
+        online: 'Users Online',
+        activeUsers: 'Active users in the last 24h.',
+        networkSignal: 'Stable network signal.',
+        welcome: 'Welcome to Wiki EU4',
+        defaultAbout: 'This is the collaborative encyclopedia dedicated to the Empire Universe 4 universe.',
+        edit: 'EDIT',
+        recentTransmissions: 'Recent Transmissions',
+        viewArchive: 'VIEW FULL ARCHIVE',
+        decoding: 'DECODING SIGNAL...',
+        signalLost: 'SIGNAL LOST. No transmissions found.',
+        bulletin: 'Official Bulletin',
+        noBulletins: 'No official announcements at this time.',
+        archive: 'Transmission Archive',
+        error: 'NO DATA'
+    },
+    fr: {
+        featured: 'Contributeur en Vedette',
+        transmissions: 'TRANSMISSIONS',
+        official: 'Officier de Terrain',
+        wikiEntries: 'Entrées Wiki',
+        encyclopedia: 'Encyclopédie Galactique',
+        online: 'Personnes en Ligne',
+        activeUsers: 'Utilisateurs actifs ces dernières 24h.',
+        networkSignal: 'Signal réseau stable.',
+        welcome: 'Bienvenue sur Wiki EU4',
+        defaultAbout: 'Ceci est l\'encyclopédie collaborative dédiée à l\'univers de Empire Universe 4.',
+        edit: 'MODIFIER',
+        recentTransmissions: 'Transmissions Récentes',
+        viewArchive: 'VOIR L\'ARCHIVE COMPLÈTE',
+        decoding: 'DÉCODAGE DU SIGNAL...',
+        signalLost: 'SIGNAL PERDU. Aucune transmission trouvée.',
+        bulletin: 'Bulletin Officiel',
+        noBulletins: 'Aucun communiqué officiel pour oument.',
+        archive: 'Archive des Transmissions',
+        error: 'PAS DE DONNÉES'
+    }
+};
 
 interface HomeViewProps {
     stats: {
@@ -33,6 +100,70 @@ export const HomeView: React.FC<HomeViewProps> = ({
     bulletins = [], onEditBulletin, onBulletinClick, readPosts
 }) => {
     const isAdmin = currentUser?.role === 'ADMIN';
+    const { language, translatePost } = useLanguage();
+    const t = STATIC_TEXT[language];
+
+    const [translatedAbout, setTranslatedAbout] = React.useState({ title: '', content: '' });
+    const [translatedBulletins, setTranslatedBulletins] = React.useState<BulletinItem[]>([]);
+
+    // Translate About Section
+    React.useEffect(() => {
+        if (language === 'pt') {
+            setTranslatedAbout({
+                title: aboutTitle || t.welcome,
+                content: aboutContent || t.defaultAbout
+            });
+        } else {
+            // Reusing translatePost logic by creating a dummy post object
+            const dummyPost: Post = {
+                id: 'welcome_section',
+                title: aboutTitle || STATIC_TEXT.pt.welcome,
+                content: aboutContent || STATIC_TEXT.pt.defaultAbout,
+                type: 'WIKI' as any,
+                category: '',
+                authorId: '',
+                authorName: '',
+                slug: 'welcome',
+                tags: [],
+                likes: 0,
+                createdAt: '',
+                displayOrder: 0
+            };
+            translatePost(dummyPost).then(data => {
+                setTranslatedAbout(data);
+            });
+        }
+    }, [language, aboutTitle, aboutContent]);
+
+    // Translate Bulletins
+    React.useEffect(() => {
+        if (language === 'pt') {
+            setTranslatedBulletins(bulletins);
+        } else {
+            const translateAllBulletins = async () => {
+                const translated = await Promise.all(bulletins.map(async b => {
+                    const dummy: Post = {
+                        id: `bulletin_${b.id}`,
+                        title: b.title,
+                        content: b.content,
+                        type: 'WIKI' as any,
+                        category: '',
+                        authorId: '',
+                        authorName: '',
+                        slug: '',
+                        tags: [],
+                        likes: 0,
+                        createdAt: '',
+                        displayOrder: 0
+                    };
+                    const data = await translatePost(dummy);
+                    return { ...b, title: data.title, content: data.content };
+                }));
+                setTranslatedBulletins(translated);
+            };
+            translateAllBulletins();
+        }
+    }, [language, bulletins]);
 
     // Calculate top contributor for the hero card
     const authorCounts: { [key: string]: { name: string, count: number } } = {};
@@ -63,7 +194,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-4">
-                            <h3 className="text-violet-400/70 font-mono text-xs tracking-widest uppercase">Contribuidor de Destaque</h3>
+                            <h3 className="text-violet-400/70 font-mono text-xs tracking-widest uppercase">{t.featured}</h3>
                             <Star size={16} className="text-violet-400 animate-pulse" />
                         </div>
                         {topContributor ? (
@@ -77,14 +208,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
                                 </div>
                                 <div>
                                     <p className="text-2xl font-display font-bold text-white tracking-tight">{topContributor.name}</p>
-                                    <p className="text-[10px] font-mono text-violet-300 uppercase">{topContributor.count} TRANSMISSÕES</p>
+                                    <p className="text-[10px] font-mono text-violet-300 uppercase">{topContributor.count} {t.transmissions}</p>
                                 </div>
                             </div>
                         ) : (
                             <p className="text-2xl font-display font-bold text-white/50 tracking-tight">SEM DADOS</p>
                         )}
                         <div className="mt-4 flex items-center gap-2 text-xs font-mono text-violet-300">
-                            <span className="text-space-neon">Oficial de Campo</span>
+                            <span className="text-space-neon">{t.official}</span>
                         </div>
                     </div>
                 </div>
@@ -98,12 +229,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-4">
-                            <h3 className="text-space-neon/70 font-mono text-xs tracking-widest uppercase">Entradas na Wiki</h3>
+                            <h3 className="text-space-neon/70 font-mono text-xs tracking-widest uppercase">{t.wikiEntries}</h3>
                             <Activity size={16} className="text-space-neon animate-pulse" />
                         </div>
                         <p className="text-5xl font-display font-bold text-white tracking-tight">{stats.wikiCount}</p>
                         <div className="mt-4 flex items-center gap-2 text-xs font-mono text-space-muted">
-                            <span className="text-space-neon">Enciclopédia Galáctica</span>
+                            <span className="text-space-neon">{t.encyclopedia}</span>
                         </div>
                     </div>
                 </div>
@@ -117,12 +248,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-4">
-                            <h3 className="text-space-alert/70 font-mono text-xs tracking-widest uppercase">Pessoas Online na Wiki</h3>
+                            <h3 className="text-space-alert/70 font-mono text-xs tracking-widest uppercase">{t.online}</h3>
                             <Users size={16} className="text-space-alert animate-pulse" />
                         </div>
                         <p className="text-5xl font-display font-bold text-white tracking-tight">{stats.onlineCount}</p>
                         <div className="mt-4 text-xs text-space-muted font-mono border-l-2 border-space-alert pl-2">
-                            Usuários ativos nas últimas 24h.<br />Sinal de rede estável.
+                            {t.activeUsers}<br />{t.networkSignal}
                         </div>
                     </div>
                 </div>
@@ -144,7 +275,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                                 <div className="flex-1">
                                     <div className="flex justify-between items-start">
                                         <h2 className="text-2xl font-display font-bold text-white mb-2">
-                                            {aboutTitle || 'Bem-vindo à Wiki EU4'}
+                                            {translatedAbout.title}
                                         </h2>
                                         {isAdmin && onEditAbout && (
                                             <Button
@@ -153,13 +284,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
                                                 onClick={onEditAbout}
                                                 className="opacity-0 group-hover:opacity-100 transition-opacity text-space-neon"
                                             >
-                                                <Edit3 size={14} className="mr-1" /> EDITAR
+                                                <Edit3 size={14} className="mr-1" /> {t.edit}
                                             </Button>
                                         )}
                                     </div>
                                     <div
                                         className="text-space-muted font-mono text-sm leading-relaxed max-w-3xl prose prose-invert prose-sm max-w-none pr-2 custom-scrollbar"
-                                        dangerouslySetInnerHTML={{ __html: aboutContent || 'Esta é a enciclopédia colaborativa dedicada ao universo de Empire Universe 4.' }}
+                                        dangerouslySetInnerHTML={{ __html: translatedAbout.content }}
                                     />
                                 </div>
                             </div>
@@ -168,10 +299,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
                     <div className="flex justify-between items-end border-b border-space-steel/30 pb-2">
                         <h2 className="text-2xl font-display font-bold uppercase flex items-center gap-3 text-white">
-                            <History className="text-space-neon" /> Transmissões Recentes
+                            <History className="text-space-neon" /> {t.recentTransmissions}
                         </h2>
                         <Button variant="ghost" size="sm" onClick={() => onNavigate('wiki')} className="text-xs hover:text-space-neon">
-                            VER ARQUIVO COMPLETO <ArrowRight size={14} className="ml-1" />
+                            {t.viewArchive} <ArrowRight size={14} className="ml-1" />
                         </Button>
                     </div>
 
@@ -180,7 +311,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                             <div className="h-40 flex items-center justify-center border border-space-steel/30 rounded-lg bg-space-dark/20">
                                 <div className="flex flex-col items-center gap-2">
                                     <div className="w-8 h-8 rounded-full border-2 border-space-neon border-t-transparent animate-spin" />
-                                    <span className="text-xs font-mono text-space-neon animate-pulse">DECODIFICANDO SINAL...</span>
+                                    <span className="text-xs font-mono text-space-neon animate-pulse">{t.decoding}</span>
                                 </div>
                             </div>
                         ) : recentPosts.length > 0 ? (
@@ -194,7 +325,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                                 />
                             ))
                         ) : (
-                            <div className="text-space-muted font-mono text-center py-10 border border-dashed border-space-steel rounded">SINAL PERDIDO. Nenhuma transmissão encontrada.</div>
+                            <div className="text-space-muted font-mono text-center py-10 border border-dashed border-space-steel rounded">{t.signalLost}</div>
                         )}
                     </div>
                 </div>
@@ -214,16 +345,16 @@ export const HomeView: React.FC<HomeViewProps> = ({
                             </button>
                         )}
                         <h3 className="font-display font-bold text-white uppercase text-sm mb-4 border-b border-space-steel/30 pb-2 flex justify-between">
-                            <span>Boletim Oficial</span>
+                            <span>{t.bulletin}</span>
                             <span className="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
                         </h3>
                         <div className="space-y-4">
-                            {bulletins.length === 0 ? (
+                            {translatedBulletins.length === 0 ? (
                                 <p className="text-xs text-space-muted font-mono italic">
-                                    Nenhum comunicado oficial no momento.
+                                    {t.noBulletins}
                                 </p>
                             ) : (() => {
-                                const sorted = [...bulletins].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                                const sorted = [...translatedBulletins].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
                                 const featured = sorted.slice(0, 3);
                                 const archive = sorted.slice(3);
 
@@ -276,7 +407,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                                         {archive.length > 0 && (
                                             <div className="mt-4 pt-4 border-t border-space-steel/20">
                                                 <h4 className="text-[10px] font-mono text-space-muted uppercase tracking-widest mb-3 flex items-center gap-2">
-                                                    <History size={10} /> Arquivo de Transmissões
+                                                    <History size={10} /> {t.archive}
                                                 </h4>
                                                 <div className="max-h-[200px] overflow-y-auto pr-2 custom-scrollbar space-y-2">
                                                     {archive.map(item => (

@@ -2,6 +2,7 @@ import React from 'react';
 import { Post, User } from '../types';
 import { Card, Badge } from './ui/Shared';
 import { Clock, Eye, MessageSquare, ArrowUpRight } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface WikiGridCardProps {
     post: Post;
@@ -10,12 +11,28 @@ interface WikiGridCardProps {
 }
 
 export const WikiGridCard: React.FC<WikiGridCardProps> = ({ post, onClick, currentUser }) => {
-    // Extract a small snippet from HTML content
-    const snippet = post.content.replace(/<[^>]*>/g, '').slice(0, 100);
+    const { language, translatePost } = useLanguage();
+    const [translatedTitle, setTranslatedTitle] = React.useState(post.title);
+    const [translatedSnippet, setTranslatedSnippet] = React.useState('');
 
     // Try to find an image in the content or use a placeholder
     const imgMatch = post.content.match(/<img[^>]+src="([^">]+)"/);
     const coverImage = imgMatch ? imgMatch[1] : `https://api.dicebear.com/7.x/identicon/svg?seed=${post.title}`;
+
+    React.useEffect(() => {
+        if (language === 'pt') {
+            setTranslatedTitle(post.title);
+            setTranslatedSnippet(post.content.replace(/<[^>]*>?/gm, '').slice(0, 100));
+        } else if (post.translations && post.translations[language]) {
+            setTranslatedTitle(post.translations[language].title);
+            setTranslatedSnippet(post.translations[language].content.replace(/<[^>]*>?/gm, '').slice(0, 100));
+        } else {
+            translatePost(post).then(data => {
+                setTranslatedTitle(data.title);
+                setTranslatedSnippet(data.content.replace(/<[^>]*>?/gm, '').slice(0, 100));
+            });
+        }
+    }, [language, post]);
 
     return (
         <Card
@@ -45,11 +62,11 @@ export const WikiGridCard: React.FC<WikiGridCardProps> = ({ post, onClick, curre
             {/* Content */}
             <div className="p-4 flex-1 flex flex-col">
                 <h4 className="font-display font-bold text-white group-hover:text-space-neon transition-colors mb-2 line-clamp-2 leading-tight">
-                    {post.title}
+                    {translatedTitle}
                 </h4>
 
                 <p className="text-xs text-space-muted font-mono leading-relaxed line-clamp-3 mb-4 flex-1">
-                    {snippet}...
+                    {translatedSnippet}...
                 </p>
 
                 {/* Footer Stats */}
@@ -59,7 +76,7 @@ export const WikiGridCard: React.FC<WikiGridCardProps> = ({ post, onClick, curre
                             <Eye size={10} /> {post.views}
                         </span>
                         <span className="flex items-center gap-1 text-space-neon">
-                            <Clock size={10} /> {new Date(post.createdAt).toLocaleDateString()}
+                            <Clock size={10} /> {new Date(post.createdAt).toLocaleDateString(language === 'pt' ? 'pt-BR' : 'en-US')}
                         </span>
                     </div>
                 </div>
