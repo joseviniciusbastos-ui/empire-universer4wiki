@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Rocket, Shield, Zap, Crosshair, Save, RotateCcw, Box, ShieldAlert, X } from 'lucide-react';
+import { Rocket, Shield, Zap, Crosshair, Save, RotateCcw, Box, ShieldAlert, X, Trash2, Settings, Plus, Cpu } from 'lucide-react';
 import { Button, Card, Badge, Input } from '../ui/Shared';
 import { useToast } from '../../contexts/ToastContext';
 import { supabase } from '../../lib/supabase';
@@ -39,7 +39,7 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
     };
 
     // --- DESIGNER STATE ---
-    const [viewMode, setViewMode] = useState<'designer' | 'hangar'>('designer');
+    const [viewMode, setViewMode] = useState<'designer' | 'hangar' | 'admin-ships' | 'admin-modules' | 'admin-policies'>('designer');
     const [slots, setSlots] = useState<any[]>([]);
     const [designName, setDesignName] = useState("");
     const [currentStats, setCurrentStats] = useState<any>({});
@@ -48,6 +48,7 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
     const [savedDesigns, setSavedDesigns] = useState<any[]>([]);
     const [warnings, setWarnings] = useState<string[]>([]);
     const [policyModifiers, setPolicyModifiers] = useState<any>({});
+    const [showWelcome, setShowWelcome] = useState(true);
 
     useEffect(() => {
         if (selectedShip) {
@@ -72,6 +73,15 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
     useEffect(() => {
         if (viewMode === 'hangar') {
             fetchSavedDesigns();
+        }
+        if (viewMode === 'admin-ships') {
+            fetchInitialData(); // Refresh ships list
+        }
+        if (viewMode === 'admin-modules') {
+            fetchInitialData(); // Refresh modules list
+        }
+        if (viewMode === 'admin-policies') {
+            fetchInitialData(); // Refresh policies list
         }
     }, [viewMode]);
 
@@ -233,6 +243,79 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
         }
     };
 
+    // --- ADMIN CRUD FUNCTIONS ---
+    const createItem = async (table: string, data: any, refresh: () => void) => {
+        const { error } = await supabase.from(table).insert([data]);
+        if (!error) {
+            showToast("Item criado com sucesso!", "success");
+            refresh();
+        } else {
+            showToast("Erro: " + error.message, "error");
+        }
+    };
+
+    const deleteItem = async (table: string, id: string, refresh: () => void) => {
+        if (!confirm("Tem certeza?")) return;
+        const { error } = await supabase.from(table).delete().eq('id', id);
+        if (!error) {
+            showToast("Item removido.", "success");
+            refresh();
+        } else {
+            showToast("Erro: " + error.message, "error");
+        }
+    };
+
+    // Helper for JSON inputs
+    const JsonInput = ({ value, onChange, placeholder }: { value: any, onChange: (v: any) => void, placeholder?: string }) => {
+        const [text, setText] = useState(JSON.stringify(value, null, 2));
+        const [valid, setValid] = useState(true);
+
+        const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+            const newVal = e.target.value;
+            setText(newVal);
+            try {
+                const parsed = JSON.parse(newVal);
+                setValid(true);
+                onChange(parsed);
+            } catch (err) {
+                setValid(false);
+            }
+        };
+
+        return (
+            <div className="flex flex-col">
+                <textarea
+                    className={`bg-space-black border ${valid ? 'border-space-steel' : 'border-space-alert'} rounded p-2 font-mono text-xs h-32 w-full`}
+                    value={text}
+                    onChange={handleChange}
+                    placeholder={placeholder || "{}"}
+                />
+                {!valid && <span className="text-[10px] text-space-alert">JSON Inválido</span>}
+            </div>
+        );
+    };
+
+    const renderWelcome = () => (
+        <div className="bg-space-dark border border-space-neon p-6 rounded-xl mb-6 flex items-start gap-4 relative">
+            <div className="bg-space-neon/10 p-4 rounded-full border border-space-neon/30">
+                <Rocket size={32} className="text-space-neon" />
+            </div>
+            <div className="flex-1">
+                <h3 className="text-xl font-display font-bold text-white mb-2">Bem-vindo ao Estaleiro Imperial</h3>
+                <p className="text-sm text-space-muted mb-4 font-mono leading-relaxed">
+                    Comandante, esta interface permite projetar as naves que comporão nossa frota.
+                    <br />1. Selecione um <strong>Chassi</strong> base.
+                    <br />2. Equipe <strong>Módulos</strong> nos hardpoints disponíveis.
+                    <br />3. Visualize estatísticas e custos em tempo real.
+                </p>
+                <Button size="sm" variant="secondary" onClick={() => setShowWelcome(false)}>ENTENDIDO</Button>
+            </div>
+            <button onClick={() => setShowWelcome(false)} className="absolute top-2 right-2 text-space-muted hover:text-white">
+                <X size={16} />
+            </button>
+        </div>
+    );
+
     return (
         <div className="space-y-6 animate-fade-in relative z-10 w-full max-w-7xl mx-auto p-4">
             <div className="flex justify-between items-center border-b border-space-steel pb-4">
@@ -245,9 +328,39 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
                     </p>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                     <Button variant={viewMode === 'designer' ? 'primary' : 'ghost'} onClick={() => { setViewMode('designer'); setSelectedShip(null); }}>PROJETISTA</Button>
                     <Button variant={viewMode === 'hangar' ? 'primary' : 'ghost'} onClick={() => { setViewMode('hangar'); setSelectedShip(null); }}>MEU HANGAR</Button>
+
+                    {currentUser?.role === 'ADMIN' && (
+                        <>
+                            <div className="h-6 w-px bg-space-steel/50 mx-1"></div>
+                            <Button
+                                variant={viewMode === 'admin-ships' ? 'primary' : 'ghost'}
+                                onClick={() => { setViewMode('admin-ships'); setSelectedShip(null); }}
+                                icon={<Rocket size={14} />}
+                                size="sm"
+                            >
+                                NAVES
+                            </Button>
+                            <Button
+                                variant={viewMode === 'admin-modules' ? 'primary' : 'ghost'}
+                                onClick={() => { setViewMode('admin-modules'); setSelectedShip(null); }}
+                                icon={<Cpu size={14} />}
+                                size="sm"
+                            >
+                                MÓDULOS
+                            </Button>
+                            <Button
+                                variant={viewMode === 'admin-policies' ? 'primary' : 'ghost'}
+                                onClick={() => { setViewMode('admin-policies'); setSelectedShip(null); }}
+                                icon={<Settings size={14} />}
+                                size="sm"
+                            >
+                                POLÍTICAS
+                            </Button>
+                        </>
+                    )}
                 </div>
 
                 {selectedShip && viewMode === 'designer' && (
@@ -324,49 +437,250 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
                 </div>
             ) : !selectedShip ? (
                 /* SHIP SELECTION SCREEN */
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {ships.map(ship => (
-                        <div key={ship.id}
-                            onClick={() => setSelectedShip(ship)}
-                            className="group relative bg-space-dark/60 border border-space-steel hover:border-space-neon rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-[0_0_15px_rgba(0,255,157,0.3)]">
-                            <div className="h-48 bg-black/50 relative">
-                                {ship.image_url ? (
-                                    <img src={ship.image_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                                ) : (
-                                    <div className="flex items-center justify-center h-full text-space-muted">
-                                        <Rocket size={48} />
+                <>
+                    {showWelcome && renderWelcome()}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {ships.map(ship => (
+                            <div key={ship.id}
+                                onClick={() => setSelectedShip(ship)}
+                                className="group relative bg-space-dark/60 border border-space-steel hover:border-space-neon rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-[0_0_15px_rgba(0,255,157,0.3)]">
+                                <div className="h-48 bg-black/50 relative">
+                                    {ship.image_url ? (
+                                        <img src={ship.image_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full text-space-muted">
+                                            <Rocket size={48} />
+                                        </div>
+                                    )}
+                                    <div className="absolute top-2 right-2">
+                                        <Badge className="bg-space-black/80 backdrop-blur border border-space-steel">{ship.category}</Badge>
                                     </div>
-                                )}
-                                <div className="absolute top-2 right-2">
-                                    <Badge className="bg-space-black/80 backdrop-blur border border-space-steel">{ship.category}</Badge>
                                 </div>
-                            </div>
-                            <div className="p-4">
-                                <h3 className="text-xl font-bold text-white font-display mb-1 group-hover:text-space-neon transition-colors">{ship.name}</h3>
-                                <p className="text-xs text-space-muted mb-4 h-10 overflow-hidden">{ship.description}</p>
+                                <div className="p-4">
+                                    <h3 className="text-xl font-bold text-white font-display mb-1 group-hover:text-space-neon transition-colors">{ship.name}</h3>
+                                    <p className="text-xs text-space-muted mb-4 h-10 overflow-hidden">{ship.description}</p>
 
-                                <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                                    <div className="flex justify-between items-center bg-space-black/30 p-1.5 rounded">
-                                        <span className="text-space-muted">HULL</span>
-                                        <span className="text-white">{ship.base_stats.hull}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center bg-space-black/30 p-1.5 rounded">
-                                        <span className="text-space-muted">SHIELD</span>
-                                        <span className="text-white font-bold text-blue-300">{ship.base_stats.shield}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center bg-space-black/30 p-1.5 rounded col-span-2">
-                                        <div className="flex items-center gap-1 text-space-muted"><Box size={12} /> SLOTS</div>
-                                        <span className="text-space-neon">{ship.slots_layout.length} HARDPOINTS</span>
+                                    <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                                        <div className="flex justify-between items-center bg-space-black/30 p-1.5 rounded">
+                                            <span className="text-space-muted">HULL</span>
+                                            <span className="text-white">{ship.base_stats.hull}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center bg-space-black/30 p-1.5 rounded">
+                                            <span className="text-space-muted">SHIELD</span>
+                                            <span className="text-white font-bold text-blue-300">{ship.base_stats.shield}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center bg-space-black/30 p-1.5 rounded col-span-2">
+                                            <div className="flex items-center gap-1 text-space-muted"><Box size={12} /> SLOTS</div>
+                                            <span className="text-space-neon">{ship.slots_layout.length} HARDPOINTS</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                    {ships.length === 0 && (
-                        <div className="col-span-full text-center py-12 text-space-muted border border-dashed border-space-steel rounded-xl">
-                            <p>Nenhum chassi de nave disponível. Contate o administrador.</p>
-                        </div>
-                    )}
+                        ))}
+                        {ships.length === 0 && (
+                            <div className="col-span-full text-center py-12 text-space-muted border border-dashed border-space-steel rounded-xl">
+                                <p>Nenhum chassi de nave disponível. Contate o administrador.</p>
+                            </div>
+                        )}
+                    </div>
+                </>
+            ) : viewMode === 'admin-ships' ? (
+                /* ADMIN: SHIPS MANAGEMENT */
+                <div className="space-y-6">
+                    <Card title="Adicionar Nova Nave">
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            const form = e.target as any;
+                            const data = {
+                                name: form.name.value,
+                                description: form.description.value,
+                                category: form.category.value,
+                                image_url: form.image_url.value,
+                                base_stats: JSON.parse(form.base_stats.value || '{}'),
+                                slots_layout: JSON.parse(form.slots_layout.value || '[]'),
+                                base_cost: JSON.parse(form.base_cost.value || '{}'),
+                                base_build_time: parseInt(form.base_build_time.value)
+                            };
+                            createItem('ships', data, fetchInitialData);
+                            form.reset();
+                        }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Input name="name" placeholder="Nome da Nave" required />
+                            <select name="category" className="bg-space-black border border-space-steel rounded p-2 text-white">
+                                <option value="fighter">Caça (Fighter)</option>
+                                <option value="corvette">Corveta</option>
+                                <option value="frigate">Fragata</option>
+                                <option value="destroyer">Destroyer</option>
+                                <option value="cruiser">Cruzador</option>
+                                <option value="battleship">Couraçado</option>
+                                <option value="capital">Capital</option>
+                                <option value="transport">Transporte</option>
+                                <option value="mining">Mineração</option>
+                            </select>
+                            <Input name="image_url" placeholder="URL da Imagem" />
+                            <Input name="base_build_time" type="number" placeholder="Tempo de Construção (segundos)" required />
+                            <div className="col-span-2">
+                                <Input name="description" placeholder="Descrição" />
+                            </div>
+
+                            <div className="col-span-2 md:col-span-1">
+                                <label className="text-xs text-space-neon mb-1 block">Stats Base (JSON)</label>
+                                <textarea name="base_stats" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24" defaultValue='{"hull": 100, "shield": 50, "speed": 100, "cargo": 0}' />
+                            </div>
+                            <div className="col-span-2 md:col-span-1">
+                                <label className="text-xs text-space-neon mb-1 block">Slots Layout (JSON)</label>
+                                <textarea name="slots_layout" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24" defaultValue='[{"type":"engine", "count": 1}, {"type":"weapon", "count": 2}]' />
+                            </div>
+                            <div className="col-span-2">
+                                <label className="text-xs text-space-neon mb-1 block">Custo Base (JSON)</label>
+                                <textarea name="base_cost" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-16" defaultValue='{"metal": 1000, "crystal": 500, "deuterium": 100}' />
+                            </div>
+
+                            <div className="col-span-2">
+                                <Button type="submit" variant="primary" className="w-full">CRIAR NAVE</Button>
+                            </div>
+                        </form>
+                    </Card>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {ships.map(ship => (
+                            <div key={ship.id} className="border border-space-steel bg-space-dark/50 p-4 rounded relative group">
+                                <button onClick={() => deleteItem('ships', ship.id, fetchInitialData)} className="absolute top-2 right-2 text-space-alert opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="w-12 h-12 bg-space-black rounded border border-space-steel overflow-hidden flex items-center justify-center">
+                                        {ship.image_url ? <img src={ship.image_url} className="w-full h-full object-cover" /> : <Rocket size={20} className="text-space-muted" />}
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-white">{ship.name}</h4>
+                                        <Badge>{ship.category}</Badge>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-[10px] font-mono text-space-muted mt-2">
+                                    {Object.entries(ship.base_stats).slice(0, 4).map(([k, v]) => (
+                                        <div key={k}>{k.toUpperCase()}: <span className="text-white">{String(v)}</span></div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : viewMode === 'admin-modules' ? (
+                /* ADMIN: MODULES MANAGEMENT */
+                <div className="space-y-6">
+                    <Card title="Adicionar Novo Módulo">
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            const form = e.target as any;
+                            const data = {
+                                name: form.name.value,
+                                type: form.type.value,
+                                description: form.description.value,
+                                level: parseInt(form.level.value),
+                                stats_modifier: JSON.parse(form.stats_modifier.value || '{}'),
+                                cost: JSON.parse(form.cost.value || '{}'),
+                                image_url: form.image_url.value
+                            };
+                            createItem('ship_modules', data, fetchInitialData);
+                            form.reset();
+                        }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Input name="name" placeholder="Nome do Módulo" required />
+                            <select name="type" className="bg-space-black border border-space-steel rounded p-2 text-white">
+                                <option value="engine">Motor</option>
+                                <option value="weapon">Arma</option>
+                                <option value="shield">Escudo</option>
+                                <option value="armor">Blindagem</option>
+                                <option value="cargo">Carga</option>
+                                <option value="mining">Mineração</option>
+                                <option value="special">Especial</option>
+                            </select>
+                            <Input name="level" type="number" placeholder="Nível / Tech Level" defaultValue="1" />
+                            <Input name="image_url" placeholder="URL da Imagem Icone" />
+                            <div className="col-span-2">
+                                <Input name="description" placeholder="Descrição" />
+                            </div>
+
+                            <div className="col-span-2 md:col-span-1">
+                                <label className="text-xs text-space-neon mb-1 block">Modificadores (JSON)</label>
+                                <textarea name="stats_modifier" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24" defaultValue='{"speed_add": 10, "energy_consumption": 5}' />
+                            </div>
+                            <div className="col-span-2 md:col-span-1">
+                                <label className="text-xs text-space-neon mb-1 block">Custo (JSON)</label>
+                                <textarea name="cost" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24" defaultValue='{"metal": 500, "crystal": 200}' />
+                            </div>
+
+                            <div className="col-span-2">
+                                <Button type="submit" variant="primary" className="w-full">CRIAR MÓDULO</Button>
+                            </div>
+                        </form>
+                    </Card>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {modules.map(mod => (
+                            <div key={mod.id} className="border border-space-steel bg-space-dark/50 p-3 rounded relative group flex flex-col gap-2">
+                                <button onClick={() => deleteItem('ship_modules', mod.id, fetchInitialData)} className="absolute top-2 right-2 text-space-alert opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={14} /></button>
+                                <div className="flex items-center gap-2">
+                                    <Badge color="bg-blue-900/50 text-blue-300">{mod.type}</Badge>
+                                    <span className="font-bold text-white text-sm">{mod.name}</span>
+                                </div>
+                                <p className="text-[10px] text-space-muted">{mod.description}</p>
+                                <div className="text-[10px] font-mono bg-space-black p-1 rounded">
+                                    {JSON.stringify(mod.stats_modifier).slice(0, 50)}...
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : viewMode === 'admin-policies' ? (
+                /* ADMIN: POLICIES MANAGEMENT */
+                <div className="space-y-6">
+                    <Card title="Gerenciar Políticas & Bônus">
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            const form = e.target as any;
+                            const data = {
+                                name: form.name.value,
+                                type: form.type.value,
+                                description: form.description.value,
+                                modifiers: JSON.parse(form.modifiers.value || '{}'),
+                                is_active: true
+                            };
+                            createItem('policies', data, fetchInitialData);
+                            form.reset();
+                        }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Input name="name" placeholder="Nome da Política" required />
+                            <select name="type" className="bg-space-black border border-space-steel rounded p-2 text-white">
+                                <option value="government">Governo</option>
+                                <option value="empire">Império</option>
+                                <option value="event">Evento Global</option>
+                            </select>
+                            <div className="col-span-2">
+                                <Input name="description" placeholder="Descrição do efeito" />
+                            </div>
+                            <div className="col-span-2">
+                                <label className="text-xs text-space-neon mb-1 block">Modificadores (JSON)</label>
+                                <textarea name="modifiers" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24" placeholder='{"build_time_pct": -0.1, "resource_cost_pct": 0.05}' defaultValue='{"build_time_pct": -0.1}' />
+                                <span className="text-[10px] text-space-muted">Use sufixo _pct para percentuais (0.1 = +10%)</span>
+                            </div>
+                            <Button type="submit" variant="primary" className="col-span-2">CRIAR POLÍTICA</Button>
+                        </form>
+                    </Card>
+
+                    <div className="space-y-2">
+                        {activePolicies.map(pol => (
+                            <div key={pol.id} className="flex justify-between items-center bg-space-dark/30 border border-space-steel p-3 rounded">
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <h4 className="font-bold text-white">{pol.name}</h4>
+                                        <Badge color={pol.type === 'government' ? 'bg-purple-900/50 text-purple-300' : 'bg-yellow-900/50 text-yellow-300'}>{pol.type}</Badge>
+                                    </div>
+                                    <p className="text-xs text-space-muted">{pol.description}</p>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <span className="font-mono text-xs text-space-neon">{JSON.stringify(pol.modifiers)}</span>
+                                    <button onClick={() => deleteItem('policies', pol.id, fetchInitialData)} className="text-space-alert hover:bg-space-alert/20 p-1 rounded"><Trash2 size={16} /></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             ) : (
                 /* DESIGNER INTERFACE */

@@ -3,8 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Button, Card, Badge, Input } from './ui/Shared';
 import {
     Users, Settings, Save, Trash2, Shield, ShieldAlert,
-    CheckCircle, X, ChevronUp, ChevronDown, FileText, MessageSquare, Search,
-    Rocket, Cpu, Scale
+    CheckCircle, X, ChevronUp, ChevronDown, FileText, MessageSquare, Search
 } from 'lucide-react';
 import { PostType, User } from '../types';
 import { useToast } from '../contexts/ToastContext';
@@ -30,7 +29,7 @@ const POST_TYPE_LABELS = {
 
 export default function AdminPanel({ currentUser }: AdminPanelProps) {
     const { showToast } = useToast();
-    const [activeTab, setActiveTab] = useState<'users' | 'settings' | 'publications' | 'trash' | 'feedback' | 'ships' | 'modules' | 'policies'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'settings' | 'publications' | 'trash' | 'feedback'>('users');
     const [users, setUsers] = useState<any[]>([]);
     const [deletedPosts, setDeletedPosts] = useState<any[]>([]);
     const [reports, setReports] = useState<any[]>([]);
@@ -295,90 +294,9 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
     };
 
 
-    // --- SHIP DESIGNER MANAGEMENT ---
-    const [ships, setShips] = useState<any[]>([]);
-    const [modules, setModules] = useState<any[]>([]);
-    const [policies, setPolicies] = useState<any[]>([]);
 
-    // Fetchers
-    const fetchShips = async () => {
-        setIsLoading(true);
-        const { data } = await supabase.from('ships').select('*').order('name');
-        if (data) setShips(data);
-        setIsLoading(false);
-    };
 
-    const fetchModules = async () => {
-        setIsLoading(true);
-        const { data } = await supabase.from('ship_modules').select('*').order('type').order('name');
-        if (data) setModules(data);
-        setIsLoading(false);
-    };
 
-    const fetchPolicies = async () => {
-        setIsLoading(true);
-        const { data } = await supabase.from('policies').select('*').order('type');
-        if (data) setPolicies(data);
-        setIsLoading(false);
-    };
-
-    useEffect(() => {
-        if (activeTab === 'ships') fetchShips();
-        if (activeTab === 'modules') fetchModules();
-        if (activeTab === 'policies') fetchPolicies();
-    }, [activeTab]);
-
-    // Generic Creator/Deleter
-    const createItem = async (table: string, data: any, refresh: () => void) => {
-        const { error } = await supabase.from(table).insert([data]);
-        if (!error) {
-            showToast("Item criado com sucesso!", "success");
-            refresh();
-        } else {
-            showToast("Erro: " + error.message, "error");
-        }
-    };
-
-    const deleteItem = async (table: string, id: string, refresh: () => void) => {
-        if (!confirm("Tem certeza?")) return;
-        const { error } = await supabase.from(table).delete().eq('id', id);
-        if (!error) {
-            showToast("Item removido.", "success");
-            refresh();
-        } else {
-            showToast("Erro: " + error.message, "error");
-        }
-    };
-
-    // Helper for JSON inputs
-    const JsonInput = ({ value, onChange, placeholder }: { value: any, onChange: (v: any) => void, placeholder?: string }) => {
-        const [text, setText] = useState(JSON.stringify(value, null, 2));
-        const [valid, setValid] = useState(true);
-
-        const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-            const newVal = e.target.value;
-            setText(newVal);
-            try {
-                const parsed = JSON.parse(newVal);
-                setValid(true);
-                onChange(parsed);
-            } catch (err) {
-                setValid(false);
-            }
-        };
-
-        return (
-            <div className="flex flex-col">
-                <textarea
-                    className={`bg-space-black border ${valid ? 'border-space-steel' : 'border-space-alert'} rounded p-2 font-mono text-xs h-32 w-full`} // Increased height
-                    value={text}
-                    onChange={handleChange}
-                    placeholder={placeholder || "{}"}
-                />
-                {!valid && <span className="text-[10px] text-space-alert">JSON Inválido</span>}
-            </div>
-        );
-    };
 
     if (currentUser?.role !== 'ADMIN') {
         return (
@@ -400,7 +318,7 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                     <Button variant={activeTab === 'users' ? 'primary' : 'ghost'} onClick={() => setActiveTab('users')} icon={<Users size={16} />}>USUÁRIOS</Button>
                     <Button variant={activeTab === 'publications' ? 'primary' : 'ghost'} onClick={() => setActiveTab('publications')} icon={<FileText size={16} />}>POSTS</Button>
                     <Button variant={activeTab === 'settings' ? 'primary' : 'ghost'} onClick={() => setActiveTab('settings')} icon={<Settings size={16} />}>CONFIG</Button>
-                    {/* Ship Design tools moved to ShipDesignerView for direct integration */}
+                    {/* Ship/Module/Policy management tools have been moved to ShipDesignerView */}
                     <div className="h-6 w-px bg-space-steel/50 mx-2"></div>
                     <Button variant={activeTab === 'trash' ? 'primary' : 'ghost'} onClick={() => setActiveTab('trash')} icon={<Trash2 size={16} />} className="text-space-alert">LIXO</Button>
                 </div>
@@ -497,211 +415,7 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                 </div>
             )}
 
-            {/* --- NEW TABS --- */}
 
-            {/* SHIPS EDITOR */}
-            {activeTab === 'ships' && (
-                <div className="space-y-6">
-                    <Card title="Adicionar Nova Nave">
-                        <form onSubmit={(e) => {
-                            e.preventDefault();
-                            const form = e.target as any;
-                            const data = {
-                                name: form.name.value,
-                                description: form.description.value,
-                                category: form.category.value,
-                                image_url: form.image_url.value,
-                                base_stats: JSON.parse(form.base_stats.value || '{}'),
-                                slots_layout: JSON.parse(form.slots_layout.value || '[]'),
-                                base_cost: JSON.parse(form.base_cost.value || '{}'),
-                                base_build_time: parseInt(form.base_build_time.value)
-                            };
-                            createItem('ships', data, fetchShips);
-                            form.reset();
-                        }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Input name="name" placeholder="Nome da Nave" required />
-                            <select name="category" className="bg-space-black border border-space-steel rounded p-2 text-white">
-                                <option value="fighter">Caça (Fighter)</option>
-                                <option value="corvette">Corveta</option>
-                                <option value="frigate">Fragata</option>
-                                <option value="destroyer">Destroyer</option>
-                                <option value="cruiser">Cruzador</option>
-                                <option value="battleship">Couraçado</option>
-                                <option value="capital">Capital</option>
-                                <option value="transport">Transporte</option>
-                                <option value="mining">Mineração</option>
-                            </select>
-                            <Input name="image_url" placeholder="URL da Imagem" />
-                            <Input name="base_build_time" type="number" placeholder="Tempo de Construção (segundos)" required />
-                            <div className="col-span-2">
-                                <Input name="description" placeholder="Descrição" />
-                            </div>
-
-                            <div className="col-span-2 md:col-span-1">
-                                <label className="text-xs text-space-neon mb-1 block">Stats Base (JSON)</label>
-                                <textarea name="base_stats" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24" defaultValue='{"hull": 100, "shield": 50, "speed": 100, "cargo": 0}' />
-                            </div>
-                            <div className="col-span-2 md:col-span-1">
-                                <label className="text-xs text-space-neon mb-1 block">Slots Layout (JSON)</label>
-                                <textarea name="slots_layout" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24" defaultValue='[{"type":"engine", "count": 1}, {"type":"weapon", "count": 2}]' />
-                            </div>
-                            <div className="col-span-2">
-                                <label className="text-xs text-space-neon mb-1 block">Custo Base (JSON)</label>
-                                <textarea name="base_cost" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-16" defaultValue='{"metal": 1000, "crystal": 500, "deuterium": 100}' />
-                            </div>
-
-                            <div className="col-span-2">
-                                <Button type="submit" variant="primary" className="w-full">CRIAR NAVE</Button>
-                            </div>
-                        </form>
-                    </Card>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {ships.map(ship => (
-                            <div key={ship.id} className="border border-space-steel bg-space-dark/50 p-4 rounded relative group">
-                                <button onClick={() => deleteItem('ships', ship.id, fetchShips)} className="absolute top-2 right-2 text-space-alert opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
-                                <div className="flex items-center gap-3 mb-2">
-                                    <div className="w-12 h-12 bg-space-black rounded border border-space-steel overflow-hidden flex items-center justify-center">
-                                        {ship.image_url ? <img src={ship.image_url} className="w-full h-full object-cover" /> : <Rocket size={20} className="text-space-muted" />}
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-white">{ship.name}</h4>
-                                        <Badge>{ship.category}</Badge>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 text-[10px] font-mono text-space-muted mt-2">
-                                    {Object.entries(ship.base_stats).slice(0, 4).map(([k, v]) => (
-                                        <div key={k}>{k.toUpperCase()}: <span className="text-white">{String(v)}</span></div>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* MODULES EDITOR */}
-            {activeTab === 'modules' && (
-                <div className="space-y-6">
-                    <Card title="Adicionar Novo Módulo">
-                        <form onSubmit={(e) => {
-                            e.preventDefault();
-                            const form = e.target as any;
-                            const data = {
-                                name: form.name.value,
-                                type: form.type.value,
-                                description: form.description.value,
-                                level: parseInt(form.level.value),
-                                stats_modifier: JSON.parse(form.stats_modifier.value || '{}'),
-                                cost: JSON.parse(form.cost.value || '{}'),
-                                image_url: form.image_url.value
-                            };
-                            createItem('ship_modules', data, fetchModules);
-                            form.reset();
-                        }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Input name="name" placeholder="Nome do Módulo" required />
-                            <select name="type" className="bg-space-black border border-space-steel rounded p-2 text-white">
-                                <option value="engine">Motor</option>
-                                <option value="weapon">Arma</option>
-                                <option value="shield">Escudo</option>
-                                <option value="armor">Blindagem</option>
-                                <option value="cargo">Carga</option>
-                                <option value="mining">Mineração</option>
-                                <option value="special">Especial</option>
-                            </select>
-                            <Input name="level" type="number" placeholder="Nível / Tech Level" defaultValue="1" />
-                            <Input name="image_url" placeholder="URL da Imagem Icone" />
-                            <div className="col-span-2">
-                                <Input name="description" placeholder="Descrição" />
-                            </div>
-
-                            <div className="col-span-2 md:col-span-1">
-                                <label className="text-xs text-space-neon mb-1 block">Modificadores (JSON)</label>
-                                <textarea name="stats_modifier" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24" defaultValue='{"speed_add": 10, "energy_consumption": 5}' />
-                            </div>
-                            <div className="col-span-2 md:col-span-1">
-                                <label className="text-xs text-space-neon mb-1 block">Custo (JSON)</label>
-                                <textarea name="cost" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24" defaultValue='{"metal": 500, "crystal": 200}' />
-                            </div>
-
-                            <div className="col-span-2">
-                                <Button type="submit" variant="primary" className="w-full">CRIAR MÓDULO</Button>
-                            </div>
-                        </form>
-                    </Card>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {modules.map(mod => (
-                            <div key={mod.id} className="border border-space-steel bg-space-dark/50 p-3 rounded relative group flex flex-col gap-2">
-                                <button onClick={() => deleteItem('ship_modules', mod.id, fetchModules)} className="absolute top-2 right-2 text-space-alert opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={14} /></button>
-                                <div className="flex items-center gap-2">
-                                    <Badge color="bg-blue-900/50 text-blue-300">{mod.type}</Badge>
-                                    <span className="font-bold text-white text-sm">{mod.name}</span>
-                                </div>
-                                <p className="text-[10px] text-space-muted">{mod.description}</p>
-                                <div className="text-[10px] font-mono bg-space-black p-1 rounded">
-                                    {JSON.stringify(mod.stats_modifier).slice(0, 50)}...
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* POLICIES EDITOR */}
-            {activeTab === 'policies' && (
-                <div className="space-y-6">
-                    <Card title="Gerenciar Políticas & Bônus">
-                        <form onSubmit={(e) => {
-                            e.preventDefault();
-                            const form = e.target as any;
-                            const data = {
-                                name: form.name.value,
-                                type: form.type.value,
-                                description: form.description.value,
-                                modifiers: JSON.parse(form.modifiers.value || '{}'),
-                                is_active: true
-                            };
-                            createItem('policies', data, fetchPolicies);
-                            form.reset();
-                        }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Input name="name" placeholder="Nome da Política" required />
-                            <select name="type" className="bg-space-black border border-space-steel rounded p-2 text-white">
-                                <option value="government">Governo</option>
-                                <option value="empire">Império</option>
-                                <option value="event">Evento Global</option>
-                            </select>
-                            <div className="col-span-2">
-                                <Input name="description" placeholder="Descrição do efeito" />
-                            </div>
-                            <div className="col-span-2">
-                                <label className="text-xs text-space-neon mb-1 block">Modificadores (JSON)</label>
-                                <textarea name="modifiers" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24" placeholder='{"build_time_pct": -0.1, "resource_cost_pct": 0.05}' defaultValue='{"build_time_pct": -0.1}' />
-                                <span className="text-[10px] text-space-muted">Use sufixo _pct para percentuais (0.1 = +10%)</span>
-                            </div>
-                            <Button type="submit" variant="primary" className="col-span-2">CRIAR POLÍTICA</Button>
-                        </form>
-                    </Card>
-
-                    <div className="space-y-2">
-                        {policies.map(pol => (
-                            <div key={pol.id} className="flex justify-between items-center bg-space-dark/30 border border-space-steel p-3 rounded">
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <h4 className="font-bold text-white">{pol.name}</h4>
-                                        <Badge color={pol.type === 'government' ? 'bg-purple-900/50 text-purple-300' : 'bg-yellow-900/50 text-yellow-300'}>{pol.type}</Badge>
-                                    </div>
-                                    <p className="text-xs text-space-muted">{pol.description}</p>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <span className="font-mono text-xs text-space-neon">{JSON.stringify(pol.modifiers)}</span>
-                                    <button onClick={() => deleteItem('policies', pol.id, fetchPolicies)} className="text-space-alert hover:bg-space-alert/20 p-1 rounded"><Trash2 size={16} /></button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
 
             {/* TRASH & FEEDBACK TABS (Restored from memory or simplified if needed, but in this case simple restoration if not fully replaced in prev block) */}
             {activeTab === 'trash' && (
