@@ -400,11 +400,8 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                     <Button variant={activeTab === 'users' ? 'primary' : 'ghost'} onClick={() => setActiveTab('users')} icon={<Users size={16} />}>USUÁRIOS</Button>
                     <Button variant={activeTab === 'publications' ? 'primary' : 'ghost'} onClick={() => setActiveTab('publications')} icon={<FileText size={16} />}>POSTS</Button>
                     <Button variant={activeTab === 'settings' ? 'primary' : 'ghost'} onClick={() => setActiveTab('settings')} icon={<Settings size={16} />}>CONFIG</Button>
-                    {/* New Tabs */}
-                    <Button variant={activeTab === 'ships' ? 'primary' : 'ghost'} onClick={() => setActiveTab('ships')} icon={<Rocket size={16} />}>NAVES</Button>
-                    <Button variant={activeTab === 'modules' ? 'primary' : 'ghost'} onClick={() => setActiveTab('modules')} icon={<Cpu size={16} />}>MÓDULOS</Button>
-                    <Button variant={activeTab === 'policies' ? 'primary' : 'ghost'} onClick={() => setActiveTab('policies')} icon={<Scale size={16} />}>POLÍTICAS</Button>
-
+                    {/* Ship Design tools moved to ShipDesignerView for direct integration */}
+                    <div className="h-6 w-px bg-space-steel/50 mx-2"></div>
                     <Button variant={activeTab === 'trash' ? 'primary' : 'ghost'} onClick={() => setActiveTab('trash')} icon={<Trash2 size={16} />} className="text-space-alert">LIXO</Button>
                 </div>
             </div>
