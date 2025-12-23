@@ -9,14 +9,13 @@ interface AchievementCardProps {
     onTogglePin?: (id: string) => void;
 }
 
-export const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
+export const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, onTogglePin }) => {
     const { language } = useLanguage();
     const isEarned = !!achievement.earned_at;
 
     const name = achievement.name[language] || achievement.name['en'] || 'Unknown';
     const description = achievement.description[language] || achievement.description['en'] || '';
 
-    return (
     return (
         <Card
             className={`relative overflow-hidden transition-all duration-500 group

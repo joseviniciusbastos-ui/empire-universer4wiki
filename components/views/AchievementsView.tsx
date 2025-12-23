@@ -78,12 +78,11 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({ currentUser 
                 const combined = allAchievements.map(a => {
                     const earned = userEarned.find(u => u.achievement_id === a.id);
                     return {
-                        return {
-                            ...a,
-                            earned_at: earned ? earned.earned_at : undefined,
-                            is_pinned: earned ? earned.is_pinned : false
-                        };
-                    });
+                        ...a,
+                        earned_at: earned ? earned.earned_at : undefined,
+                        is_pinned: earned ? earned.is_pinned : false
+                    };
+                });
                 setAchievements(combined);
             } else {
                 setAchievements(allAchievements);
