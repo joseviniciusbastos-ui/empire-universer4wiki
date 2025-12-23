@@ -433,7 +433,7 @@ export const TechTreeView: React.FC = () => {
                 </div>
 
                 {/* HUD Overlay / Research Report */}
-                <div className="absolute bottom-6 left-6 p-0 bg-space-dark/95 backdrop-blur-2xl border border-space-steel/30 rounded-2xl w-full max-w-[400px] pointer-events-none animate-slideUp shadow-2xl overflow-hidden flex flex-col max-h-[70vh]">
+                <div className="absolute bottom-6 right-6 p-0 bg-space-dark/95 backdrop-blur-2xl border border-space-steel/30 rounded-2xl w-full max-w-[400px] pointer-events-none animate-slideUp shadow-2xl overflow-hidden flex flex-col max-h-[70vh]">
                     <div className="absolute inset-0 bg-space-neon/5 opacity-30 pointer-events-none" />
 
                     {displayNode ? (
@@ -547,7 +547,7 @@ export const TechTreeView: React.FC = () => {
                 </div>
 
                 {/* Navigator Info */}
-                <div className="absolute bottom-6 right-6 px-4 py-3 bg-space-dark/90 backdrop-blur-md border border-space-steel/30 rounded-xl font-mono text-[10px] text-space-muted flex items-center gap-6 shadow-xl">
+                <div className="absolute bottom-6 left-6 px-4 py-3 bg-space-dark/90 backdrop-blur-md border border-space-steel/30 rounded-xl font-mono text-[10px] text-space-muted flex items-center gap-6 shadow-xl">
                     <div className="flex gap-3 border-r border-space-steel/30 pr-6">
                         <span className="text-space-neon font-bold">COORD:</span>
                         <span>X {position.x.toFixed(0)}</span>
