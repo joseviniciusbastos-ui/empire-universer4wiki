@@ -1,5 +1,5 @@
 import React from 'react';
-import { Book, MessageSquare, Terminal as TerminalIcon, Wrench, LogOut, X, User as UserIcon, BookOpen, LogIn, Shield, AlertTriangle, Pin, PinOff, Cpu, Trophy } from 'lucide-react';
+import { Book, MessageSquare, Terminal as TerminalIcon, Wrench, LogOut, X, User as UserIcon, BookOpen, LogIn, Shield, AlertTriangle, Pin, PinOff, Cpu, Trophy, Rocket } from 'lucide-react';
 import { Button } from '../ui/Shared';
 import { User } from '../../types';
 import { supabase } from '../../lib/supabase';
@@ -22,7 +22,8 @@ const STATIC_TEXT: Record<Language, any> = {
         feedback: 'FEEDBACK',
         lang: 'IDIOMA / LANG',
         tech: 'ÁRVORE TECH',
-        achievements: 'CONQUISTAS'
+        achievements: 'CONQUISTAS',
+        ship_designer: 'ESTALEIRO'
     },
     en: {
         nav: 'NAVIGATION',
@@ -38,7 +39,8 @@ const STATIC_TEXT: Record<Language, any> = {
         feedback: 'FEEDBACK',
         lang: 'LANGUAGE / LINGUE',
         tech: 'TECH TREE',
-        achievements: 'ACHIEVEMENTS'
+        achievements: 'ACHIEVEMENTS',
+        ship_designer: 'SHIPYARD'
     },
     fr: {
         nav: 'NAVIGATION',
@@ -54,7 +56,8 @@ const STATIC_TEXT: Record<Language, any> = {
         feedback: 'RETOUR D\'INFO',
         lang: 'LANGUE / LANG',
         tech: 'ARBRE TECH',
-        achievements: 'SUCCÈS'
+        achievements: 'SUCCÈS',
+        ship_designer: 'CHANTIER SPATIAL'
     }
 };
 
@@ -125,6 +128,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                             { id: 'articles', icon: <TerminalIcon size={20} />, label: t.logs },
                             { id: 'forum', icon: <MessageSquare size={20} />, label: t.comms },
                             { id: 'tech-tree', icon: <Cpu size={20} />, label: t.tech },
+                            { id: 'ship-designer', icon: <Rocket size={20} />, label: t.ship_designer },
                             { id: 'achievements', icon: <Trophy size={20} />, label: t.achievements },
                             { id: 'tools', icon: <Wrench size={20} />, label: t.engineering }
                         ].map((item) => (

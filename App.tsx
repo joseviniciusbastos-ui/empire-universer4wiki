@@ -22,6 +22,7 @@ import { BlogView } from './components/views/BlogView';
 import { ForumView } from './components/views/ForumView';
 import { TechTreeView } from './components/views/TechTreeView';
 import { AchievementsView } from './components/views/AchievementsView';
+import { ShipDesignerView } from './components/views/ShipDesignerView';
 import { ProfileView } from './components/views/ProfileView';
 import { PublicProfileView } from './components/views/PublicProfileView';
 import { useToast } from './contexts/ToastContext';
@@ -37,7 +38,7 @@ const CATEGORY_KEYS = {
 };
 
 export default function App() {
-  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'tools' | 'profile' | 'admin' | 'post-view' | 'public-profile' | 'tech-tree' | 'achievements'>('home');
+  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'tools' | 'profile' | 'admin' | 'post-view' | 'public-profile' | 'tech-tree' | 'achievements' | 'ship-designer'>('home');
 
   // App State
   const { currentUser, isLoading: isAuthLoading, refreshProfile } = useAuth();
@@ -506,6 +507,12 @@ export default function App() {
       {view === 'achievements' && (
         <RestrictedView>
           <AchievementsView currentUser={currentUser} />
+        </RestrictedView>
+      )}
+
+      {view === 'ship-designer' && (
+        <RestrictedView>
+          <ShipDesignerView currentUser={currentUser} />
         </RestrictedView>
       )}
 

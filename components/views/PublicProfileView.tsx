@@ -13,19 +13,18 @@ interface PublicProfileViewProps {
 }
 
 export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId, onClose, onPostClick }) => {
-    const [profile, setProfile] = useState<any>(null); // Using any temporarily as User type might differ from DB
+    const [profile, setProfile] = useState<any>(null);
     const [posts, setPosts] = useState<Post[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [publicDesigns, setPublicDesigns] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchProfileData = async () => {
             setIsLoading(true);
             try {
                 // Fetch User Profile
-                // Note: user_profiles table is "users" in public schema? Check types.ts or Supabase usage.
-                // Fetch User Profile
                 const { data: userData, error: userError } = await supabase
-                    .from('profiles') // Fixed table name
+                    .from('profiles')
                     .select('*')
                     .eq('id', userId)
                     .single();
@@ -41,6 +40,17 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId, on
 
                 if (postsError) throw postsError;
 
+                // Fetch Public Designs
+                const { data: designsData, error: designsError } = await supabase
+                    .from('saved_designs')
+                    .select('*, ships(name, image_url)')
+                    .eq('user_id', userId)
+                    .eq('is_public', true)
+                    .order('created_at', { ascending: false });
+
+                if (designsError) console.error("Error fetching designs:", designsError);
+                setPublicDesigns(designsData || []);
+
                 // Transform posts
                 const mappedPosts: Post[] = (postsData || []).map((dbPost: any) => ({
                     id: dbPost.id.toString(),
@@ -50,7 +60,7 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId, on
                     category: dbPost.category,
                     authorId: dbPost.author_id,
                     authorName: dbPost.author_name,
-                    authorReputation: userData.reputation, // Pass author reputation
+                    authorReputation: userData.reputation,
                     slug: dbPost.slug,
                     tags: dbPost.tags || [],
                     likes: dbPost.likes,
@@ -59,7 +69,6 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId, on
                     updatedAt: dbPost.updated_at
                 }));
 
-                // Transform user data to match UI needs
                 setProfile({
                     id: userData.id,
                     username: userData.username,
@@ -135,15 +144,35 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId, on
                 </div>
             </div>
 
-            import {PinnedAchievements} from '../PinnedAchievements';
-
-            // ... existing imports
-
-            // ... inside component
             {/* Pinned Achievements */}
             <div className="pb-6 border-b border-space-steel/30">
                 <PinnedAchievements userId={profile.id} />
             </div>
+
+            {/* Public Ship Designs */}
+            {publicDesigns.length > 0 && (
+                <div className="pb-6 border-b border-space-steel/30">
+                    <h3 className="text-xl font-display font-bold uppercase text-white mb-6">Projetos Navais ({publicDesigns.length})</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {publicDesigns.map(design => (
+                            <div key={design.id} className="bg-space-dark border border-space-steel p-4 rounded-xl flex items-center gap-4 group hover:border-space-neon transition-colors">
+                                <div className="w-16 h-16 bg-black rounded border border-space-steel flex items-center justify-center overflow-hidden">
+                                    {design.ships?.image_url ? <img src={design.ships.image_url} className="w-full h-full object-cover" /> : <div className="text-space-muted">?</div>}
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="font-bold text-white font-display group-hover:text-space-neon transition-colors">{design.name}</h4>
+                                    <p className="text-xs text-space-muted">{design.ships?.name} Chassis</p>
+                                    <div className="flex gap-3 mt-1 text-[10px] font-mono text-space-muted">
+                                        <span>ATK: {design.total_stats.attack || 0}</span>
+                                        <span>DEF: {design.total_stats.shield || 0}</span>
+                                        <span>SPD: {design.total_stats.speed || 0}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* User Posts */}
             <div>
