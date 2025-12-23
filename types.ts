@@ -43,7 +43,7 @@ export interface Post {
   userReaction?: ReactionType | null;
   lastEditedBy?: string;
   lastEditedByName?: string;
-  displayOrder: number;
+  displayOrder?: number;
   deletedAt?: string | null;
   translations?: Record<string, { title: string, content: string }>;
 }
@@ -135,4 +135,16 @@ export interface UserReport {
   status: ReportStatus;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Achievement {
+  id: string;
+  name: Record<string, string>;
+  description: Record<string, string>;
+  icon: string;
+  category: string;
+  requirement_type: string;
+  requirement_value: number;
+  earned_at?: string;
+  is_pinned?: boolean;
 }

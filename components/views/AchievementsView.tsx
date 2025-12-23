@@ -5,16 +5,7 @@ import { Trophy, Filter, Search, Award } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { User } from '../../types';
 
-interface Achievement {
-    id: string;
-    name: Record<string, string>;
-    description: Record<string, string>;
-    icon: string;
-    category: string;
-    requirement_type: string;
-    requirement_value: number;
-    earned_at?: string;
-}
+import { Achievement } from '../../types';
 
 const STATIC_TEXT = {
     pt: {
@@ -87,10 +78,12 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({ currentUser 
                 const combined = allAchievements.map(a => {
                     const earned = userEarned.find(u => u.achievement_id === a.id);
                     return {
-                        ...a,
-                        earned_at: earned ? earned.earned_at : undefined
-                    };
-                });
+                        return {
+                            ...a,
+                            earned_at: earned ? earned.earned_at : undefined,
+                            is_pinned: earned ? earned.is_pinned : false
+                        };
+                    });
                 setAchievements(combined);
             } else {
                 setAchievements(allAchievements);
@@ -113,6 +106,37 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({ currentUser 
 
         return matchesFilter && matchesSearch;
     });
+
+
+    const togglePin = async (achievementId: string) => {
+        if (!currentUser) return;
+
+        const achievement = achievements.find(a => a.id === achievementId);
+        if (!achievement || !achievement.earned_at) return;
+
+        const newPinnedState = !achievement.is_pinned;
+
+        // Optimistic UI Update
+        setAchievements(prev => prev.map(a =>
+            a.id === achievementId ? { ...a, is_pinned: newPinnedState } : a
+        ));
+
+        // Call Supabase
+        const { error } = await supabase
+            .from('user_achievements')
+            .update({ is_pinned: newPinnedState })
+            .eq('user_id', currentUser.id)
+            .eq('achievement_id', achievementId);
+
+        if (error) {
+            console.error('Error toggling pin:', error);
+            // Revert changes if error
+            setAchievements(prev => prev.map(a =>
+                a.id === achievementId ? { ...a, is_pinned: !newPinnedState } : a
+            ));
+            alert(error.message); // Show trigger error (limit 5)
+        }
+    };
 
     const earnedCount = achievements.filter(a => !!a.earned_at).length;
 
@@ -190,7 +214,11 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({ currentUser 
             ) : filteredAchievements.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
                     {filteredAchievements.map(achievement => (
-                        <AchievementCard key={achievement.id} achievement={achievement} />
+                        <AchievementCard
+                            key={achievement.id}
+                            achievement={achievement}
+                            onTogglePin={togglePin}
+                        />
                     ))}
                 </div>
             ) : (

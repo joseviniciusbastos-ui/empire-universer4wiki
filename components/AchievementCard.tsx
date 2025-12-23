@@ -1,21 +1,12 @@
 import React from 'react';
 import { Card } from './ui/Shared';
-import { Trophy, Lock, CheckCircle, Info } from 'lucide-react';
+import { Trophy, Lock, CheckCircle, Info, Pin } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-
-interface Achievement {
-    id: string;
-    name: Record<string, string>;
-    description: Record<string, string>;
-    icon: string;
-    category: string;
-    requirement_type: string;
-    requirement_value: number;
-    earned_at?: string;
-}
+import { Achievement } from '../types';
 
 interface AchievementCardProps {
     achievement: Achievement;
+    onTogglePin?: (id: string) => void;
 }
 
 export const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
@@ -25,6 +16,7 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({ achievement })
     const name = achievement.name[language] || achievement.name['en'] || 'Unknown';
     const description = achievement.description[language] || achievement.description['en'] || '';
 
+    return (
     return (
         <Card
             className={`relative overflow-hidden transition-all duration-500 group
@@ -61,9 +53,24 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({ achievement })
                             {achievement.category}
                         </span>
                         {isEarned && (
-                            <span className="flex items-center gap-1 text-[9px] font-mono text-space-neon animate-pulse">
-                                <CheckCircle size={10} /> CONDOMÍNIO SINC.
-                            </span>
+                            <div className="flex items-center gap-2">
+                                {/* Pin Button */}
+                                {onTogglePin && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onTogglePin(achievement.id);
+                                        }}
+                                        className={`transition-all duration-300 ${achievement.is_pinned ? 'text-space-neon scale-110' : 'text-space-muted hover:text-white'}`}
+                                        title={achievement.is_pinned ? "Desafixar" : "Fixar no Perfil (Máx 5)"}
+                                    >
+                                        <Pin size={14} fill={achievement.is_pinned ? "currentColor" : "none"} />
+                                    </button>
+                                )}
+                                <span className="flex items-center gap-1 text-[9px] font-mono text-space-neon animate-pulse">
+                                    <CheckCircle size={10} /> DESBLOQUEADA
+                                </span>
+                            </div>
                         )}
                     </div>
 

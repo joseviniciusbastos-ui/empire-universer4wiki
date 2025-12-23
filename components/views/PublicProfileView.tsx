@@ -4,6 +4,7 @@ import { ReputationBadge } from '../ui/ReputationBadge';
 import { User, Post, PostType } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { PostCard } from '../PostCard';
+import { PinnedAchievements } from '../PinnedAchievements';
 
 interface PublicProfileViewProps {
     userId: string;
@@ -132,6 +133,16 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId, on
                         </div>
                     </div>
                 </div>
+            </div>
+
+            import {PinnedAchievements} from '../PinnedAchievements';
+
+            // ... existing imports
+
+            // ... inside component
+            {/* Pinned Achievements */}
+            <div className="pb-6 border-b border-space-steel/30">
+                <PinnedAchievements userId={profile.id} />
             </div>
 
             {/* User Posts */}
