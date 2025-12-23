@@ -289,6 +289,20 @@ export const TechTreeView: React.FC = () => {
                     </div>
                 </div>
 
+                {/* Integrated Navigator Stats */}
+                <div className="hidden xl:flex items-center gap-4 bg-space-dark/50 border border-space-steel/30 rounded-lg px-4 py-2 font-mono text-[10px] text-space-muted">
+                    <div className="flex gap-3 border-r border-space-steel/30 pr-4">
+                        <span className="text-space-neon font-bold">POS:</span>
+                        <span>{position.x.toFixed(0)},{position.y.toFixed(0)}</span>
+                    </div>
+                    <div className="border-r border-space-steel/30 pr-4">
+                        <span className="text-space-neon font-bold">STATUS:</span> {selectedNode ? 'LOCKED' : 'FREE'}
+                    </div>
+                    <div>
+                        <span className="text-space-neon font-bold">ZOOM:</span> {(scale * 100).toFixed(0)}%
+                    </div>
+                </div>
+
                 <div className="flex items-center gap-3">
                     <div className="relative group">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-space-muted" size={14} />
@@ -546,20 +560,6 @@ export const TechTreeView: React.FC = () => {
                     )}
                 </div>
 
-                {/* Navigator Info */}
-                <div className="absolute bottom-6 left-6 px-4 py-3 bg-space-dark/90 backdrop-blur-md border border-space-steel/30 rounded-xl font-mono text-[10px] text-space-muted flex items-center gap-6 shadow-xl">
-                    <div className="flex gap-3 border-r border-space-steel/30 pr-6">
-                        <span className="text-space-neon font-bold">COORD:</span>
-                        <span>X {position.x.toFixed(0)}</span>
-                        <span>Y {position.y.toFixed(0)}</span>
-                    </div>
-                    <div>
-                        <span className="text-space-neon font-bold">NODE:</span> {selectedNode ? 'LOCKED' : 'FREE'}
-                    </div>
-                    <div>
-                        <span className="text-space-neon font-bold">ZOOM:</span> {(scale * 100).toFixed(0)}%
-                    </div>
-                </div>
             </Card>
         </div>
     );
