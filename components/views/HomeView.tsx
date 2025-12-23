@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Badge, Button } from '../ui/Shared';
-import { Users, BookOpen, Clock, History, AlertTriangle, Star, Activity, ArrowRight, Zap, Edit3, Rocket } from 'lucide-react';
+import { Users, BookOpen, Clock, History, AlertTriangle, Star, Activity, ArrowRight, Zap, Edit3, Rocket, Trophy, Cpu } from 'lucide-react';
 import { PostCard } from '../PostCard';
 import { Post, User, BulletinItem } from '../../types';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -25,7 +25,10 @@ const STATIC_TEXT = {
         bulletin: 'Boletim Oficial',
         noBulletins: 'Nenhum comunicado oficial no momento.',
         archive: 'Arquivo de Transmissões',
-        error: 'SEM DADOS'
+        error: 'SEM DADOS',
+        achievementsTitle: 'Centro de Conquistas',
+        achievementsDesc: 'Veja suas medalhas e progresso na rede.',
+        checkMedals: 'VER MEDALHAS'
     },
     en: {
         featured: 'Featured Contributor',
@@ -46,7 +49,10 @@ const STATIC_TEXT = {
         bulletin: 'Official Bulletin',
         noBulletins: 'No official announcements at this time.',
         archive: 'Transmission Archive',
-        error: 'NO DATA'
+        error: 'NO DATA',
+        achievementsTitle: 'Achievement Hub',
+        achievementsDesc: 'View your medals and network progress.',
+        checkMedals: 'VIEW MEDALS'
     },
     fr: {
         featured: 'Contributeur en Vedette',
@@ -67,7 +73,10 @@ const STATIC_TEXT = {
         bulletin: 'Bulletin Officiel',
         noBulletins: 'Aucun communiqué officiel pour oument.',
         archive: 'Archive des Transmissions',
-        error: 'PAS DE DONNÉES'
+        error: 'PAS DE DONNÉES',
+        achievementsTitle: 'Centre des Succès',
+        achievementsDesc: 'Voir vos médailles et votre progression.',
+        checkMedals: 'VOIR MÉDAILLES'
     }
 };
 
@@ -433,6 +442,45 @@ export const HomeView: React.FC<HomeViewProps> = ({
                                     </>
                                 );
                             })()}
+                        </div>
+                    </div>
+
+                    {/* Achievements/Tech Tree Quick Link Widget */}
+                    <div className="bg-space-dark/60 border border-space-neon/20 rounded-xl p-5 relative overflow-hidden group/ach">
+                        <div className="absolute top-0 right-0 p-2 opacity-5 group-hover/ach:opacity-20 transition-all scale-150 rotate-12">
+                            <Trophy size={80} className="text-space-neon" />
+                        </div>
+                        <div className="relative z-10">
+                            <h3 className="text-xs font-mono text-space-neon uppercase tracking-widest mb-2 flex items-center gap-2">
+                                <Trophy size={14} /> {t.achievementsTitle}
+                            </h3>
+                            <p className="text-[11px] text-space-muted font-mono mb-4">
+                                {t.achievementsDesc}
+                            </p>
+                            <div className="space-y-2">
+                                <Button
+                                    variant="primary"
+                                    size="sm"
+                                    className="w-full text-[10px] py-1.5"
+                                    onClick={() => onNavigate('achievements')}
+                                >
+                                    {t.checkMedals}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Tech Tree Shortcut */}
+                    <div
+                        onClick={() => onNavigate('tech-tree')}
+                        className="bg-space-dark/40 border border-space-steel/30 rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:border-space-neon hover:bg-space-neon/5 transition-all group"
+                    >
+                        <div className="w-10 h-10 rounded border border-space-steel flex items-center justify-center group-hover:border-space-neon transition-colors">
+                            <Cpu size={20} className="text-space-muted group-hover:text-space-neon" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-mono text-space-muted uppercase tracking-tighter group-hover:text-space-neon transition-colors">Acessar Matriz</p>
+                            <p className="text-xs font-display font-bold text-white uppercase">Árvore Tecnológica</p>
                         </div>
                     </div>
                 </div>

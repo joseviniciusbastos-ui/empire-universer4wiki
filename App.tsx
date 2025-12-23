@@ -20,6 +20,8 @@ import { MainLayout } from './components/layout/MainLayout';
 import { WikiView } from './components/views/WikiView';
 import { BlogView } from './components/views/BlogView';
 import { ForumView } from './components/views/ForumView';
+import { TechTreeView } from './components/views/TechTreeView';
+import { AchievementsView } from './components/views/AchievementsView';
 import { ProfileView } from './components/views/ProfileView';
 import { PublicProfileView } from './components/views/PublicProfileView';
 import { useToast } from './contexts/ToastContext';
@@ -35,7 +37,7 @@ const CATEGORY_KEYS = {
 };
 
 export default function App() {
-  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'tools' | 'profile' | 'admin' | 'post-view' | 'public-profile'>('home');
+  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'tools' | 'profile' | 'admin' | 'post-view' | 'public-profile' | 'tech-tree' | 'achievements'>('home');
 
   // App State
   const { currentUser, isLoading: isAuthLoading, refreshProfile } = useAuth();
@@ -492,6 +494,18 @@ export default function App() {
             searchQuery={searchQuery}
             onSearchChange={applySearch}
           />
+        </RestrictedView>
+      )}
+
+      {view === 'tech-tree' && (
+        <RestrictedView>
+          <TechTreeView />
+        </RestrictedView>
+      )}
+
+      {view === 'achievements' && (
+        <RestrictedView>
+          <AchievementsView currentUser={currentUser} />
         </RestrictedView>
       )}
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Book, MessageSquare, Terminal as TerminalIcon, Wrench, LogOut, X, User as UserIcon, BookOpen, LogIn, Shield, AlertTriangle, Pin, PinOff } from 'lucide-react';
+import { Book, MessageSquare, Terminal as TerminalIcon, Wrench, LogOut, X, User as UserIcon, BookOpen, LogIn, Shield, AlertTriangle, Pin, PinOff, Cpu, Trophy } from 'lucide-react';
 import { Button } from '../ui/Shared';
 import { User } from '../../types';
 import { supabase } from '../../lib/supabase';
@@ -20,7 +20,9 @@ const STATIC_TEXT: Record<Language, any> = {
         abort: 'ABORTAR SESSÃO',
         access: 'ACESSAR',
         feedback: 'FEEDBACK',
-        lang: 'IDIOMA / LANG'
+        lang: 'IDIOMA / LANG',
+        tech: 'ÁRVORE TECH',
+        achievements: 'CONQUISTAS'
     },
     en: {
         nav: 'NAVIGATION',
@@ -34,7 +36,9 @@ const STATIC_TEXT: Record<Language, any> = {
         abort: 'ABORT SESSION',
         access: 'LOGIN',
         feedback: 'FEEDBACK',
-        lang: 'LANGUAGE / LINGUE'
+        lang: 'LANGUAGE / LINGUE',
+        tech: 'TECH TREE',
+        achievements: 'ACHIEVEMENTS'
     },
     fr: {
         nav: 'NAVIGATION',
@@ -48,7 +52,9 @@ const STATIC_TEXT: Record<Language, any> = {
         abort: 'ABANDONNER SESSION',
         access: 'ACCÉDER',
         feedback: 'RETOUR D\'INFO',
-        lang: 'LANGUE / LANG'
+        lang: 'LANGUE / LANG',
+        tech: 'ARBRE TECH',
+        achievements: 'SUCCÈS'
     }
 };
 
@@ -118,6 +124,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                             { id: 'wiki', icon: <Book size={20} />, label: t.wiki },
                             { id: 'articles', icon: <TerminalIcon size={20} />, label: t.logs },
                             { id: 'forum', icon: <MessageSquare size={20} />, label: t.comms },
+                            { id: 'tech-tree', icon: <Cpu size={20} />, label: t.tech },
+                            { id: 'achievements', icon: <Trophy size={20} />, label: t.achievements },
                             { id: 'tools', icon: <Wrench size={20} />, label: t.engineering }
                         ].map((item) => (
                             <Button
