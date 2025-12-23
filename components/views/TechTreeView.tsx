@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Button, Card } from '../ui/Shared';
-import { Search, ZoomIn, ZoomOut, Maximize2, Cpu, Info, Boxes, Zap, Shield, Target, Globe, Landmark, ShieldCheck, Crosshair, Factory, Radio, Landmark as Bank, ShieldAlert, Building2, Map } from 'lucide-react';
+import { Search, ZoomIn, ZoomOut, Maximize2, Cpu, Info, Boxes, Zap, Shield, Target, Globe, Landmark, ShieldCheck, Crosshair, Factory, Radio, Landmark as Bank, ShieldAlert, Building2, Map, ArrowRight, CornerDownRight, History, Route } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const STATIC_TEXT = {
@@ -14,6 +14,10 @@ const STATIC_TEXT = {
         locked: 'Bloqueado',
         unlocked: 'Concluído',
         requirements: 'Pesquisa necessária:',
+        unlocks: 'Desbloqueia:',
+        path: 'Caminho de Pesquisa',
+        click_hint: 'CLIQUE PARA FIXAR/VISUALIZAR CAMINHO',
+        prereq_chain: 'Requisitos Cumulativos',
         categories: {
             general: 'Edifícios Base',
             engine: 'Motores e Propulsão',
@@ -34,6 +38,10 @@ const STATIC_TEXT = {
         locked: 'Locked',
         unlocked: 'Completed',
         requirements: 'Research required:',
+        unlocks: 'Unlocks:',
+        path: 'Research Path',
+        click_hint: 'CLICK TO PIN/VIEW PATH',
+        prereq_chain: 'Cumulative Requirements',
         categories: {
             general: 'Base Buildings',
             engine: 'Engines & Propulsion',
@@ -54,6 +62,10 @@ const STATIC_TEXT = {
         locked: 'Verrouillé',
         unlocked: 'Terminé',
         requirements: 'Recherche requise:',
+        unlocks: 'Déverrouille:',
+        path: 'Chemin de Recherche',
+        click_hint: 'CLIQUEZ POUR ÉPINGLER/VOIR CHEMIN',
+        prereq_chain: 'Conditions Cumulatives',
         categories: {
             general: 'Bâtiments de Base',
             engine: 'Moteurs et Propulsion',
@@ -189,10 +201,37 @@ export const TechTreeView: React.FC = () => {
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [hoveredNode, setHoveredNode] = useState<TechNode | null>(null);
+    const [selectedNode, setSelectedNode] = useState<TechNode | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
     const containerRef = useRef<HTMLDivElement>(null);
 
+    // --- UX: Path Finding Logic ---
+    const getPrerequisiteChain = (node: TechNode, chain = new Set<string>()): Set<string> => {
+        if (!node.requirements) return chain;
+        node.requirements.forEach(reqId => {
+            if (!chain.has(reqId)) {
+                chain.add(reqId);
+                const reqNode = TECH_NODES.find(n => n.id === reqId);
+                if (reqNode) getPrerequisiteChain(reqNode, chain);
+            }
+        });
+        return chain;
+    };
+
+    const getUnlocks = (nodeId: string): TechNode[] => {
+        return TECH_NODES.filter(n => n.requirements?.includes(nodeId));
+    };
+
+    const activeChain = useMemo(() => {
+        return selectedNode ? getPrerequisiteChain(selectedNode) : new Set<string>();
+    }, [selectedNode]);
+
+    const activeUnlocks = useMemo(() => {
+        return selectedNode ? getUnlocks(selectedNode.id) : [];
+    }, [selectedNode]);
+
+    // --- Interaction ---
     const handleWheel = (e: React.WheelEvent) => {
         const delta = e.deltaY > 0 ? -0.05 : 0.05;
         const newScale = Math.min(Math.max(scale + delta, 0.02), 2);
@@ -203,6 +242,10 @@ export const TechTreeView: React.FC = () => {
         if (e.button !== 0) return;
         setIsDragging(true);
         setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+        // Deselect if clicking background
+        if ((e.target as HTMLElement) === containerRef.current) {
+            setSelectedNode(null);
+        }
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
@@ -218,12 +261,15 @@ export const TechTreeView: React.FC = () => {
     const resetView = () => {
         setScale(0.3);
         setPosition({ x: 50, y: 50 });
+        setSelectedNode(null);
     };
 
     const filteredNodes = TECH_NODES.filter(node => {
         const name = language === 'pt' ? node.pt : node.en;
         return name.toLowerCase().includes(searchQuery.toLowerCase());
     });
+
+    const displayNode = selectedNode || hoveredNode;
 
     return (
         <div className="space-y-6 animate-fadeIn h-[calc(100vh-120px)] flex flex-col">
@@ -238,7 +284,7 @@ export const TechTreeView: React.FC = () => {
                             {t.title}
                         </h2>
                         <div className="flex items-center gap-2 text-[10px] font-mono text-space-muted uppercase tracking-[0.2em]">
-                            <span className="text-space-neon">SYNC:</span> POST ARVORE TECNOLOGIA
+                            <span className="text-space-neon">MATRIX:</span> v4.2.0 • {TECH_NODES.length} NODES
                         </div>
                     </div>
                 </div>
@@ -305,38 +351,62 @@ export const TechTreeView: React.FC = () => {
                         </div>
                     ))}
 
-                    {/* SVG Connections */}
+                    {/* SVG Connections with Path Logic */}
                     <svg className="absolute top-0 left-0 w-[8000px] h-[8000px] pointer-events-none overflow-visible">
                         {TECH_NODES.map(node => (
                             node.requirements?.map(reqId => {
                                 const reqNode = TECH_NODES.find(n => n.id === reqId);
                                 if (!reqNode) return null;
+
+                                // Path Logic
+                                const isPath = selectedNode && (
+                                    (activeChain.has(reqId) && (activeChain.has(node.id) || node.id === selectedNode.id)) ||
+                                    (node.id === selectedNode.id && reqId === selectedNode.id) // Self reference check (not really needed for DAG)
+                                );
+
+                                const isRelevant = !selectedNode || isPath;
+
                                 return (
                                     <line
                                         key={`${node.id}-${reqId}`}
                                         x1={reqNode.x} y1={reqNode.y}
                                         x2={node.x} y2={node.y}
-                                        stroke={CATEGORY_UI[node.category].color.includes('red') ? '#ef4444' : '#00c2ff'}
-                                        strokeWidth="3"
-                                        strokeDasharray="10,10"
-                                        opacity="0.2"
-                                        className="animate-pulse"
+                                        stroke={isPath ? '#00ffa3' : (CATEGORY_UI[node.category].color.includes('red') ? '#ef4444' : '#00c2ff')}
+                                        strokeWidth={isPath ? "6" : "3"}
+                                        strokeDasharray={isPath ? "none" : "10,10"}
+                                        opacity={isRelevant ? (isPath ? 0.8 : 0.2) : 0.05}
+                                        className={isPath ? "animate-pulse" : ""}
                                     />
                                 );
                             })
                         ))}
                     </svg>
 
-                    {/* Nodes */}
+                    {/* Nodes with Selected State Logic */}
                     {filteredNodes.map(node => {
                         const ui = CATEGORY_UI[node.category] || CATEGORY_UI.other;
                         const isHovered = hoveredNode?.id === node.id;
+                        const isSelected = selectedNode?.id === node.id;
+                        const isInPrereqChain = selectedNode && activeChain.has(node.id);
+                        const isUnlock = selectedNode && activeUnlocks.some(n => n.id === node.id);
+
+                        // Dimming Logic: Dim if a node is selected AND this node is NOT selected, NOT in chain, and NOT unlocked
+                        const isDimmed = selectedNode && !isSelected && !isInPrereqChain && !isUnlock;
 
                         return (
                             <div
                                 key={node.id}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedNode(isSelected ? null : node);
+                                }}
                                 className={`absolute transform -translate-x-1/2 -translate-y-1/2 p-4 bg-space-dark/95 backdrop-blur-sm rounded-xl border transition-all duration-300 pointer-events-auto cursor-pointer
-                                    ${isHovered ? `${ui.border} ring-4 ${ui.border.replace('border-', 'ring-')}/20 scale-110 shadow-[0_0_40px_rgba(0,194,255,0.5)]` : 'border-space-steel/50'}
+                                    ${isSelected ? `border-space-neon ring-4 ring-space-neon/20 z-20 scale-125 shadow-[0_0_50px_rgba(0,255,163,0.3)]` :
+                                        isInPrereqChain ? `border-sky-400 ring-2 ring-sky-400/20 z-10 scale-100` :
+                                            isUnlock ? `border-emerald-400 ring-2 ring-emerald-400/20 z-10 scale-100` :
+                                                isHovered ? `${ui.border} ring-4 ${ui.border.replace('border-', 'ring-')}/20 scale-110 shadow-[0_0_40px_rgba(0,194,255,0.5)] z-10` :
+                                                    'border-space-steel/50'}
+                                    ${isDimmed ? 'opacity-20 grayscale' : 'opacity-100'}
                                 `}
                                 style={{ left: node.x, top: node.y }}
                                 onMouseEnter={() => setHoveredNode(node)}
@@ -353,61 +423,124 @@ export const TechTreeView: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
+                                {/* Label for interactions */}
+                                {isSelected && <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-space-neon text-space-black px-2 py-0.5 rounded text-[8px] font-bold tracking-widest whitespace-nowrap">SELECTED</div>}
+                                {isInPrereqChain && <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-sky-500 text-white px-2 py-0.5 rounded text-[8px] font-bold tracking-widest whitespace-nowrap">REQUIRED</div>}
+                                {isUnlock && <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-2 py-0.5 rounded text-[8px] font-bold tracking-widest whitespace-nowrap">UNLOCKS</div>}
                             </div>
                         );
                     })}
                 </div>
 
-                {/* HUD Overlay */}
-                <div className="absolute bottom-6 left-6 p-6 bg-space-dark/95 backdrop-blur-2xl border border-space-steel/30 rounded-2xl w-full max-w-[360px] pointer-events-none animate-slideUp shadow-2xl overflow-hidden">
-                    <div className="absolute inset-0 bg-space-neon/5 opacity-30" />
-                    {hoveredNode ? (
-                        <div className="relative space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <Info size={14} className="text-space-neon" />
-                                    <span className="text-[10px] font-mono text-space-neon uppercase tracking-widest">PROTOCOLO DE DECODIFICAÇÃO</span>
-                                </div>
-                                <span className={`text-[9px] font-mono px-2 py-0.5 border rounded ${CATEGORY_UI[hoveredNode.category].color.replace('text-', 'border-').replace('text-', 'bg-')}/10 ${CATEGORY_UI[hoveredNode.category].color}`}>
-                                    {hoveredNode.category.toUpperCase()}
-                                </span>
-                            </div>
+                {/* HUD Overlay / Research Report */}
+                <div className="absolute bottom-6 left-6 p-0 bg-space-dark/95 backdrop-blur-2xl border border-space-steel/30 rounded-2xl w-full max-w-[400px] pointer-events-none animate-slideUp shadow-2xl overflow-hidden flex flex-col max-h-[70vh]">
+                    <div className="absolute inset-0 bg-space-neon/5 opacity-30 pointer-events-none" />
 
-                            <div>
+                    {displayNode ? (
+                        <div className="flex flex-col h-full pointer-events-auto">
+                            {/* Header Section */}
+                            <div className="p-6 pb-4 border-b border-space-steel/20">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                        {selectedNode ? <Route size={14} className="text-space-neon" /> : <Info size={14} className="text-space-neon" />}
+                                        <span className="text-[10px] font-mono text-space-neon uppercase tracking-widest">
+                                            {selectedNode ? t.path.toUpperCase() : 'PROTOCOLO DE DECODIFICAÇÃO'}
+                                        </span>
+                                    </div>
+                                    <span className={`text-[9px] font-mono px-2 py-0.5 border rounded ${CATEGORY_UI[displayNode.category].color.replace('text-', 'border-').replace('text-', 'bg-')}/10 ${CATEGORY_UI[displayNode.category].color}`}>
+                                        {displayNode.category.toUpperCase()}
+                                    </span>
+                                </div>
                                 <h3 className="text-2xl font-display font-bold text-white mb-2 uppercase tracking-tighter">
-                                    {language === 'pt' ? hoveredNode.pt : hoveredNode.en}
+                                    {language === 'pt' ? displayNode.pt : displayNode.en}
                                 </h3>
                                 <p className="text-xs text-space-muted font-mono leading-relaxed opacity-90 border-l-2 border-space-neon/30 pl-3">
-                                    {language === 'pt' ? hoveredNode.desc_pt : hoveredNode.desc_en}
+                                    {language === 'pt' ? displayNode.desc_pt : displayNode.desc_en}
                                 </p>
                             </div>
 
-                            {hoveredNode.requirements && (
-                                <div className="pt-4 border-t border-space-steel/20">
-                                    <p className="text-[9px] font-mono text-space-muted uppercase mb-3 flex items-center gap-2">
-                                        <Target size={10} className="text-space-neon" />
-                                        {t.requirements}
-                                    </p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {hoveredNode.requirements.map(reqId => {
-                                            const req = TECH_NODES.find(n => n.id === reqId);
-                                            return (
-                                                <span key={reqId} className="px-3 py-1.5 bg-space-black border border-space-steel/40 rounded-md text-[10px] font-mono text-white shadow-sm">
-                                                    {req ? (language === 'pt' ? req.pt : req.en) : reqId}
-                                                </span>
-                                            );
-                                        })}
+                            {/* Scrollable Content */}
+                            <div className="overflow-y-auto p-6 pt-4 space-y-6 custom-scrollbar">
+                                {/* Selected Node: Show Full Path Report */}
+                                {selectedNode && (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 text-space-neon/80 text-[10px] uppercase font-bold tracking-widest">
+                                            <History size={12} /> {t.prereq_chain} ({activeChain.size})
+                                        </div>
+                                        <div className="relative pl-3 border-l border-space-steel/20 space-y-3">
+                                            {Array.from(activeChain).reverse().map((reqId, index) => {
+                                                const req = TECH_NODES.find(n => n.id === reqId);
+                                                if (!req) return null;
+                                                return (
+                                                    <div key={reqId} className="relative flex items-center gap-3 animate-fadeIn" style={{ animationDelay: `${index * 50}ms` }}>
+                                                        <div className="w-2 h-2 rounded-full bg-sky-500 absolute -left-[17px] ring-4 ring-space-dark" />
+                                                        <span className="text-[10px] font-mono text-white/70">{language === 'pt' ? req.pt : req.en}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                            {/* Final Target */}
+                                            <div className="relative flex items-center gap-3 animate-fadeIn" style={{ animationDelay: `${activeChain.size * 50}ms` }}>
+                                                <div className="w-3 h-3 rounded-full bg-space-neon absolute -left-[19px] ring-4 ring-space-dark animate-pulse" />
+                                                <span className="text-xs font-bold text-space-neon">{language === 'pt' ? selectedNode.pt : selectedNode.en}</span>
+                                            </div>
+                                        </div>
                                     </div>
+                                )}
+
+                                {/* Hover/Normal: Show Simple Requirements */}
+                                {!selectedNode && displayNode.requirements && (
+                                    <div>
+                                        <p className="text-[9px] font-mono text-space-muted uppercase mb-3 flex items-center gap-2">
+                                            <Target size={10} className="text-space-neon" />
+                                            {t.requirements}
+                                        </p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {displayNode.requirements.map(reqId => {
+                                                const req = TECH_NODES.find(n => n.id === reqId);
+                                                return (
+                                                    <span key={reqId} className="px-3 py-1.5 bg-space-black border border-space-steel/40 rounded-md text-[10px] font-mono text-white shadow-sm">
+                                                        {req ? (language === 'pt' ? req.pt : req.en) : reqId}
+                                                    </span>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Unlocks Check */}
+                                {(selectedNode ? activeUnlocks.length > 0 : getUnlocks(displayNode.id).length > 0) && (
+                                    <div>
+                                        <p className="text-[9px] font-mono text-emerald-400 uppercase mb-3 flex items-center gap-2">
+                                            <CornerDownRight size={12} />
+                                            {t.unlocks}
+                                        </p>
+                                        <div className="space-y-2">
+                                            {(selectedNode ? activeUnlocks : getUnlocks(displayNode.id)).map(unlock => (
+                                                <div key={unlock.id} className="flex items-center gap-2 p-2 bg-emerald-500/5 border border-emerald-500/20 rounded">
+                                                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                                                    <span className="text-[10px] font-mono text-emerald-100">{language === 'pt' ? unlock.pt : unlock.en}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {!selectedNode && (
+                                <div className="p-3 bg-space-black/40 border-t border-space-steel/20 text-center">
+                                    <span className="text-[9px] font-mono text-space-neon/70 uppercase tracking-widest animate-pulse">
+                                        {t.click_hint}
+                                    </span>
                                 </div>
                             )}
                         </div>
                     ) : (
-                        <div className="relative py-10 text-center space-y-4">
-                            <div className="w-12 h-12 rounded-full border border-space-neon/20 flex items-center justify-center mx-auto bg-space-neon/5 animate-pulse">
-                                <Search size={24} className="text-space-neon opacity-50" />
+                        <div className="relative py-20 text-center space-y-4">
+                            <div className="w-16 h-16 rounded-full border border-space-neon/20 flex items-center justify-center mx-auto bg-space-neon/5 animate-pulse">
+                                <Search size={32} className="text-space-neon opacity-50" />
                             </div>
                             <p className="text-[10px] font-mono text-space-muted uppercase tracking-[0.3em] font-bold">
-                                AGUARDANDO SELEÇÃO DE NÓDULO...
+                                SELECIONE UM NÓDULO
                             </p>
                         </div>
                     )}
@@ -421,7 +554,7 @@ export const TechTreeView: React.FC = () => {
                         <span>Y {position.y.toFixed(0)}</span>
                     </div>
                     <div>
-                        <span className="text-space-neon font-bold">PROGRES:</span> {TECH_NODES.length} NODES
+                        <span className="text-space-neon font-bold">NODE:</span> {selectedNode ? 'LOCKED' : 'FREE'}
                     </div>
                     <div>
                         <span className="text-space-neon font-bold">ZOOM:</span> {(scale * 100).toFixed(0)}%
