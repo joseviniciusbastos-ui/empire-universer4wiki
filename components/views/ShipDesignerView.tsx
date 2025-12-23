@@ -39,7 +39,7 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
     };
 
     // --- DESIGNER STATE ---
-    const [viewMode, setViewMode] = useState<'designer' | 'hangar' | 'admin-ships' | 'admin-modules' | 'admin-policies'>('designer');
+    const [viewMode, setViewMode] = useState<'designer' | 'hangar' | 'admin-ships' | 'admin-modules' | 'admin-policies' | 'admin-component-types'>('designer');
     const [slots, setSlots] = useState<any[]>([]);
     const [designName, setDesignName] = useState("");
     const [currentStats, setCurrentStats] = useState<any>({});
@@ -82,6 +82,9 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
         }
         if (viewMode === 'admin-policies') {
             fetchInitialData(); // Refresh policies list
+        }
+        if (viewMode === 'admin-component-types') {
+            fetchInitialData(); // Refresh component types
         }
     }, [viewMode]);
 
@@ -301,7 +304,7 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
                 <Rocket size={32} className="text-space-neon" />
             </div>
             <div className="flex-1">
-                <h3 className="text-xl font-display font-bold text-white mb-2">Bem-vindo ao Estaleiro Imperial</h3>
+                <h3 className="text-xl font-display font-bold text-white mb-2">Bem-vindo ao Estaleiro Virtual</h3>
                 <p className="text-sm text-space-muted mb-4 font-mono leading-relaxed">
                     Comandante, esta interface permite projetar as naves que comporão nossa frota.
                     <br />1. Selecione um <strong>Chassi</strong> base.
@@ -324,7 +327,7 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
                         <Rocket className="text-space-neon" /> Estaleiro Virtual
                     </h2>
                     <p className="text-space-muted font-mono text-sm mt-1">
-                        Projete e configure suas naves para a frota imperial.
+                        Projete e configure suas naves para a frota.
                     </p>
                 </div>
 
@@ -358,6 +361,14 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
                                 size="sm"
                             >
                                 POLÍTICAS
+                            </Button>
+                            <Button
+                                variant={viewMode === 'admin-component-types' ? 'primary' : 'ghost'}
+                                onClick={() => { setViewMode('admin-component-types'); setSelectedShip(null); }}
+                                icon={<Box size={14} />}
+                                size="sm"
+                            >
+                                TIPOS
                             </Button>
                         </>
                     )}
@@ -682,6 +693,89 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
                         ))}
                     </div>
                 </div>
+            ) : viewMode === 'admin-component-types' ? (
+                /* ADMIN: COMPONENT TYPES INFO */
+                <div className="space-y-6">
+                    <Card title="Tipos de Componentes Disponíveis">
+                        <div className="bg-space-dark/30 border border-space-neon/30 p-4 rounded-lg mb-4">
+                            <h4 className="text-space-neon font-display font-bold mb-2 flex items-center gap-2">
+                                <Box size={20} />
+                                Gerenciamento de Tipos de Componentes
+                            </h4>
+                            <p className="text-sm text-space-muted mb-3">
+                                Os tipos de componentes definem as categorias de módulos que podem ser equipados nas naves.
+                                Cada tipo tem características específicas e slots dedicados.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {[
+                                { type: 'engine', label: 'Motor', icon: '🚀', description: 'Sistemas de propulsão e velocidade', color: 'bg-blue-900/50 text-blue-300 border-blue-500/30' },
+                                { type: 'weapon', label: 'Arma', icon: '⚔️', description: 'Sistemas ofensivos e armamentos', color: 'bg-red-900/50 text-red-300 border-red-500/30' },
+                                { type: 'shield', label: 'Escudo', icon: '🛡️', description: 'Sistemas de proteção energética', color: 'bg-cyan-900/50 text-cyan-300 border-cyan-500/30' },
+                                { type: 'armor', label: 'Blindagem', icon: '🔰', description: 'Proteção física e estrutural', color: 'bg-gray-700/50 text-gray-300 border-gray-500/30' },
+                                { type: 'cargo', label: 'Carga', icon: '📦', description: 'Compartimentos de armazenamento', color: 'bg-yellow-900/50 text-yellow-300 border-yellow-500/30' },
+                                { type: 'mining', label: 'Mineração', icon: '⛏️', description: 'Equipamentos de extração de recursos', color: 'bg-orange-900/50 text-orange-300 border-orange-500/30' },
+                                { type: 'special', label: 'Especial', icon: '✨', description: 'Módulos únicos e experimentais', color: 'bg-purple-900/50 text-purple-300 border-purple-500/30' }
+                            ].map(componentType => {
+                                const moduleCount = modules.filter(m => m.type === componentType.type).length;
+                                return (
+                                    <div key={componentType.type} className={`border ${componentType.color} p-4 rounded-lg`}>
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="text-2xl">{componentType.icon}</div>
+                                            <div className="flex-1">
+                                                <h4 className="font-bold text-white font-display">{componentType.label}</h4>
+                                                <Badge className="text-[10px] mt-1">{componentType.type.toUpperCase()}</Badge>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-space-muted mb-3">{componentType.description}</p>
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-space-muted">Módulos:</span>
+                                            <span className="font-bold text-white font-mono">{moduleCount}</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </Card>
+
+                    <Card title="Estatísticas por Tipo">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b border-space-steel">
+                                        <th className="text-left py-2 px-3 text-space-neon font-display">Tipo</th>
+                                        <th className="text-center py-2 px-3 text-space-neon font-display">Total Módulos</th>
+                                        <th className="text-center py-2 px-3 text-space-neon font-display">Nível Médio</th>
+                                        <th className="text-left py-2 px-3 text-space-neon font-display">Naves Compatíveis</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {['engine', 'weapon', 'shield', 'armor', 'cargo', 'mining', 'special'].map(type => {
+                                        const typeModules = modules.filter(m => m.type === type);
+                                        const avgLevel = typeModules.length > 0
+                                            ? (typeModules.reduce((sum, m) => sum + (m.level || 1), 0) / typeModules.length).toFixed(1)
+                                            : '0';
+                                        const compatibleShips = ships.filter(s =>
+                                            s.slots_layout.some((slot: any) => slot.type === type)
+                                        ).length;
+
+                                        return (
+                                            <tr key={type} className="border-b border-space-steel/30 hover:bg-space-white/5">
+                                                <td className="py-2 px-3">
+                                                    <Badge className="bg-space-steel/50">{type}</Badge>
+                                                </td>
+                                                <td className="text-center py-2 px-3 font-mono text-white">{typeModules.length}</td>
+                                                <td className="text-center py-2 px-3 font-mono text-white">{avgLevel}</td>
+                                                <td className="py-2 px-3 font-mono text-space-muted">{compatibleShips} naves</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+                </div>
             ) : (
                 /* DESIGNER INTERFACE */
                 <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-200px)]">
@@ -777,7 +871,7 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
                                 {/* Policy Modifiers Display */}
                                 {Object.keys(policyModifiers).length > 0 && (
                                     <div className="bg-purple-900/20 border border-purple-500/30 p-3 rounded text-purple-200 text-xs font-mono mb-4">
-                                        <strong className="block mb-1">BÔNUS IMPERIAIS</strong>
+                                        <strong className="block mb-1">BÔNUS ATIVOS</strong>
                                         {Object.entries(policyModifiers).map(([policyName, mods]: [string, any]) => (
                                             <div key={policyName} className="mb-1">
                                                 <span className="font-bold">{policyName}</span>: {mods.join(', ')}
