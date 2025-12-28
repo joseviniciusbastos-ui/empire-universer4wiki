@@ -97,11 +97,38 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange, categorie
                 <div>
                     <label className="block text-xs font-mono text-space-muted mb-1">Autor</label>
                     <Input
-                        placeholder="Nome do autor..." // Simple text match for now
+                        placeholder="Nome do autor..."
                         value={filters.author}
                         onChange={e => setFilters({ ...filters, author: e.target.value })}
                         className="h-[38px]"
                     />
+                </div>
+            </div>
+
+            {/* Tag Filter */}
+            <div className="mt-4 border-t border-space-steel/30 pt-4">
+                <label className="block text-xs font-mono text-space-muted mb-2 uppercase tracking-widest">Filtrar por Tags</label>
+                <div className="flex flex-wrap gap-2">
+                    {['Tutorial', 'Wiki', 'Evento', 'Dica', 'Lore', 'Update', 'Guia'].map(tag => {
+                        const isSelected = filters.tags.includes(tag);
+                        return (
+                            <button
+                                key={tag}
+                                onClick={() => {
+                                    const newTags = isSelected
+                                        ? filters.tags.filter(t => t !== tag)
+                                        : [...filters.tags, tag];
+                                    setFilters({ ...filters, tags: newTags });
+                                }}
+                                className={`px-3 py-1 rounded-full text-[10px] font-mono transition-all border ${isSelected
+                                        ? 'bg-space-neon text-black border-space-neon'
+                                        : 'bg-space-black text-space-muted border-space-steel hover:border-space-neon'
+                                    }`}
+                            >
+                                {tag}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
         </div>

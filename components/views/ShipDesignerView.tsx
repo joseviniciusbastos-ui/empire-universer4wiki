@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Rocket, Shield, Zap, Crosshair, Save, RotateCcw, Box, ShieldAlert, X, Trash2, Settings, Plus, Cpu } from 'lucide-react';
+import { Rocket, Shield, Zap, Crosshair, Save, RotateCcw, Box, ShieldAlert, X, Trash2, Settings, Plus, Cpu, Printer, FileText } from 'lucide-react';
 import { Button, Card, Badge, Input } from '../ui/Shared';
 import { useToast } from '../../contexts/ToastContext';
 import { supabase } from '../../lib/supabase';
@@ -161,6 +161,10 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
             }
             return s;
         }));
+    };
+
+    const handlePrint = () => {
+        window.print();
     };
 
     const handleSaveDesign = async () => {
@@ -384,6 +388,7 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
                                 <span className="text-green-300">DEUTÉRIO: {Math.floor(totalCost.deuterium || 0)}</span>
                             </div>
                         </div>
+                        <Button variant="ghost" onClick={handlePrint} icon={<Printer size={16} />} title="Imprimir Esquematica">EXPORTAR</Button>
                         <Button variant="primary" onClick={handleSaveDesign} icon={<Save size={16} />}>SALVAR FIT</Button>
                     </div>
                 )}

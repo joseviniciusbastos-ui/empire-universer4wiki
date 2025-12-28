@@ -53,6 +53,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                     }}
                     onToggleTerminal={() => setIsTerminalOpen(true)}
                     currentUser={currentUser}
+                    setView={setView}
                 />
 
                 {/* View Content */}

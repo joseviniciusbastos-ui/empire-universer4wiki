@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { Button, Card } from '../ui/Shared';
-import { Search, ZoomIn, ZoomOut, Maximize2, Cpu, Info, Boxes, Zap, Shield, Target, Globe, Landmark, ShieldCheck, Crosshair, Factory, Radio, Landmark as Bank, ShieldAlert, Building2, Map, ArrowRight, CornerDownRight, History, Route } from 'lucide-react';
+import { Search, ZoomIn, ZoomOut, Maximize2, Cpu, Info, Boxes, Zap, Shield, Target, Globe, Landmark, ShieldCheck, Crosshair, Factory, Radio, Landmark as Bank, ShieldAlert, Building2, Map, ArrowRight, CornerDownRight, History, Route, Printer } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const STATIC_TEXT = {
@@ -264,6 +264,10 @@ export const TechTreeView: React.FC = () => {
         setSelectedNode(null);
     };
 
+    const handlePrint = () => {
+        window.print();
+    };
+
     const filteredNodes = TECH_NODES.filter(node => {
         const name = language === 'pt' ? node.pt : node.en;
         return name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -317,6 +321,7 @@ export const TechTreeView: React.FC = () => {
                     <div className="h-8 w-[1px] bg-space-steel/30 mx-1" />
                     <Button variant="ghost" size="sm" onClick={() => setScale(s => Math.min(s + 0.1, 2))}><ZoomIn size={16} /></Button>
                     <Button variant="ghost" size="sm" onClick={() => setScale(s => Math.max(s - 0.1, 0.02))}><ZoomOut size={16} /></Button>
+                    <Button variant="ghost" size="sm" onClick={handlePrint} className="text-space-neon"><Printer size={16} /></Button>
                     <Button variant="ghost" size="sm" onClick={resetView} className="text-space-neon"><Maximize2 size={16} /></Button>
                 </div>
             </div>
@@ -561,6 +566,68 @@ export const TechTreeView: React.FC = () => {
                 </div>
 
             </Card>
+
+            {/* PRINTABLE REPORT */}
+            <div className="hidden print:block fixed inset-0 bg-white text-black p-8 z-[9999]">
+                <div className="border-b-4 border-black pb-4 mb-8">
+                    <h1 className="text-4xl font-bold uppercase mb-1">Dossiê Tecnológico do Império</h1>
+                    <p className="font-mono text-sm">SETOR: {t.title}</p>
+                    <p className="font-mono text-xs text-gray-500">RELATÓRIO GERADO EM: {new Date().toLocaleString()}</p>
+                </div>
+
+                {selectedNode ? (
+                    <div>
+                        <div className="mb-8">
+                            <h2 className="text-6xl font-black uppercase mb-4">{language === 'pt' ? selectedNode.pt : selectedNode.en}</h2>
+                            <p className="text-xl italic border-l-8 border-black pl-4 py-2 bg-gray-50">
+                                {language === 'pt' ? selectedNode.desc_pt : selectedNode.desc_en}
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-12">
+                            <div>
+                                <h3 className="text-xl font-bold border-b-2 border-black mb-4 uppercase">Caminho de Pré-requisitos</h3>
+                                <div className="space-y-3 font-mono">
+                                    {Array.from(activeChain).reverse().map((reqId, i) => {
+                                        const node = TECH_NODES.find(n => n.id === reqId);
+                                        return (
+                                            <div key={reqId} className="flex items-center gap-4">
+                                                <span className="text-gray-400">[{i + 1}]</span>
+                                                <span className="font-bold">{language === 'pt' ? node?.pt : node?.en}</span>
+                                            </div>
+                                        );
+                                    })}
+                                    <div className="flex items-center gap-4 pt-2 border-t border-gray-200">
+                                        <span className="text-black font-black">[ALVO]</span>
+                                        <span className="font-black text-lg underline">{language === 'pt' ? selectedNode.pt : selectedNode.en}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 className="text-xl font-bold border-b-2 border-black mb-4 uppercase">Aplicações e Desbloqueios</h3>
+                                <div className="space-y-2">
+                                    {activeUnlocks.map(unlock => (
+                                        <div key={unlock.id} className="p-2 border border-gray-200 flex items-center gap-3">
+                                            <div className="w-2 h-2 bg-black rounded-full" />
+                                            <span className="font-bold">{language === 'pt' ? unlock.pt : unlock.en}</span>
+                                        </div>
+                                    ))}
+                                    {activeUnlocks.length === 0 && <p className="text-gray-400 italic">Nenhum desbloqueio imediato catalogado.</p>}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="text-center py-20">
+                        <p className="text-2xl font-bold uppercase italic text-gray-300">Nenhum nódulo selecionado para detalhamento.</p>
+                    </div>
+                )}
+
+                <div className="absolute bottom-8 left-8 right-8 text-center text-[10px] font-mono border-t pt-4">
+                    CONFIDENCIAL • PROPRIEDADE DA INTELIGÊNCIA CENTRAL UNIVERSER4
+                </div>
+            </div>
         </div>
     );
 };

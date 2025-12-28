@@ -226,6 +226,13 @@ export default function App() {
     if (searchFilters.category !== 'all' && post.category !== searchFilters.category) return false;
     if (searchFilters.author && !post.authorName.toLowerCase().includes(searchFilters.author.toLowerCase())) return false;
 
+    // Advanced Tag Filter: Must contain ALL selected tags
+    if (searchFilters.tags && searchFilters.tags.length > 0) {
+      const postTags = post.tags.map(t => t.toLowerCase());
+      const hasAllTags = searchFilters.tags.every(tag => postTags.includes(tag.toLowerCase()));
+      if (!hasAllTags) return false;
+    }
+
     if (searchFilters.dateRange !== 'all') {
       const date = new Date(post.createdAt);
       const now = new Date();
@@ -548,6 +555,7 @@ export default function App() {
           userId={viewingProfileId}
           onClose={() => setView('home')}
           onPostClick={openPostView}
+          currentUser={currentUser}
         />
       )}
 

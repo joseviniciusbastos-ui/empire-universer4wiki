@@ -4,6 +4,7 @@ import { RichTextEditor } from './ui/RichTextEditor';
 import { supabase } from '../lib/supabase';
 import { Send, Trash2, MessageSquare, CornerDownRight } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { PostType, User } from '../types';
 
 interface Comment {
@@ -24,6 +25,7 @@ interface CommentsProps {
 
 const Comments: React.FC<CommentsProps> = ({ postId, currentUser }) => {
     const { showToast } = useToast();
+    const { t } = useLanguage();
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState('');
     const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -135,7 +137,7 @@ const Comments: React.FC<CommentsProps> = ({ postId, currentUser }) => {
                             <RichTextEditor
                                 value={newComment}
                                 onChange={setNewComment}
-                                placeholder="Adicione um comentário..."
+                                placeholder={t.newComment + "..."}
                                 className="w-full bg-space-dark/50"
                                 minHeight="150px"
                             />
@@ -149,7 +151,7 @@ const Comments: React.FC<CommentsProps> = ({ postId, currentUser }) => {
                             size="sm"
                         >
                             <Send size={14} className="mr-2" />
-                            {isLoading ? 'Enviando...' : 'Comentar'}
+                            {isLoading ? t.loading : t.comments}
                         </Button>
                     </div>
                 </form>
@@ -219,6 +221,24 @@ const CommentItem: React.FC<CommentItemProps> = ({
     replyContent,
     setReplyContent
 }) => {
+    const { t, language, translateText } = useLanguage();
+    const [translatedContent, setTranslatedContent] = useState(comment.content);
+    const [isTranslating, setIsTranslating] = useState(false);
+
+    useEffect(() => {
+        if (language !== 'pt') {
+            handleTranslation();
+        } else {
+            setTranslatedContent(comment.content);
+        }
+    }, [language, comment.content]);
+
+    const handleTranslation = async () => {
+        setIsTranslating(true);
+        const translated = await translateText(comment.content, language);
+        setTranslatedContent(translated);
+        setIsTranslating(false);
+    };
     const replies = allComments.filter(c => c.parent_id === comment.id);
     const isReplying = replyingTo === comment.id;
 
@@ -286,8 +306,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
                             </div>
                         </div>
                         <div
-                            className="text-sm text-space-text leading-relaxed break-words prose prose-invert max-w-none"
-                            dangerouslySetInnerHTML={{ __html: comment.content }}
+                            className={`text-sm text-space-text leading-relaxed break-words prose prose-invert max-w-none ${isTranslating ? 'opacity-50' : ''}`}
+                            dangerouslySetInnerHTML={{ __html: translatedContent }}
                         />
 
                         {/* Reply Input */}

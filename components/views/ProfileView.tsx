@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wrench } from 'lucide-react';
+import { Wrench, Users } from 'lucide-react';
 import { Button, Badge } from '../ui/Shared';
 import { ReputationBadge } from '../ui/ReputationBadge';
 import { User } from '../../types';
@@ -13,6 +13,17 @@ interface ProfileViewProps {
 }
 
 export const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onEditProfile, onLoginClick }) => {
+    const [followingCount, setFollowingCount] = React.useState(0);
+
+    React.useEffect(() => {
+        if (currentUser) {
+            supabase.from('follows')
+                .select('*', { count: 'exact', head: true })
+                .eq('follower_id', currentUser.id)
+                .then(({ count }) => setFollowingCount(count || 0));
+        }
+    }, [currentUser?.id]);
+
     if (!currentUser) {
         return (
             <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
@@ -76,8 +87,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onEditPro
                             <p className="font-mono text-space-neon text-xl font-bold">{currentUser.reputation}</p>
                         </div>
                         <div className="text-center group cursor-default">
-                            <p className="text-[10px] text-space-muted uppercase tracking-widest group-hover:text-space-neon transition-colors">Missões</p>
-                            <p className="font-mono text-white text-xl">0</p>
+                            <p className="text-[10px] text-space-muted uppercase tracking-widest group-hover:text-space-neon transition-colors">Seguindo</p>
+                            <p className="font-mono text-white text-xl">{followingCount}</p>
                         </div>
                         <div className="text-center group cursor-default">
                             <p className="text-[10px] text-space-muted uppercase tracking-widest group-hover:text-space-neon transition-colors">ID do Agente</p>
