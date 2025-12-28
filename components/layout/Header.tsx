@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, Menu, Terminal as TerminalIcon } from 'lucide-react';
 import NotificationsMenu from '../NotificationsMenu';
 import { User } from '../../types';
+import { GameClock } from '../ui/GameClock';
 
 interface HeaderProps {
     onToggleSidebar: () => void;
@@ -29,6 +30,12 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, onToggleTermina
                 >
                     <TerminalIcon size={20} />
                 </button>
+
+                <div className="hidden sm:block border-l border-space-steel h-8 mx-2" />
+
+                <GameClock className="hidden md:flex" />
+
+                <div className="hidden md:block border-l border-space-steel h-8 mx-2" />
 
                 <NotificationsMenu currentUser={currentUser} setView={setView} />
 

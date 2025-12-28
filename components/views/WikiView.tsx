@@ -140,55 +140,78 @@ export const WikiView: React.FC<WikiViewProps> = ({
                 </div>
             </div>
 
+            {/* Wiki Stats Banner */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-2">
+                {[
+                    { label: 'Páginas Ativas', value: wikiPosts.length, icon: <Database size={14} className="text-space-neon" /> },
+                    { label: 'Contribuidores', value: new Set(wikiPosts.map(p => p.authorId)).size, icon: <Star size={14} className="text-yellow-500" /> },
+                    { label: 'Categorias', value: categories.length, icon: <FolderOpen size={14} className="text-blue-400" /> },
+                    { label: 'Status Base', value: 'ESTÁVEL', icon: <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> }
+                ].map((stat, idx) => (
+                    <div key={idx} className="bg-space-dark/30 border border-space-steel/10 rounded-lg p-3 flex flex-col gap-1 backdrop-blur-sm">
+                        <div className="flex items-center gap-2 text-[9px] font-mono text-space-muted uppercase tracking-widest">
+                            {stat.icon} {stat.label}
+                        </div>
+                        <div className="text-lg font-display font-bold text-white leading-none">
+                            {stat.value}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+
             {/* Featured Post (Latest) */}
-            {featuredPost && activeCategory === 'all' && !searchQuery && (
-                <div
-                    className="group relative w-full h-[300px] border border-space-steel/30 rounded-2xl overflow-hidden cursor-pointer hover:border-space-neon/50 transition-all duration-500"
-                    onClick={() => onPostClick(featuredPost)}
-                >
-                    {/* Background Visuals */}
-                    <div className="absolute inset-0 z-0">
-                        <img
-                            src={featuredPost.content.match(/<img[^>]+src="([^">]+)"/)?.[1] || "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop"}
-                            alt="Featured"
-                            className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-space-black via-space-black/60 to-transparent" />
-                    </div>
+            {
+                featuredPost && activeCategory === 'all' && !searchQuery && (
+                    <div
+                        className="group relative w-full h-[300px] border border-space-steel/30 rounded-2xl overflow-hidden cursor-pointer hover:border-space-neon/50 transition-all duration-500"
+                        onClick={() => onPostClick(featuredPost)}
+                    >
+                        {/* Background Visuals */}
+                        <div className="absolute inset-0 z-0">
+                            <img
+                                src={featuredPost.content.match(/<img[^>]+src="([^">]+)"/)?.[1] || "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop"}
+                                alt="Featured"
+                                className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-space-black via-space-black/80 to-transparent" />
+                            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-space-neon/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
 
-                    {/* Badge */}
-                    <div className="absolute top-6 left-6 z-10 flex items-center gap-2">
-                        <Badge className="bg-space-neon text-black font-bold text-[10px] px-3 py-1 ring-4 ring-space-neon/10">{t.featured}</Badge>
-                        <span className="text-space-neon/70 font-mono text-xs uppercase tracking-[0.2em] bg-space-black/80 px-2 py-1 rounded backdrop-blur-sm border border-space-neon/20">
-                            {featuredPost.category}
-                        </span>
-                    </div>
-
-                    <div className="absolute bottom-8 left-8 right-8 z-10 max-w-2xl">
-                        <h3 className="text-4xl font-display font-bold text-white group-hover:text-space-neon transition-colors mb-3 leading-tight">
-                            {featuredPost.title}
-                        </h3>
-                        <div
-                            className="text-space-muted font-mono text-sm line-clamp-2 mb-6 opacity-80 group-hover:opacity-100 transition-opacity"
-                            dangerouslySetInnerHTML={{ __html: featuredPost.content.replace(/<[^>]+>/g, '') }}
-                        />
-                        <div className="flex items-center gap-6 text-[10px] font-mono text-space-steel uppercase tracking-widest">
-                            <span className="flex items-center gap-2">
-                                <span className="text-space-neon opacity-50">{t.author}:</span> {featuredPost.authorName}
-                            </span>
-                            <span className="flex items-center gap-2">
-                                <span className="text-space-neon opacity-50">{t.transmission}:</span> {new Date(featuredPost.createdAt).toLocaleDateString(language === 'pt' ? 'pt-BR' : 'en-US')}
+                        {/* Badge */}
+                        <div className="absolute top-6 left-6 z-10 flex items-center gap-2">
+                            <Badge className="bg-space-neon text-black font-bold text-[10px] px-3 py-1 ring-4 ring-space-neon/10">{t.featured}</Badge>
+                            <span className="text-space-neon/70 font-mono text-xs uppercase tracking-[0.2em] bg-space-black/80 px-2 py-1 rounded backdrop-blur-sm border border-space-neon/20">
+                                {featuredPost.category}
                             </span>
                         </div>
-                    </div>
 
-                    <div className="absolute right-12 bottom-12 z-10 hidden lg:block opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-500">
-                        <div className="w-12 h-12 rounded-full border border-space-neon flex items-center justify-center text-space-neon">
-                            <ChevronRight size={24} />
+                        <div className="absolute bottom-8 left-8 right-8 z-10 max-w-2xl">
+                            <h3 className="text-4xl font-display font-bold text-white group-hover:text-space-neon transition-colors mb-3 leading-tight">
+                                {featuredPost.title}
+                            </h3>
+                            <div
+                                className="text-space-muted font-mono text-sm line-clamp-2 mb-6 opacity-80 group-hover:opacity-100 transition-opacity"
+                                dangerouslySetInnerHTML={{ __html: featuredPost.content.replace(/<[^>]+>/g, '') }}
+                            />
+                            <div className="flex items-center gap-6 text-[10px] font-mono text-space-steel uppercase tracking-widest">
+                                <span className="flex items-center gap-2">
+                                    <span className="text-space-neon opacity-50">{t.author}:</span> {featuredPost.authorName}
+                                </span>
+                                <span className="flex items-center gap-2">
+                                    <span className="text-space-neon opacity-50">{t.transmission}:</span> {new Date(featuredPost.createdAt).toLocaleDateString(language === 'pt' ? 'pt-BR' : 'en-US')}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="absolute right-12 bottom-12 z-10 hidden lg:block opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-500">
+                            <div className="w-12 h-12 rounded-full border border-space-neon flex items-center justify-center text-space-neon">
+                                <ChevronRight size={24} />
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Search Bar Area */}
             <div className="relative group">
@@ -245,57 +268,59 @@ export const WikiView: React.FC<WikiViewProps> = ({
             </div>
 
             {/* Category Drawer Overlay */}
-            {isDrawerOpen && (
-                <div className="fixed inset-0 z-50 flex justify-end">
-                    <div className="absolute inset-0 bg-space-black/80 backdrop-blur-sm transition-opacity" onClick={() => setIsDrawerOpen(false)} />
-                    <div className="relative w-full max-w-md bg-space-dark border-l border-space-neon/30 h-full p-8 shadow-2xl animate-slideLeft">
-                        <div className="flex justify-between items-center mb-10">
-                            <div>
-                                <h3 className="text-2xl font-display font-bold text-white uppercase tracking-wider">{t.directories}</h3>
-                                <p className="text-[10px] font-mono text-space-neon uppercase tracking-[0.2em] mt-1">{t.classification}</p>
-                            </div>
-                            <button onClick={() => setIsDrawerOpen(false)} className="p-3 hover:bg-space-steel/10 rounded-full text-space-muted hover:text-white transition-colors">
-                                <X size={24} />
-                            </button>
-                        </div>
-
-                        <div className="space-y-2">
-                            <button
-                                onClick={() => { onCategoryClick('all'); setIsDrawerOpen(false); }}
-                                className={`w-full group flex items-center justify-between p-5 rounded-xl border transition-all duration-300 ${activeCategory === 'all' ? 'bg-space-neon/10 border-space-neon text-space-neon' : 'bg-space-dark border-space-steel/20 text-space-muted hover:border-space-steel/50 hover:text-white'}`}
-                            >
-                                <div className="flex items-center gap-4">
-                                    <Database size={20} className={activeCategory === 'all' ? 'text-space-neon' : 'text-space-steel'} />
-                                    <span className="font-display font-bold text-sm tracking-widest">{t.index}</span>
+            {
+                isDrawerOpen && (
+                    <div className="fixed inset-0 z-50 flex justify-end">
+                        <div className="absolute inset-0 bg-space-black/80 backdrop-blur-sm transition-opacity" onClick={() => setIsDrawerOpen(false)} />
+                        <div className="relative w-full max-w-md bg-space-dark border-l border-space-neon/30 h-full p-8 shadow-2xl animate-slideLeft">
+                            <div className="flex justify-between items-center mb-10">
+                                <div>
+                                    <h3 className="text-2xl font-display font-bold text-white uppercase tracking-wider">{t.directories}</h3>
+                                    <p className="text-[10px] font-mono text-space-neon uppercase tracking-[0.2em] mt-1">{t.classification}</p>
                                 </div>
-                                <ChevronRight size={16} className={`transition-transform duration-300 ${activeCategory === 'all' ? 'translate-x-1' : 'opacity-0'}`} />
-                            </button>
+                                <button onClick={() => setIsDrawerOpen(false)} className="p-3 hover:bg-space-steel/10 rounded-full text-space-muted hover:text-white transition-colors">
+                                    <X size={24} />
+                                </button>
+                            </div>
 
-                            {categories.map(cat => (
+                            <div className="space-y-2">
                                 <button
-                                    key={cat}
-                                    onClick={() => { onCategoryClick(cat); setIsDrawerOpen(false); }}
-                                    className={`w-full group flex items-center justify-between p-5 rounded-xl border transition-all duration-300 ${activeCategory === cat ? 'bg-space-neon/10 border-space-neon text-space-neon' : 'bg-space-dark border-space-steel/20 text-space-muted hover:border-space-steel/50 hover:text-white'}`}
+                                    onClick={() => { onCategoryClick('all'); setIsDrawerOpen(false); }}
+                                    className={`w-full group flex items-center justify-between p-5 rounded-xl border transition-all duration-300 ${activeCategory === 'all' ? 'bg-space-neon/10 border-space-neon text-space-neon' : 'bg-space-dark border-space-steel/20 text-space-muted hover:border-space-steel/50 hover:text-white'}`}
                                 >
                                     <div className="flex items-center gap-4">
-                                        <FolderOpen size={20} className={activeCategory === cat ? 'text-space-neon' : 'text-space-steel'} />
-                                        <span className="font-display font-bold text-sm tracking-widest uppercase">{cat}</span>
+                                        <Database size={20} className={activeCategory === 'all' ? 'text-space-neon' : 'text-space-steel'} />
+                                        <span className="font-display font-bold text-sm tracking-widest">{t.index}</span>
                                     </div>
-                                    <ChevronRight size={16} className={`transition-transform duration-300 ${activeCategory === cat ? 'translate-x-1' : 'opacity-0'}`} />
+                                    <ChevronRight size={16} className={`transition-transform duration-300 ${activeCategory === 'all' ? 'translate-x-1' : 'opacity-0'}`} />
                                 </button>
-                            ))}
-                        </div>
 
-                        <div className="absolute bottom-8 left-8 right-8">
-                            <div className="bg-space-black/50 border border-space-steel/20 rounded-xl p-6">
-                                <p className="text-[10px] font-mono text-space-muted italic leading-relaxed">
-                                    {t.quote}
-                                </p>
+                                {categories.map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => { onCategoryClick(cat); setIsDrawerOpen(false); }}
+                                        className={`w-full group flex items-center justify-between p-5 rounded-xl border transition-all duration-300 ${activeCategory === cat ? 'bg-space-neon/10 border-space-neon text-space-neon' : 'bg-space-dark border-space-steel/20 text-space-muted hover:border-space-steel/50 hover:text-white'}`}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <FolderOpen size={20} className={activeCategory === cat ? 'text-space-neon' : 'text-space-steel'} />
+                                            <span className="font-display font-bold text-sm tracking-widest uppercase">{cat}</span>
+                                        </div>
+                                        <ChevronRight size={16} className={`transition-transform duration-300 ${activeCategory === cat ? 'translate-x-1' : 'opacity-0'}`} />
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="absolute bottom-8 left-8 right-8">
+                                <div className="bg-space-black/50 border border-space-steel/20 rounded-xl p-6">
+                                    <p className="text-[10px] font-mono text-space-muted italic leading-relaxed">
+                                        {t.quote}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };

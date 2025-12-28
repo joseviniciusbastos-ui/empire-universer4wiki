@@ -4,7 +4,6 @@ import { CATEGORIES } from './constants';
 import { Post, PostType, DB_Post, BulletinItem } from './types';
 import { CacheManager, debounce } from './lib/cache';
 import Terminal from './components/Terminal';
-import Tools from './components/Tools';
 import CreatePostModal from './components/modals/CreatePostModal';
 import FeedbackModal from './components/modals/FeedbackModal';
 import LoginModal from './components/modals/LoginModal';
@@ -38,7 +37,7 @@ const CATEGORY_KEYS = {
 };
 
 export default function App() {
-  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'tools' | 'profile' | 'admin' | 'post-view' | 'public-profile' | 'tech-tree' | 'achievements' | 'ship-designer'>('home');
+  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'profile' | 'admin' | 'post-view' | 'public-profile' | 'tech-tree' | 'achievements' | 'ship-designer'>('home');
 
   // App State
   const { currentUser, isLoading: isAuthLoading, refreshProfile } = useAuth();
@@ -518,20 +517,7 @@ export default function App() {
       )}
 
 
-      {view === 'tools' && (
-        <RestrictedView>
-          <div className="space-y-6">
-            <h2 className="text-3xl font-display font-bold uppercase">Ferramentas de Engenharia</h2>
-            <Tools currentUser={currentUser} />
-            {/* Feedback Modal */}
-            <FeedbackModal
-              isOpen={isFeedbackModalOpen}
-              onClose={() => setIsFeedbackModalOpen(false)}
-              currentUser={currentUser}
-            />
-          </div>
-        </RestrictedView>
-      )}
+
 
       {view === 'admin' && currentUser && (
         <AdminPanel currentUser={currentUser} />

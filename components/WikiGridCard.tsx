@@ -1,8 +1,9 @@
 import React from 'react';
 import { Post, User } from '../types';
 import { Card, Badge } from './ui/Shared';
-import { Clock, Eye, MessageSquare, ArrowUpRight } from 'lucide-react';
+import { Clock, Eye, MessageSquare, ArrowUpRight, User as UserIcon } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { RANK_THRESHOLDS } from '../constants';
 
 interface WikiGridCardProps {
     post: Post;
@@ -71,6 +72,14 @@ export const WikiGridCard: React.FC<WikiGridCardProps> = ({ post, onClick, curre
 
                 {/* Footer Stats */}
                 <div className="flex items-center justify-between pt-3 border-t border-space-steel/10">
+                    <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-space-dark border border-space-steel flex items-center justify-center text-[10px] text-space-muted overflow-hidden">
+                            {post.authorName.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-[10px] font-mono text-space-muted truncate max-w-[60px]">
+                            {post.authorName}
+                        </span>
+                    </div>
                     <div className="flex items-center gap-3 text-[10px] font-mono text-space-muted">
                         <span className="flex items-center gap-1">
                             <Eye size={10} /> {post.views}

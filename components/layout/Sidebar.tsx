@@ -5,7 +5,6 @@ import { User } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { RANK_THRESHOLDS } from '../../constants';
 import { useLanguage, Language } from '../../contexts/LanguageContext';
-import { GameClock } from '../ui/GameClock';
 
 const STATIC_TEXT: Record<Language, any> = {
     pt: {
@@ -128,8 +127,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                             { id: 'articles', icon: <TerminalIcon size={20} />, label: t.logs },
                             { id: 'forum', icon: <MessageSquare size={20} />, label: t.comms },
                             { id: 'tech-tree', icon: <Cpu size={20} />, label: t.tech },
-                            { id: 'achievements', icon: <Trophy size={20} />, label: t.achievements },
-                            { id: 'tools', icon: <Wrench size={20} />, label: t.engineering }
+                            { id: 'achievements', icon: <Trophy size={20} />, label: t.achievements }
                         ].map((item) => (
                             <Button
                                 key={item.id}
@@ -298,16 +296,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                 </div>
             </nav>
 
-            <div className={`p-4 border-t border-space-steel transition-all duration-300 ${isExpanded ? 'opacity-100 h-auto' : 'opacity-0 h-0 p-0 hidden'}`}>
-                <div className="bg-space-darker rounded p-4 border border-space-steel/50 space-y-4">
-                    <GameClock className="justify-center" />
 
-                    <div className="flex items-center justify-center gap-2 pt-2 border-t border-space-steel/20">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                        <span className="text-[10px] text-space-neon font-mono uppercase tracking-widest">Link Online</span>
-                    </div>
-                </div>
-            </div>
         </aside>
     );
 };
