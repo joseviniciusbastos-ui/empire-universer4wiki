@@ -517,17 +517,12 @@ export default function App() {
         </RestrictedView>
       )}
 
-      {view === 'ship-designer' && (
-        <RestrictedView>
-          <ShipDesignerView currentUser={currentUser} />
-        </RestrictedView>
-      )}
 
       {view === 'tools' && (
         <RestrictedView>
           <div className="space-y-6">
             <h2 className="text-3xl font-display font-bold uppercase">Ferramentas de Engenharia</h2>
-            <Tools />
+            <Tools currentUser={currentUser} />
             {/* Feedback Modal */}
             <FeedbackModal
               isOpen={isFeedbackModalOpen}

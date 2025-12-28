@@ -4,11 +4,22 @@ import { Card, Badge, Button } from './ui/Shared';
 import { ToolModule } from '../types';
 import { ResourceCalculator } from './tools/ResourceCalculator';
 import { TravelSimulator } from './tools/TravelSimulator';
+import { ShipDesignerView } from './views/ShipDesignerView';
 
-const Tools: React.FC = () => {
-  const [activeModule, setActiveModule] = useState<'grid' | 'calculator' | 'travel'>('grid');
+interface ToolsProps {
+  currentUser: any;
+}
+
+const Tools: React.FC<ToolsProps> = ({ currentUser }) => {
+  const [activeModule, setActiveModule] = useState<'grid' | 'calculator' | 'travel' | 'shipyard'>('grid');
 
   const DYNAMIC_TOOLS: ToolModule[] = [
+    {
+      id: 'shipyard',
+      name: 'Estaleiro de Naves',
+      status: 'active',
+      description: 'Projeto e customização de frotas e chassis industriais.'
+    },
     {
       id: 'calculator',
       name: 'Calculadora de Materiais',
@@ -47,6 +58,17 @@ const Tools: React.FC = () => {
           <LayoutGrid size={14} className="mr-2" /> VOLTAR AO PAINEL
         </Button>
         <TravelSimulator />
+      </div>
+    );
+  }
+
+  if (activeModule === 'shipyard') {
+    return (
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" onClick={() => setActiveModule('grid')} className="mb-4">
+          <LayoutGrid size={14} className="mr-2" /> VOLTAR AO PAINEL
+        </Button>
+        <ShipDesignerView currentUser={currentUser} />
       </div>
     );
   }

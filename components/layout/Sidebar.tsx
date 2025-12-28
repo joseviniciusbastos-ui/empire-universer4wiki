@@ -128,7 +128,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                             { id: 'articles', icon: <TerminalIcon size={20} />, label: t.logs },
                             { id: 'forum', icon: <MessageSquare size={20} />, label: t.comms },
                             { id: 'tech-tree', icon: <Cpu size={20} />, label: t.tech },
-                            { id: 'ship-designer', icon: <Rocket size={20} />, label: t.ship_designer },
                             { id: 'achievements', icon: <Trophy size={20} />, label: t.achievements },
                             { id: 'tools', icon: <Wrench size={20} />, label: t.engineering }
                         ].map((item) => (
