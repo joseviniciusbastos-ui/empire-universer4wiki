@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Button, Card, Badge, Input } from '../ui/Shared';
-import { Rocket, Cpu, Settings, Box, Plus, Trash2, Edit2, Save, X, Image as ImageIcon } from 'lucide-react';
+import { Rocket, Cpu, Settings, Box, Plus, Trash2, Edit2, Save, X, Image as ImageIcon, Zap, Shield, Target, Boxes, Crosshair } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
+import { TECH_NODES } from '../../lib/techData';
 
 interface ShipyardManagerProps {
     ships: any[];
@@ -16,6 +17,9 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
     const [activeTab, setActiveTab] = useState<'ships' | 'modules' | 'policies'>('ships');
     const [isEditing, setIsEditing] = useState<any | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+
+    // --- Simulator State ---
+    const [equippedModules, setEquippedModules] = useState<Record<string, string>>({}); // slotIndex -> moduleId
 
     // Form States
     const [shipForm, setShipForm] = useState({
@@ -31,7 +35,8 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
         slots: '[{"type":"engine", "count": 1}, {"type":"weapon", "count": 2}]',
         metal: 1000,
         crystal: 500,
-        deuterium: 100
+        deuterium: 100,
+        tech_id: ''
     });
 
     const [moduleForm, setModuleForm] = useState({
@@ -41,7 +46,8 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
         description: '',
         image_url: '',
         stats: '{}',
-        cost: '{"metal": 500, "crystal": 200}'
+        cost: '{"metal": 500, "crystal": 200}',
+        tech_id: ''
     });
 
     const [policyForm, setPolicyForm] = useState({
@@ -66,7 +72,8 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
             slots: '[{"type":"engine", "count": 1}, {"type":"weapon", "count": 2}]',
             metal: 1000,
             crystal: 500,
-            deuterium: 100
+            deuterium: 100,
+            tech_id: ''
         });
         setModuleForm({
             name: '',
@@ -75,7 +82,8 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
             description: '',
             image_url: '',
             stats: '{}',
-            cost: '{"metal": 500, "crystal": 200}'
+            cost: '{"metal": 500, "crystal": 200}',
+            tech_id: ''
         });
         setPolicyForm({
             name: '',
@@ -85,6 +93,7 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
             is_active: true
         });
         setIsEditing(null);
+        setEquippedModules({});
     };
 
     const handleEditItem = (item: any, type: 'ship' | 'module' | 'policy') => {
@@ -103,7 +112,8 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
                 slots: JSON.stringify(item.slots_layout),
                 metal: item.base_cost.metal || 0,
                 crystal: item.base_cost.crystal || 0,
-                deuterium: item.base_cost.deuterium || 0
+                deuterium: item.base_cost.deuterium || 0,
+                tech_id: item.tech_id || ''
             });
             setActiveTab('ships');
         } else if (type === 'module') {
@@ -114,7 +124,8 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
                 description: item.description || '',
                 image_url: item.image_url || '',
                 stats: JSON.stringify(item.stats_modifier),
-                cost: JSON.stringify(item.cost)
+                cost: JSON.stringify(item.cost),
+                tech_id: item.tech_id || ''
             });
             setActiveTab('modules');
         } else if (type === 'policy') {
@@ -129,6 +140,36 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
+
+    // --- Stats Calculation ---
+    const simulatedStats = useMemo(() => {
+        let stats = {
+            hull: shipForm.hull,
+            shield: shipForm.shield,
+            speed: shipForm.speed,
+            cargo: shipForm.cargo
+        };
+
+        Object.values(equippedModules).forEach(modId => {
+            const mod = modules.find(m => m.id === modId);
+            if (!mod?.stats_modifier) return;
+
+            Object.entries(mod.stats_modifier).forEach(([key, val]: [string, any]) => {
+                if (key.endsWith('_pct')) {
+                    const baseKey = key.replace('_pct', '') as keyof typeof stats;
+                    if (stats[baseKey] !== undefined) stats[baseKey] *= (1 + val);
+                } else if (key.endsWith('_add')) {
+                    const baseKey = key.replace('_add', '') as keyof typeof stats;
+                    if (stats[baseKey] !== undefined) stats[baseKey] += val;
+                } else {
+                    const baseKey = key as keyof typeof stats;
+                    if (stats[baseKey] !== undefined) stats[baseKey] += val;
+                }
+            });
+        });
+
+        return stats;
+    }, [shipForm, equippedModules, modules]);
 
     const saveShip = async () => {
         setIsLoading(true);
@@ -150,7 +191,8 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
                     crystal: shipForm.crystal,
                     deuterium: shipForm.deuterium
                 },
-                slots_layout: JSON.parse(shipForm.slots)
+                slots_layout: JSON.parse(shipForm.slots),
+                tech_id: shipForm.tech_id || null
             };
 
             if (isEditing) {
@@ -181,7 +223,8 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
                 description: moduleForm.description,
                 image_url: moduleForm.image_url,
                 stats_modifier: JSON.parse(moduleForm.stats),
-                cost: JSON.parse(moduleForm.cost)
+                cost: JSON.parse(moduleForm.cost),
+                tech_id: moduleForm.tech_id || null
             };
 
             if (isEditing) {
@@ -315,6 +358,18 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
                                     </div>
                                     <Input type="number" placeholder="Build Time (s)" label="TEMPO DE CONST. (S)" value={shipForm.base_build_time} onChange={e => setShipForm({ ...shipForm, base_build_time: parseInt(e.target.value) || 0 })} />
 
+                                    <label className="text-xs font-mono text-space-neon uppercase block mt-4">Tecnologia Requisitada</label>
+                                    <select
+                                        className="w-full bg-space-black border border-space-steel rounded p-2 text-white text-sm"
+                                        value={shipForm.tech_id}
+                                        onChange={e => setShipForm({ ...shipForm, tech_id: e.target.value })}
+                                    >
+                                        <option value="">Nenhuma (Início)</option>
+                                        {TECH_NODES.filter(n => n.category === 'chassis' || n.category === 'general').map(node => (
+                                            <option key={node.id} value={node.id}>[{node.category.toUpperCase()}] {node.pt}</option>
+                                        ))}
+                                    </select>
+
                                     <label className="text-xs font-mono text-space-neon uppercase block mt-4">Custos de Produção</label>
                                     <div className="grid grid-cols-3 gap-2">
                                         <Input type="number" label="METAL" value={shipForm.metal} onChange={e => setShipForm({ ...shipForm, metal: parseInt(e.target.value) || 0 })} />
@@ -328,6 +383,15 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
                                         value={shipForm.slots}
                                         onChange={e => setShipForm({ ...shipForm, slots: e.target.value })}
                                     />
+                                    <div className="flex gap-2">
+                                        {[
+                                            { label: 'FIGHTER', val: '[{"type":"engine", "count": 1}, {"type":"weapon", "count": 1}]' },
+                                            { label: 'CRUISER', val: '[{"type":"engine", "count": 1}, {"type":"weapon", "count": 4}, {"type":"shield", "count": 2}]' },
+                                            { label: 'MINE', val: '[{"type":"engine", "count": 1}, {"type":"mining", "count": 1}]' }
+                                        ].map(tmpl => (
+                                            <button key={tmpl.label} onClick={() => setShipForm({ ...shipForm, slots: tmpl.val })} className="text-[8px] px-2 py-0.5 bg-space-steel/20 hover:bg-space-neon/20 rounded border border-white/5 text-space-muted hover:text-white transition-colors">{tmpl.label}</button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex gap-2 mt-6">
@@ -337,6 +401,107 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
                                 {isEditing && <Button variant="ghost" onClick={resetForms}><X size={16} /></Button>}
                             </div>
                         </Card>
+
+                        {/* Live Simulator Preview */}
+                        {isEditing && (
+                            <Card title="SIMULADOR DE MONTAGEM (PREVIEW)" className="mt-6 border-space-neon/30 bg-space-neon/[0.02]">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Slot Configurator */}
+                                    <div className="space-y-4">
+                                        <label className="text-xs font-mono text-space-neon uppercase flex items-center gap-2">
+                                            <Cpu size={14} /> Configuração de Slots
+                                        </label>
+                                        <div className="space-y-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+                                            {(() => {
+                                                try {
+                                                    const slots = JSON.parse(shipForm.slots);
+                                                    let slotItems: any[] = [];
+                                                    slots.forEach((slotTypeGroup: any, groupIndex: number) => {
+                                                        for (let i = 0; i < slotTypeGroup.count; i++) {
+                                                            const slotId = `${groupIndex}-${i}`;
+                                                            slotItems.push(
+                                                                <div key={slotId} className="flex items-center gap-2 bg-black/40 p-2 rounded border border-white/5">
+                                                                    <div className="w-8 h-8 rounded bg-space-steel/20 flex items-center justify-center text-space-neon flex-shrink-0">
+                                                                        {slotTypeGroup.type === 'engine' && <Zap size={14} />}
+                                                                        {slotTypeGroup.type === 'weapon' && <Crosshair size={14} />}
+                                                                        {slotTypeGroup.type === 'shield' && <Shield size={14} />}
+                                                                        {slotTypeGroup.type === 'cargo' && <Boxes size={14} />}
+                                                                    </div>
+                                                                    <div className="flex-1">
+                                                                        <div className="text-[10px] text-space-muted uppercase">{slotTypeGroup.type} Slot #{i + 1}</div>
+                                                                        <select
+                                                                            className="w-full bg-transparent text-xs text-white focus:outline-none"
+                                                                            value={equippedModules[slotId] || ''}
+                                                                            onChange={e => setEquippedModules(prev => ({ ...prev, [slotId]: e.target.value }))}
+                                                                        >
+                                                                            <option value="">(Vazio)</option>
+                                                                            {modules.filter(m => m.type === slotTypeGroup.type).map(m => (
+                                                                                <option key={m.id} value={m.id}>{m.name} (v{m.level})</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </div>
+                                                                    {equippedModules[slotId] && (
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const newEquipped = { ...equippedModules };
+                                                                                delete newEquipped[slotId];
+                                                                                setEquippedModules(newEquipped);
+                                                                            }}
+                                                                            className="text-space-alert opacity-50 hover:opacity-100"
+                                                                        >
+                                                                            <X size={12} />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        }
+                                                    });
+                                                    return slotItems.length > 0 ? slotItems : <div className="text-xs text-space-muted italic p-4 text-center">Nenhum slot definido.</div>;
+                                                } catch (e) {
+                                                    return <div className="text-xs text-space-alert p-4 bg-space-alert/10 rounded font-mono">Erro no JSON de Slots!</div>;
+                                                }
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    {/* Calculated Results */}
+                                    <div className="space-y-4">
+                                        <label className="text-xs font-mono text-space-neon uppercase flex items-center gap-2">
+                                            <Rocket size={14} /> Performance Resultante
+                                        </label>
+                                        <div className="bg-black/60 p-4 rounded-lg border border-space-neon/20 space-y-3">
+                                            {[
+                                                { label: 'HULL (ESTRUTURA)', val: simulatedStats.hull, base: shipForm.hull, icon: <Rocket size={14} />, color: 'text-white' },
+                                                { label: 'SHIELD (ESCUDO)', val: simulatedStats.shield, base: shipForm.shield, icon: <Shield size={14} />, color: 'text-sky-400' },
+                                                { label: 'SPEED (VELOCIDADE)', val: simulatedStats.speed, base: shipForm.speed, icon: <Zap size={14} />, color: 'text-lime-400' },
+                                                { label: 'CARGO (CAPACIDADE)', val: simulatedStats.cargo, base: shipForm.cargo, icon: <Boxes size={14} />, color: 'text-blue-400' },
+                                            ].map(stat => (
+                                                <div key={stat.label} className="space-y-1">
+                                                    <div className="flex justify-between text-[10px] font-mono">
+                                                        <span className="text-space-muted uppercase flex items-center gap-1">{stat.icon} {stat.label}</span>
+                                                        <span className={stat.color}>{Math.round(stat.val)}</span>
+                                                    </div>
+                                                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                                        <div
+                                                            className={`h-full transition-all duration-500 ${stat.color.replace('text-', 'bg-')}`}
+                                                            style={{ width: `${Math.min((stat.val / (stat.base || 1)) * 50, 100)}%` }}
+                                                        />
+                                                    </div>
+                                                    {stat.val > stat.base && (
+                                                        <div className="text-[9px] text-lime-400 font-mono flex items-center gap-1">
+                                                            <Plus size={8} /> {Math.round(stat.val - stat.base)} de bônus de módulos
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="text-[10px] text-space-muted italic leading-relaxed">
+                                            * Os valores acima são calculados em tempo real aplicando modificadores aditivos e percentuais dos módulos equipados à base do chassi.
+                                        </div>
+                                    </div>
+                                </div>
+                            </Card>
+                        )}
                     </div>
 
                     {/* Ship List */}
@@ -385,6 +550,19 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
                                         <option value="special">Especial</option>
                                     </select>
                                     <Input type="number" label="TECH LEVEL / NÍVEL" value={moduleForm.level} onChange={e => setModuleForm({ ...moduleForm, level: parseInt(e.target.value) || 1 })} />
+
+                                    <label className="text-xs font-mono text-space-neon uppercase block mt-2">Tecnologia de Desbloqueio</label>
+                                    <select
+                                        className="w-full bg-space-black border border-space-steel rounded p-2 text-white text-sm"
+                                        value={moduleForm.tech_id}
+                                        onChange={e => setModuleForm({ ...moduleForm, tech_id: e.target.value })}
+                                    >
+                                        <option value="">Padrão (Nível 0)</option>
+                                        {TECH_NODES.map(node => (
+                                            <option key={node.id} value={node.id}>[{node.category.toUpperCase()}] {node.pt}</option>
+                                        ))}
+                                    </select>
+
                                     <textarea
                                         placeholder="Efeito e descrição"
                                         className="w-full bg-space-black border border-space-steel rounded p-2 text-white text-sm h-24"
@@ -401,6 +579,15 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
                                         onChange={e => setModuleForm({ ...moduleForm, stats: e.target.value })}
                                         placeholder='{"speed_add": 50, "shield_pct": 0.1}'
                                     />
+                                    <div className="flex gap-2">
+                                        {[
+                                            { label: 'OFFENSIVE', val: '{"attack_pct": 0.1, "speed_add": 20}' },
+                                            { label: 'DEFENSIVE', val: '{"shield_pct": 0.15, "hull_add": 100}' },
+                                            { label: 'CARGO', val: '{"cargo_add": 500}' }
+                                        ].map(tmpl => (
+                                            <button key={tmpl.label} onClick={() => setModuleForm({ ...moduleForm, stats: tmpl.val })} className="text-[8px] px-2 py-0.5 bg-space-steel/20 hover:bg-space-neon/20 rounded border border-white/5 text-space-muted hover:text-white">{tmpl.label}</button>
+                                        ))}
+                                    </div>
                                     <label className="text-xs font-mono text-space-neon uppercase block mt-2">Custo do Módulo (JSON)</label>
                                     <textarea
                                         className="w-full bg-space-black border border-space-steel rounded p-2 text-white text-[10px] font-mono h-24"
