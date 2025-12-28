@@ -87,7 +87,7 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
         setIsEditing(null);
     };
 
-    const handleEditItem = (item: any, type: 'ship' | 'module') => {
+    const handleEditItem = (item: any, type: 'ship' | 'module' | 'policy') => {
         setIsEditing(item);
         if (type === 'ship') {
             setShipForm({
@@ -106,7 +106,7 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
                 deuterium: item.base_cost.deuterium || 0
             });
             setActiveTab('ships');
-        } else {
+        } else if (type === 'module') {
             setModuleForm({
                 name: item.name,
                 type: item.type,
@@ -117,7 +117,7 @@ export const ShipyardManager: React.FC<ShipyardManagerProps> = ({ ships, modules
                 cost: JSON.stringify(item.cost)
             });
             setActiveTab('modules');
-        } else if (type === 'policy' as any) {
+        } else if (type === 'policy') {
             setPolicyForm({
                 name: item.name,
                 type: item.type,
