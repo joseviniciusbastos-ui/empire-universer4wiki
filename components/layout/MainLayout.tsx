@@ -49,7 +49,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                 onFeedbackClick={onFeedbackClick}
             />
 
-            <main className="flex-1 flex flex-col min-h-screen relative">
+            <main className="flex-1 flex flex-col min-h-screen relative min-w-0 overflow-hidden">
                 <Header
                     onToggleSidebar={() => {
                         if (window.innerWidth >= 768) {

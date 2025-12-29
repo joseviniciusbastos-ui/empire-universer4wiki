@@ -295,7 +295,7 @@ export const TechTreeView: React.FC = () => {
                                         e.stopPropagation();
                                         setSelectedNode(isSelected ? null : node);
                                     }}
-                                    className={`absolute transform - translate - x - 1 / 2 - translate - y - 1 / 2 p - 4 bg - space - dark / 95 backdrop - blur - sm rounded - xl border transition - all duration - 300 pointer - events - auto cursor - pointer
+                                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 p-4 bg-space-dark/95 backdrop-blur-sm rounded-xl border transition-all duration-300 pointer-events-auto cursor-pointer
                                         ${isSelected ? `border-space-neon ring-4 ring-space-neon/20 z-20 scale-125 shadow-[0_0_50px_rgba(0,255,163,0.3)]` :
                                             isInPrereqChain ? `border-sky-400 ring-2 ring-sky-400/20 z-10 scale-100 shadow-[0_0_30px_rgba(0,194,255,0.2)]` :
                                                 isUnlock ? `border-emerald-400 ring-2 ring-emerald-400/20 z-10 scale-100 shadow-[0_0_30px_rgba(0,255,163,0.1)]` :
@@ -303,19 +303,19 @@ export const TechTreeView: React.FC = () => {
                                                         'border-space-steel/50'
                                         }
                                         ${isDimmed ? 'opacity-20 grayscale scale-90' : 'opacity-100'}
-`}
+                                    `}
                                     style={{ left: node.x, top: node.y }}
                                     onMouseEnter={() => setHoveredNode(node)}
                                     onMouseLeave={() => setHoveredNode(null)}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`w - 10 h - 10 rounded - lg ${ui.bg} border ${ui.border} flex items - center justify - center shadow - inner`}>
+                                        <div className={`w-10 h-10 rounded-lg ${ui.bg} border ${ui.border} flex items-center justify-center shadow-inner`}>
                                             {React.cloneElement(ui.icon as React.ReactElement, { className: ui.color, size: 20 })}
                                         </div>
                                         <div className="min-w-[140px]">
                                             <h4 className="text-sm font-display font-bold text-white uppercase leading-tight tracking-wider">{language === 'pt' ? node.pt : node.en}</h4>
                                             <div className="flex items-center gap-1.5 mt-0.5">
-                                                <span className={`text - [8px] font - mono uppercase tracking - tighter ${ui.color} `}>{t.categories[node.category]}</span>
+                                                <span className={`text-[8px] font-mono uppercase tracking-tighter ${ui.color}`}>{t.categories[node.category]}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -338,7 +338,7 @@ export const TechTreeView: React.FC = () => {
                         {displayNode ? (
                             <div className="relative flex flex-col h-full z-10">
                                 <div className="flex items-center justify-between mb-6">
-                                    <Badge className={`${CATEGORY_UI[displayNode.category].bg} ${CATEGORY_UI[displayNode.category].color} border - ${CATEGORY_UI[displayNode.category].color.split('-')[1]} -500 / 30 text - [9px] px - 3 font - bold`}>
+                                    <Badge className={`${CATEGORY_UI[displayNode.category].bg} ${CATEGORY_UI[displayNode.category].color} border-${CATEGORY_UI[displayNode.category].color.split('-')[1]}-500/30 text-[9px] px-3 font-bold`}>
                                         {t.categories[displayNode.category].toUpperCase()}
                                     </Badge>
                                     <div className="flex items-center gap-2 px-3 py-1 bg-space-dark rounded-full border border-space-steel">
@@ -376,7 +376,7 @@ export const TechTreeView: React.FC = () => {
                                                 const req = TECH_NODES.find(n => n.id === reqId);
                                                 return (
                                                     <div key={reqId} className="flex items-center gap-3 p-3 bg-white/[0.02] border border-space-steel/20 rounded-lg group hover:bg-space-neon/5 hover:border-space-neon/30 transition-all cursor-help">
-                                                        <div className={`w - 8 h - 8 rounded border flex items - center justify - center ${req ? CATEGORY_UI[req.category].bg : 'bg-space-dark'} ${req ? CATEGORY_UI[req.category].border : 'border-space-steel'} `}>
+                                                        <div className={`w-8 h-8 rounded border flex items-center justify-center ${req ? CATEGORY_UI[req.category].bg : 'bg-space-dark'} ${req ? CATEGORY_UI[req.category].border : 'border-space-steel'}`}>
                                                             {req ? React.cloneElement(CATEGORY_UI[req.category].icon as React.ReactElement, { size: 14, className: CATEGORY_UI[req.category].color }) : <Cpu size={14} />}
                                                         </div>
                                                         <span className="text-[11px] font-mono text-white/90 font-bold tracking-tight">{req ? (language === 'pt' ? req.pt : req.en) : reqId}</span>

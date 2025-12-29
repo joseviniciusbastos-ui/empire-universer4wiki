@@ -84,9 +84,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
         <aside
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className={`fixed inset-y-0 left-0 z-50 bg-space-dark border-r border-space-steel transition-all duration-300 ease-in-out flex flex-col overflow-hidden
+            className={`transition-all duration-300 ease-in-out flex flex-col overflow-hidden border-r border-space-steel bg-space-dark z-50 flex-shrink-0
                 ${isExpanded ? 'w-72' : 'w-20'} 
-                ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}
+                ${isOpen ? 'translate-x-0 fixed inset-y-0 left-0' : 'fixed inset-y-0 left-0 -translate-x-full md:relative md:translate-x-0'}`}
         >
             <div className={`h-24 border-b border-space-steel flex items-center transition-all duration-300 ${isExpanded ? 'px-5 justify-between' : 'justify-center'}`}>
                 <div className="flex items-center gap-3 min-w-max">
@@ -129,20 +129,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                             { id: 'tech-tree', icon: <Cpu size={20} />, label: t.tech },
                             { id: 'achievements', icon: <Trophy size={20} />, label: t.achievements }
                         ].map((item) => (
-                            <Button
-                                key={item.id}
-                                variant={view === item.id ? 'primary' : 'ghost'}
-                                className={`w-full mb-1 flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
-                                onClick={() => setView(item.id)}
-                                title={!isExpanded ? item.label : ''}
-                            >
-                                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                                    {item.icon}
-                                </div>
-                                <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
-                                    {item.label}
-                                </span>
-                            </Button>
+                            <div key={item.id} className="relative">
+                                {view === item.id && (
+                                    <div className="absolute left-0 top-1 bottom-1 w-[3px] bg-space-neon shadow-[0_0_10px_rgba(0,194,255,0.5)] z-10" />
+                                )}
+                                <Button
+                                    variant="ghost"
+                                    className={`w-full mb-1 flex items-center transition-all duration-300 border-none outline-none
+                                        ${view === item.id ? 'bg-space-neon/5 text-space-neon' : 'text-space-muted hover:text-white'}
+                                        ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
+                                    onClick={() => setView(item.id)}
+                                    title={!isExpanded ? item.label : ''}
+                                >
+                                    <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                                        {item.icon}
+                                    </div>
+                                    <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
+                                        {item.label}
+                                    </span>
+                                </Button>
+                            </div>
                         ))}
                     </div>
                 </div>
@@ -153,34 +159,48 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                     </p>
                     {currentUser ? (
                         <div className="space-y-1">
-                            <Button
-                                variant={view === 'profile' ? 'primary' : 'ghost'}
-                                className={`w-full mb-1 flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
-                                onClick={() => setView('profile')}
-                                title={!isExpanded ? `PERFIL: ${currentUser.username.toUpperCase()}` : ''}
-                            >
-                                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                                    <UserIcon size={20} />
-                                </div>
-                                <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
-                                    {currentUser.username.toUpperCase()}
-                                </span>
-                            </Button>
-
-                            {currentUser.role === 'ADMIN' && (
+                            <div className="relative">
+                                {view === 'profile' && (
+                                    <div className="absolute left-0 top-1 bottom-1 w-[3px] bg-space-neon shadow-[0_0_10px_rgba(0,194,255,0.5)] z-10" />
+                                )}
                                 <Button
-                                    variant={view === 'admin' ? 'primary' : 'ghost'}
-                                    className={`w-full mb-1 text-space-neon flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
-                                    onClick={() => setView('admin')}
-                                    title={!isExpanded ? 'COMANDO' : ''}
+                                    variant="ghost"
+                                    className={`w-full mb-1 flex items-center transition-all duration-300 border-none outline-none
+                                        ${view === 'profile' ? 'bg-space-neon/5 text-space-neon' : 'text-space-muted hover:text-white'}
+                                        ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
+                                    onClick={() => setView('profile')}
+                                    title={!isExpanded ? `PERFIL: ${currentUser.username.toUpperCase()}` : ''}
                                 >
                                     <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                                        <Shield size={20} />
+                                        <UserIcon size={20} />
                                     </div>
-                                    <span className={`flex-1 text-left transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
-                                        COMANDO
+                                    <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
+                                        {currentUser.username.toUpperCase()}
                                     </span>
                                 </Button>
+                            </div>
+
+                            {currentUser.role === 'ADMIN' && (
+                                <div className="relative">
+                                    {view === 'admin' && (
+                                        <div className="absolute left-0 top-1 bottom-1 w-[3px] bg-space-neon shadow-[0_0_10px_rgba(0,194,255,0.5)] z-10" />
+                                    )}
+                                    <Button
+                                        variant="ghost"
+                                        className={`w-full mb-1 flex items-center transition-all duration-300 border-none outline-none
+                                            ${view === 'admin' ? 'bg-space-neon/5 text-space-neon' : 'text-space-muted hover:text-white'}
+                                            ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
+                                        onClick={() => setView('admin')}
+                                        title={!isExpanded ? 'COMANDO' : ''}
+                                    >
+                                        <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                                            <Shield size={20} />
+                                        </div>
+                                        <span className={`flex-1 text-left transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
+                                            COMANDO
+                                        </span>
+                                    </Button>
+                                </div>
                             )}
 
                             <div className={`transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100 h-auto mt-2' : 'opacity-0 h-0 w-0'}`}>
