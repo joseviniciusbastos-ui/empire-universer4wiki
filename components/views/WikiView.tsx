@@ -197,6 +197,9 @@ export const WikiView: React.FC<WikiViewProps> = ({
                             <div className="flex items-center gap-6 text-[10px] font-mono text-space-steel uppercase tracking-widest">
                                 <span className="flex items-center gap-2">
                                     <span className="text-space-neon opacity-50">{t.author}:</span> {featuredPost.authorName}
+                                    {featuredPost.lastEditedBy && featuredPost.lastEditedBy !== featuredPost.authorId && (
+                                        <span className="text-space-neon/50"> + {featuredPost.lastEditedByName}</span>
+                                    )}
                                 </span>
                                 <span className="flex items-center gap-2">
                                     <span className="text-space-neon opacity-50">{t.transmission}:</span> {new Date(featuredPost.createdAt).toLocaleDateString(language === 'pt' ? 'pt-BR' : 'en-US')}

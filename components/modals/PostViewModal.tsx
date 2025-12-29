@@ -15,9 +15,11 @@ interface PostViewModalProps {
     onDeleteConfirmed: (postId: string) => Promise<void>;
     onEdit: (post: Post) => void;
     onAuthorClick?: (userId: string) => void;
+    allPosts: Post[];
+    onPostClick: (post: Post) => void;
 }
 
-const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, currentUser, onDeleteConfirmed, onEdit, onAuthorClick }) => {
+const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, currentUser, onDeleteConfirmed, onEdit, onAuthorClick, allPosts, onPostClick }) => {
     const { showToast } = useToast();
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [isConfirmingDelete, setIsConfirmingDelete] = React.useState(false);
@@ -191,6 +193,32 @@ const PostViewModal: React.FC<PostViewModalProps> = ({ post, isOpen, onClose, cu
                             dangerouslySetInnerHTML={{ __html: sanitizedContent }}
                         />
                     </div>
+
+                    {/* Related Articles */}
+                    {allPosts.length > 0 && (
+                        <div className="mt-12 pt-8 border-t border-space-steel">
+                            <h3 className="text-sm font-mono text-space-neon uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <Share2 size={16} /> Transmissões Relacionadas
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {allPosts
+                                    .filter(p => p.category === post.category && p.id !== post.id)
+                                    .slice(0, 3)
+                                    .map(related => (
+                                        <div
+                                            key={related.id}
+                                            onClick={() => onPostClick(related)}
+                                            className="group cursor-pointer bg-space-dark/40 border border-space-steel/30 p-3 rounded-lg hover:border-space-neon/50 transition-all"
+                                        >
+                                            <p className="text-[10px] text-space-muted font-mono uppercase mb-1">{related.category}</p>
+                                            <h4 className="text-xs font-bold text-white group-hover:text-space-neon transition-colors line-clamp-2">
+                                                {related.title}
+                                            </h4>
+                                        </div>
+                                    ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Comments Section */}
                     <div className="border-t border-space-steel pt-6 mt-8">

@@ -4,6 +4,8 @@ import { Users, BookOpen, Clock, History, AlertTriangle, Star, Activity, ArrowRi
 import { PostCard } from '../PostCard';
 import { Post, User, BulletinItem } from '../../types';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { RANK_THRESHOLDS } from '../../constants';
+import { Shield, Award, Crown, Medal } from 'lucide-react';
 
 const STATIC_TEXT = {
     pt: {
@@ -186,6 +188,21 @@ export const HomeView: React.FC<HomeViewProps> = ({
     const topContributor = Object.values(authorCounts)
         .sort((a, b) => b.count - a.count)[0];
 
+    const getRankInfo = (postCount: number) => {
+        return [...RANK_THRESHOLDS].reverse().find(r => postCount >= r.min) || RANK_THRESHOLDS[0];
+    };
+
+    const getRankIcon = (iconName: string, size: number, className: string) => {
+        switch (iconName) {
+            case 'shield': return <Shield size={size} className={className} />;
+            case 'award': return <Award size={size} className={className} />;
+            case 'zap': return <Zap size={size} className={className} />;
+            case 'star': return <Star size={size} className={className} />;
+            case 'crown': return <Crown size={size} className={className} />;
+            default: return <Medal size={size} className={className} />;
+        }
+    };
+
     return (
         <div className="space-y-8 animate-fadeIn">
             {/* Hero Stats - Holographic Grid */}
@@ -194,30 +211,40 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 {/* Featured Contributor Card */}
                 <div
                     onClick={() => topContributor && onAuthorClick?.(Object.keys(authorCounts).find(id => authorCounts[id].name === topContributor.name)!)}
-                    className="group relative bg-space-dark/40 border border-violet-500/30 p-6 overflow-hidden rounded-xl backdrop-blur-sm transition-all hover:border-violet-500 hover:shadow-[0_0_20px_rgba(139,92,246,0.2)] cursor-pointer"
+                    className="group relative bg-space-dark/40 border border-violet-500/30 p-6 overflow-hidden rounded-xl backdrop-blur-sm transition-all hover:border-violet-500 hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] cursor-pointer"
                 >
                     <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
                         <Star size={120} />
                     </div>
-                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-4">
                             <h3 className="text-violet-400/70 font-mono text-xs tracking-widest uppercase">{t.featured}</h3>
-                            <Star size={16} className="text-violet-400 animate-pulse" />
+                            <Award size={16} className="text-violet-400 animate-pulse" />
                         </div>
                         {topContributor ? (
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full border border-violet-500/50 p-0.5">
-                                    <img
-                                        src={`https://api.dicebear.com/7.x/identicon/svg?seed=${topContributor.name}`}
-                                        className="w-full h-full rounded-full grayscale group-hover:grayscale-0 transition-all"
-                                        alt={topContributor.name}
-                                    />
+                                <div className="relative">
+                                    <div className="w-14 h-14 rounded-full border-2 border-violet-500/50 p-0.5 group-hover:border-violet-400 transition-colors">
+                                        <img
+                                            src={`https://api.dicebear.com/7.x/identicon/svg?seed=${topContributor.name}`}
+                                            className="w-full h-full rounded-full grayscale group-hover:grayscale-0 transition-all duration-500"
+                                            alt={topContributor.name}
+                                        />
+                                    </div>
+                                    <div className="absolute -bottom-1 -right-1 bg-space-black border border-violet-500 rounded-full p-1 group-hover:scale-110 transition-transform">
+                                        {getRankIcon(getRankInfo(topContributor.count).icon, 12, getRankInfo(topContributor.count).color)}
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-2xl font-display font-bold text-white tracking-tight">{topContributor.name}</p>
-                                    <p className="text-[10px] font-mono text-violet-300 uppercase">{topContributor.count} {t.transmissions}</p>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-2xl font-display font-bold text-white tracking-tight truncate group-hover:text-shadow-neon transition-all">{topContributor.name}</p>
+                                    <div className="flex items-center gap-2">
+                                        <div className={`text-[9px] font-mono uppercase px-2 py-0.5 rounded bg-white/5 border border-white/10 ${getRankInfo(topContributor.count).color}`}>
+                                            {getRankInfo(topContributor.count).title}
+                                        </div>
+                                        <p className="text-[10px] font-mono text-violet-300 uppercase">{topContributor.count} {t.transmissions}</p>
+                                    </div>
                                 </div>
                             </div>
                         ) : (

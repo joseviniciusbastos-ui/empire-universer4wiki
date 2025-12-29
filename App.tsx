@@ -542,13 +542,16 @@ export default function App() {
 
       {view === 'post-view' && selectedPost && (
         <div className="container mx-auto px-4 py-8">
-          <PostView
+          <PostViewModal
+            isOpen={true}
             post={selectedPost}
-            onClose={() => setView('home')} // Default back to home
+            onClose={() => setView('home')}
             currentUser={currentUser}
             onDeleteConfirmed={handlePostDelete}
             onEdit={handleEditPost}
             onAuthorClick={handleProfileClick}
+            allPosts={posts}
+            onPostClick={(p) => setSelectedPost(p)}
           />
         </div>
       )}
