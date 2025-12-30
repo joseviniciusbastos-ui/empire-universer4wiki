@@ -3,7 +3,6 @@ import { supabase } from './lib/supabase';
 import { CATEGORIES } from './constants';
 import { Post, PostType, DB_Post, BulletinItem } from './types';
 import { CacheManager, debounce } from './lib/cache';
-import Terminal from './components/Terminal';
 import CreatePostModal from './components/modals/CreatePostModal';
 import FeedbackModal from './components/modals/FeedbackModal';
 import LoginModal from './components/modals/LoginModal';
@@ -14,14 +13,12 @@ import EditWelcomeModal from './components/modals/EditWelcomeModal';
 import EditBulletinModal from './components/modals/EditBulletinModal';
 import BulletinViewModal from './components/modals/BulletinViewModal';
 import PostViewModal from './components/modals/PostViewModal';
-import { PostView } from './components/views/PostView';
 import { MainLayout } from './components/layout/MainLayout';
 import { WikiView } from './components/views/WikiView';
 import { BlogView } from './components/views/BlogView';
 import { ForumView } from './components/views/ForumView';
 import { TechTreeView } from './components/views/TechTreeView';
 import { AchievementsView } from './components/views/AchievementsView';
-import { ShipDesignerView } from './components/views/ShipDesignerView';
 import { ProfileView } from './components/views/ProfileView';
 import { PublicProfileView } from './components/views/PublicProfileView';
 import { useToast } from './contexts/ToastContext';
@@ -37,7 +34,7 @@ const CATEGORY_KEYS = {
 };
 
 export default function App() {
-  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'profile' | 'admin' | 'post-view' | 'public-profile' | 'tech-tree' | 'achievements' | 'ship-designer'>('home');
+  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'profile' | 'admin' | 'post-view' | 'public-profile' | 'tech-tree' | 'achievements'>('home');
 
   // App State
   const { currentUser, isLoading: isAuthLoading, refreshProfile } = useAuth();
@@ -371,12 +368,6 @@ export default function App() {
     setIsBulletinViewOpen(true);
   };
 
-  // Removed misplaced import
-
-  // ... (existing imports)
-
-  // ... (inside App component)
-
   // Helper to restrict access
   const RestrictedView = ({ children }: { children: React.ReactNode }) => {
     if (!currentUser) {
@@ -415,8 +406,6 @@ export default function App() {
         currentUser={currentUser}
         onUpdate={refreshProfile}
       />
-
-      {/* Removed PostViewModal for dedicated PostView */}
 
       {/* RENDER CURRENT VIEW */}
       {view === 'home' && (

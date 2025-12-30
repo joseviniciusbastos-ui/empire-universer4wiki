@@ -6,7 +6,7 @@ import Terminal from '../Terminal';
 
 interface MainLayoutProps {
     children: React.ReactNode;
-    view: string;
+    view: 'home' | 'wiki' | 'articles' | 'forum' | 'profile' | 'admin' | 'post-view' | 'public-profile' | 'tech-tree' | 'achievements';
     setView: (view: string) => void;
     currentUser: User | null;
     onLoginClick: () => void;

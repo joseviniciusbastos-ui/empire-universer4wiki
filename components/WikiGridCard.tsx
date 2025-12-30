@@ -1,6 +1,6 @@
 import React from 'react';
 import { Post, User } from '../types';
-import { Card, Badge } from './ui/Shared';
+import { Card, Badge, ContributorAvatars } from './ui/Shared';
 import { Clock, Eye, MessageSquare, ArrowUpRight, User as UserIcon } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { RANK_THRESHOLDS } from '../constants';
@@ -72,30 +72,15 @@ export const WikiGridCard: React.FC<WikiGridCardProps> = ({ post, onClick, curre
 
                 {/* Contributors */}
                 <div className="flex items-center justify-between pt-3 border-t border-space-steel/10">
-                    <div className="flex items-center -space-x-2">
-                        {/* Author */}
-                        <div
-                            className="relative group/author"
-                            title={`Autor: ${post.authorName}`}
-                        >
-                            <div className="w-6 h-6 rounded-full bg-space-dark border border-space-steel flex items-center justify-center text-[10px] text-space-muted overflow-hidden relative z-20 hover:border-space-neon transition-colors">
-                                <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=${post.authorName}`} alt="avatar" />
-                            </div>
-                        </div>
-
-                        {/* Last Editor (if different) */}
-                        {post.lastEditedBy && post.lastEditedBy !== post.authorId && (
-                            <div
-                                className="relative group/editor"
-                                title={`Editado por: ${post.lastEditedByName}`}
-                            >
-                                <div className="w-6 h-6 rounded-full bg-space-dark border border-space-neon/30 flex items-center justify-center text-[10px] text-space-muted overflow-hidden relative z-10 hover:z-30 hover:border-space-neon transition-all">
-                                    <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=${post.lastEditedByName}`} alt="avatar" />
-                                </div>
-                            </div>
-                        )}
-
-                        <span className="text-[9px] font-mono text-space-muted ml-4 opacity-70">
+                    <div className="flex items-center gap-2">
+                        <ContributorAvatars
+                            authorId={post.authorId}
+                            authorName={post.authorName}
+                            lastEditedBy={post.lastEditedBy}
+                            lastEditedByName={post.lastEditedByName}
+                            size="md"
+                        />
+                        <span className="text-[9px] font-mono text-space-muted ml-1 opacity-70">
                             {post.authorName} {post.lastEditedBy && post.lastEditedBy !== post.authorId && '+1'}
                         </span>
                     </div>

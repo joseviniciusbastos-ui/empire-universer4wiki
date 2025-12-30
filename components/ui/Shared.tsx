@@ -70,3 +70,38 @@ export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (pro
         className={`w-full bg-black border border-space-steel px-4 py-2 text-space-text font-mono focus:border-space-neon focus:outline-none placeholder-space-muted transition-colors ${props.className}`}
     />
 );
+// --- CONTRIBUTOR AVATARS ---
+interface ContributorAvatarsProps {
+    authorId: string;
+    authorName: string;
+    lastEditedBy?: string | null;
+    lastEditedByName?: string | null;
+    size?: 'sm' | 'md' | 'lg';
+}
+
+export const ContributorAvatars: React.FC<ContributorAvatarsProps> = ({
+    authorId, authorName, lastEditedBy, lastEditedByName, size = 'md'
+}) => {
+    const s = size === 'sm' ? 'w-5 h-5 text-[8px]' : size === 'md' ? 'w-6 h-6 text-[10px]' : 'w-8 h-8 text-xs';
+    const dicebearSet = 'identicon'; // Hardcoded for consistency
+
+    return (
+        <div className="flex items-center -space-x-2">
+            {/* Author */}
+            <div className="relative group/author" title={`Autor: ${authorName}`}>
+                <div className={`${s} rounded-full bg-space-dark border border-space-steel flex items-center justify-center text-space-muted overflow-hidden relative z-20 hover:border-space-neon transition-colors`}>
+                    <img src={`https://api.dicebear.com/7.x/${dicebearSet}/svg?seed=${authorName}`} alt="avatar" />
+                </div>
+            </div>
+
+            {/* Last Editor (if different) */}
+            {lastEditedBy && lastEditedBy !== authorId && (
+                <div className="relative group/editor" title={`Editado por: ${lastEditedByName}`}>
+                    <div className={`${s} rounded-full bg-space-dark border border-space-neon/30 flex items-center justify-center text-space-muted overflow-hidden relative z-10 hover:z-30 hover:border-space-neon transition-all`}>
+                        <img src={`https://api.dicebear.com/7.x/${dicebearSet}/svg?seed=${lastEditedByName}`} alt="avatar" />
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};

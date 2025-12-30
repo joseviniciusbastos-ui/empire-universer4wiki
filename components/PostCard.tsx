@@ -1,6 +1,6 @@
 import React from 'react';
 import { User as UserIcon, Eye, Heart } from 'lucide-react';
-import { Card, Badge } from './ui/Shared';
+import { Card, Badge, ContributorAvatars } from './ui/Shared';
 import { ReactionButton } from './ui/ReactionButton';
 import { ReputationBadge } from './ui/ReputationBadge';
 import { Post, PostType, User } from '../types';
@@ -96,7 +96,14 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onClick, currentUser, 
                                     onAuthorClick && onAuthorClick(post.authorId);
                                 }}
                             >
-                                <span className="text-space-neon">BY:</span> {post.authorName}
+                                <ContributorAvatars
+                                    authorId={post.authorId}
+                                    authorName={post.authorName}
+                                    lastEditedBy={post.lastEditedBy}
+                                    lastEditedByName={post.lastEditedByName}
+                                    size="sm"
+                                />
+                                <span className="text-space-neon ml-1">BY:</span> {post.authorName}
                             </div>
                             <div className="flex items-center gap-4 text-[9px] font-mono text-space-muted">
                                 <span className="flex items-center gap-1"><Eye size={10} /> {post.views}</span>
@@ -154,14 +161,21 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onClick, currentUser, 
                     {/* Footer */}
                     <div className="flex justify-between items-center border-t border-space-steel pt-3">
                         <div
-                            className="flex items-center gap-2 text-xs text-space-muted hover:text-white transition-colors cursor-pointer z-10"
+                            className="flex items-center gap-3 text-xs text-space-muted hover:text-white transition-colors cursor-pointer z-10"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onAuthorClick && onAuthorClick(post.authorId);
                             }}
                         >
-                            <UserIcon size={12} /> {post.authorName}
-                            <div className="ml-1">
+                            <ContributorAvatars
+                                authorId={post.authorId}
+                                authorName={post.authorName}
+                                lastEditedBy={post.lastEditedBy}
+                                lastEditedByName={post.lastEditedByName}
+                                size="md"
+                            />
+                            <span>{post.authorName}</span>
+                            <div className="ml-0">
                                 <ReputationBadge reputation={post.authorReputation || 0} size="sm" showTitle={false} />
                             </div>
                         </div>

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Button, Card, Badge } from '../ui/Shared';
+import { Button, Card, Badge, ContributorAvatars } from '../ui/Shared';
 import { WikiGridCard } from '../WikiGridCard';
 import { Post, PostType, User } from '../../types';
 import { Database, FolderOpen, Star, Search, Menu, X, Filter, ChevronRight } from 'lucide-react';
@@ -195,12 +195,21 @@ export const WikiView: React.FC<WikiViewProps> = ({
                                 dangerouslySetInnerHTML={{ __html: featuredPost.content.replace(/<[^>]+>/g, '') }}
                             />
                             <div className="flex items-center gap-6 text-[10px] font-mono text-space-steel uppercase tracking-widest">
-                                <span className="flex items-center gap-2">
-                                    <span className="text-space-neon opacity-50">{t.author}:</span> {featuredPost.authorName}
-                                    {featuredPost.lastEditedBy && featuredPost.lastEditedBy !== featuredPost.authorId && (
-                                        <span className="text-space-neon/50"> + {featuredPost.lastEditedByName}</span>
-                                    )}
-                                </span>
+                                <div className="flex items-center gap-3">
+                                    <ContributorAvatars
+                                        authorId={featuredPost.authorId}
+                                        authorName={featuredPost.authorName}
+                                        lastEditedBy={featuredPost.lastEditedBy}
+                                        lastEditedByName={featuredPost.lastEditedByName}
+                                        size="md"
+                                    />
+                                    <span className="flex items-center gap-2">
+                                        <span className="text-space-neon opacity-50">{t.author}:</span> {featuredPost.authorName}
+                                        {featuredPost.lastEditedBy && featuredPost.lastEditedBy !== featuredPost.authorId && (
+                                            <span className="text-space-neon/50"> + {featuredPost.lastEditedByName}</span>
+                                        )}
+                                    </span>
+                                </div>
                                 <span className="flex items-center gap-2">
                                     <span className="text-space-neon opacity-50">{t.transmission}:</span> {new Date(featuredPost.createdAt).toLocaleDateString(language === 'pt' ? 'pt-BR' : 'en-US')}
                                 </span>
