@@ -21,6 +21,7 @@ import { TechTreeView } from './components/views/TechTreeView';
 import { AchievementsView } from './components/views/AchievementsView';
 import { ProfileView } from './components/views/ProfileView';
 import { PublicProfileView } from './components/views/PublicProfileView';
+import RacesView from './components/views/RacesView';
 import { useToast } from './contexts/ToastContext';
 import { useAuth } from './contexts/AuthContext';
 import { FilterState } from './components/SearchFilters';
@@ -34,7 +35,7 @@ const CATEGORY_KEYS = {
 };
 
 export default function App() {
-  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'profile' | 'admin' | 'post-view' | 'public-profile' | 'tech-tree' | 'achievements'>('home');
+  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'profile' | 'admin' | 'post-view' | 'public-profile' | 'tech-tree' | 'achievements' | 'races'>('home');
 
   // App State
   const { currentUser, isLoading: isAuthLoading, refreshProfile } = useAuth();
@@ -496,6 +497,12 @@ export default function App() {
       {view === 'tech-tree' && (
         <RestrictedView>
           <TechTreeView />
+        </RestrictedView>
+      )}
+
+      {view === 'races' && (
+        <RestrictedView>
+          <RacesView />
         </RestrictedView>
       )}
 

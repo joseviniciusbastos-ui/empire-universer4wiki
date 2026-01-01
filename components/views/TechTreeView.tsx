@@ -3,8 +3,6 @@ import { Button, Card, Badge } from '../ui/Shared';
 import { Search, ZoomIn, ZoomOut, Maximize2, Cpu, Info, Boxes, Box, Zap, Shield, Target, Globe, Landmark, ShieldCheck, Crosshair, Factory, Radio, Landmark as Bank, ShieldAlert, Building2, Map, ArrowRight, CornerDownRight, History, Route, Printer, Clock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { TECH_NODES, CATEGORY_UI, TechNode } from '../../lib/techData';
-import { RACES, Race } from '../../lib/racialData';
-import RaceDetailsModal from '../modals/RaceDetailsModal';
 import DOMPurify from 'isomorphic-dompurify';
 
 const STATIC_TEXT = {
@@ -81,7 +79,6 @@ export const TechTreeView: React.FC = () => {
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [hoveredNode, setHoveredNode] = useState<TechNode | null>(null);
     const [selectedNode, setSelectedNode] = useState<TechNode | null>(null);
-    const [selectedRace, setSelectedRace] = useState<Race | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -193,40 +190,6 @@ export const TechTreeView: React.FC = () => {
 
             {/* Main Content Layout */}
             <div className="flex-1 flex gap-6 min-h-0 overflow-hidden">
-                {/* Left Sidebar - Races */}
-                <div className="w-56 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-2 h-full">
-                    <div className="flex items-center gap-2 mb-2 px-1 border-b border-space-steel/30 pb-2">
-                        <Globe size={14} className="text-space-neon" />
-                        <h4 className="text-[10px] font-bold text-space-muted uppercase tracking-widest">Raças do Game</h4>
-                    </div>
-                    <div className="grid grid-cols-1 gap-3">
-                        {RACES.map(race => (
-                            <div
-                                key={race.id}
-                                id={`race-card-${race.id}`}
-                                onClick={() => setSelectedRace(race)}
-                                className="group relative cursor-pointer"
-                            >
-                                <div className="absolute -inset-0.5 bg-gradient-to-r from-space-neon/30 to-transparent rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-500" />
-                                <div className="relative p-3 bg-space-dark border border-space-steel/30 rounded-lg group-hover:border-space-neon/50 group-hover:bg-[#0f0f0f] transition-all flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full border border-space-steel/50 flex items-center justify-center bg-space-black group-hover:border-space-neon group-hover:text-space-neon transition-colors">
-                                        <span className="text-xs font-display font-black">{race.name.charAt(0)}</span>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-[11px] font-display font-bold text-white uppercase truncate tracking-tighter group-hover:text-space-neon transition-colors">
-                                            {race.name}
-                                        </div>
-                                        <div className="text-[8px] font-mono text-space-muted uppercase tracking-widest truncate">
-                                            {race.id} specimen
-                                        </div>
-                                    </div>
-                                    <ArrowRight size={12} className="text-space-muted opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
                 {/* Viewport Card */}
                 <Card className="flex-1 relative overflow-hidden bg-[#0a0a0a] border-space-steel/30 p-0 cursor-move"
                     onMouseDown={handleMouseDown}
@@ -585,13 +548,6 @@ export const TechTreeView: React.FC = () => {
                     <span>CÓPIA: 01/01</span>
                 </div>
             </div>
-
-            {/* Modals */}
-            <RaceDetailsModal
-                race={selectedRace}
-                isOpen={!!selectedRace}
-                onClose={() => setSelectedRace(null)}
-            />
         </div>
     );
 };
