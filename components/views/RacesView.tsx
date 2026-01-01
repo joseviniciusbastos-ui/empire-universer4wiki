@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Globe, ArrowRight, Dna } from 'lucide-react';
 import { Card, Badge, Button } from '../ui/Shared';
 import { RACES, Race } from '../../lib/racialData';
@@ -9,6 +9,31 @@ import DOMPurify from 'isomorphic-dompurify';
 const RacesView: React.FC = () => {
     const { language } = useLanguage();
     const [selectedRace, setSelectedRace] = useState<Race | null>(null);
+    const [imageIndices, setImageIndices] = useState<Record<string, number>>({});
+
+    // Automated Slideshow Logic (Every 10s)
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setImageIndices(prev => {
+                const next = { ...prev };
+                RACES.forEach(race => {
+                    if (race.images && race.images.length > 1) {
+                        // Pick a random index different from current one
+                        let newIdx = Math.floor(Math.random() * race.images.length);
+                        if (newIdx === prev[race.id]) {
+                            newIdx = (newIdx + 1) % race.images.length;
+                        }
+                        next[race.id] = newIdx;
+                    } else if (race.images?.length === 1) {
+                        next[race.id] = 0;
+                    }
+                });
+                return next;
+            });
+        }, 10000);
+
+        return () => clearInterval(interval);
+    }, []);
 
     const t = {
         pt: {
@@ -63,10 +88,20 @@ const RacesView: React.FC = () => {
 
                         <div className="relative z-10 flex flex-col h-full">
                             <div className="flex justify-between items-start mb-6">
-                                <div className="w-16 h-16 rounded-xl border border-space-steel/50 flex items-center justify-center bg-space-black shadow-inner group-hover:border-space-neon transition-colors duration-500">
-                                    <span className="text-3xl font-display font-black text-white group-hover:text-space-neon transition-colors">
-                                        {race.name.charAt(0)}
-                                    </span>
+                                <div className="w-16 h-16 rounded-xl border border-space-steel/50 flex items-center justify-center bg-space-black shadow-inner group-hover:border-space-neon transition-all duration-500 overflow-hidden relative">
+                                    {race.images && race.images.length > 0 ? (
+                                        <div className="absolute inset-0 transition-opacity duration-1000">
+                                            <img
+                                                src={race.images[imageIndices[race.id] || 0]}
+                                                alt={race.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <span className="text-3xl font-display font-black text-white group-hover:text-space-neon transition-colors">
+                                            {race.name.charAt(0)}
+                                        </span>
+                                    )}
                                 </div>
                                 <Badge color="bg-space-dark border border-space-steel/30 text-space-muted group-hover:text-space-neon transition-colors">
                                     {race.id.toUpperCase()}

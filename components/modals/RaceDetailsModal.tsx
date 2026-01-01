@@ -28,8 +28,16 @@ const RaceDetailsModal: React.FC<RaceDetailsModalProps> = ({ race, isOpen, onClo
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6 border-b border-space-steel pb-4 px-2">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full border border-space-neon/30 flex items-center justify-center bg-space-neon/10">
-                            <span className="text-xl font-display font-black text-space-neon">{race.name.charAt(0)}</span>
+                        <div className="w-16 h-16 rounded-xl border border-space-neon/30 flex items-center justify-center bg-space-neon/10 overflow-hidden relative shadow-[0_0_15px_rgba(0,194,255,0.1)]">
+                            {race.images && race.images.length > 0 ? (
+                                <img
+                                    src={race.images[0]}
+                                    alt={race.name}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <span className="text-2xl font-display font-black text-space-neon">{race.name.charAt(0)}</span>
+                            )}
                         </div>
                         <div>
                             <h2 className="text-2xl font-display font-black text-white uppercase tracking-tighter italic">

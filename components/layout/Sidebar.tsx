@@ -1,5 +1,5 @@
 import React from 'react';
-import { Book, MessageSquare, Terminal as TerminalIcon, Wrench, LogOut, X, User as UserIcon, BookOpen, LogIn, Shield, AlertTriangle, Pin, PinOff, Cpu, Trophy, Rocket, Globe } from 'lucide-react';
+import { Book, MessageSquare, Terminal as TerminalIcon, Wrench, LogOut, X, User as UserIcon, BookOpen, LogIn, Shield, AlertTriangle, Pin, PinOff, Cpu, Trophy, Rocket, Globe, Dna } from 'lucide-react';
 import { Button } from '../ui/Shared';
 import { User } from '../../types';
 import { supabase } from '../../lib/supabase';
@@ -22,7 +22,7 @@ const STATIC_TEXT: Record<Language, any> = {
         lang: 'IDIOMA / LANG',
         tech: 'ÁRVORE TECH',
         achievements: 'CONQUISTAS',
-        races: 'RAÇAS DO GAME',
+        races: 'RAÇAS',
         ship_designer: 'ESTALEIRO'
     },
     en: {
@@ -40,7 +40,7 @@ const STATIC_TEXT: Record<Language, any> = {
         lang: 'LANGUAGE / LINGUE',
         tech: 'TECH TREE',
         achievements: 'ACHIEVEMENTS',
-        races: 'GAME RACES',
+        races: 'RACES',
         ship_designer: 'SHIPYARD'
     },
     fr: {
@@ -58,7 +58,7 @@ const STATIC_TEXT: Record<Language, any> = {
         lang: 'LANGUE / LANG',
         tech: 'ARBRE TECH',
         achievements: 'SUCCÈS',
-        races: 'RACES DU JEU',
+        races: 'RACES',
         ship_designer: 'CHANTIER SPATIAL'
     }
 };
@@ -130,7 +130,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                             { id: 'articles', icon: <TerminalIcon size={20} />, label: t.logs },
                             { id: 'forum', icon: <MessageSquare size={20} />, label: t.comms },
                             { id: 'tech-tree', icon: <Cpu size={20} />, label: t.tech },
-                            { id: 'races', icon: <Globe size={20} />, label: t.races },
+                            { id: 'races', icon: <Dna size={20} />, label: t.races },
                             { id: 'achievements', icon: <Trophy size={20} />, label: t.achievements }
                         ].map((item) => (
                             <div key={item.id} className="relative">

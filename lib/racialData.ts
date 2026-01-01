@@ -9,6 +9,7 @@ export interface Race {
     summary: string;
     moduleName: string;
     moduleDesc: string;
+    images?: string[];
     stats: {
         agua: RacialStat;
         gravidade: RacialStat;
@@ -26,6 +27,7 @@ export const RACES: Race[] = [
         summary: 'Os Abissais são criaturas adaptadas a ambientes de alta pressão e água abundante. Eles prosperam em oceanos profundos e mundos aquáticos, com resistência natural às profundezas esmagadoras.',
         moduleName: 'Mini Coletor de Destroços Aprimorado - Abysseens',
         moduleDesc: 'Módulo de mini coletor de destroços otimizado para Abysseens com +20% de estatísticas melhoradas',
+        images: [],
         stats: {
             agua: { range: '80% - 100%', bonus: '+30%' },
             gravidade: { range: '1.5G - 2.5G', bonus: '+20%' },
@@ -41,6 +43,7 @@ export const RACES: Race[] = [
         summary: 'Os Aerions são seres etéreos que flutuam em atmosferas densas. Eles preferem ambientes de baixa gravidade ricos em gases, onde podem planar sem esforço.',
         moduleName: 'Mini Balista Aprimorada - Aerions',
         moduleDesc: 'Módulo de mini balista otimizado para Aerions com +20% de estatísticas melhoradas',
+        images: [],
         stats: {
             agua: { range: '0% - 20%', bonus: '+20%' },
             gravidade: { range: '0.3G - 0.7G', bonus: '+30%' },
@@ -56,6 +59,7 @@ export const RACES: Race[] = [
         summary: 'Os Lithars são formas de vida baseadas em silício nascidas de mundos vulcânicos. Eles prosperam em calor extremo e radiação, seus corpos cristalinos impermeáveis a temperaturas que vaporizariam outros.',
         moduleName: 'Mini Laser Aprimorado - Lithars',
         moduleDesc: 'Módulo de mini laser otimizado para Lithars com +20% de estatísticas melhoradas',
+        images: [],
         stats: {
             agua: { range: '0% - 30%', bonus: '+25%' },
             gravidade: { range: '2G - 3G', bonus: '+20%' },
@@ -71,6 +75,7 @@ export const RACES: Race[] = [
         summary: 'Os Mecalitas são seres cibernéticos que dependem de campos eletromagnéticos fortes. Eles se destacam em ambientes magneticamente ativos, extraindo energia dos núcleos planetários.',
         moduleName: 'Mini Escudo Aprimorado - Mecalythes',
         moduleDesc: 'Módulo de mini escudo otimizado para Mecalythes com +20% de estatísticas melhoradas',
+        images: [],
         stats: {
             agua: { range: '10% - 40%', bonus: '+20%' },
             gravidade: { range: '0.8G - 1.5G', bonus: '+30%' },
@@ -86,6 +91,7 @@ export const RACES: Race[] = [
         summary: 'Os Némorix são criaturas florestais adaptadas a climas temperados. Eles florescem em atmosferas exuberantes e ricas em oxigênio com temperaturas e umidade moderadas.',
         moduleName: 'Mini Extrator de Asteroides Aprimorado - Nemoryx',
         moduleDesc: 'Módulo de mini extrator de asteroides otimizado para Nemoryx com +20% de estatísticas melhoradas',
+        images: [],
         stats: {
             agua: { range: '40% - 70%', bonus: '+20%' },
             gravidade: { range: '0.6G - 1.2G', bonus: '+15%' },
@@ -101,6 +107,7 @@ export const RACES: Race[] = [
         summary: 'Os Silvae são seres vegetais delicados que requerem proteção contra radiação intensa. Eles prosperam em mundos protegidos com atmosferas densas e luz estelar suave.',
         moduleName: 'Mini Transporte de Tropas Aprimorado - Sylvae',
         moduleDesc: 'Módulo de mini transporte de tropas otimizado para Sylvae com +20% de estatísticas melhoradas',
+        images: [],
         stats: {
             agua: { range: '50% - 80%', bonus: '+25%' },
             gravidade: { range: '0.5G - 1G', bonus: '+20%' },
@@ -116,6 +123,7 @@ export const RACES: Race[] = [
         summary: 'Os Terranos são humanos adaptáveis que podem sobreviver em uma ampla gama de condições. Embora não se destaquem em lugar nenhum, também não lutam em lugar nenhum - verdadeiros generalistas galácticos.',
         moduleName: 'Mini Warp Aprimorado - Terrans',
         moduleDesc: 'Módulo de mini warp otimizado para Terrans com +20% de estatísticas melhoradas',
+        images: [],
         stats: {
             agua: { range: '30% - 70%', bonus: '+15%' },
             gravidade: { range: '0.8G - 1.2G', bonus: '+20%' },
@@ -131,6 +139,7 @@ export const RACES: Race[] = [
         summary: 'Os Xyrrh são sobreviventes resistentes de terras áridas. Eles prosperam em condições quentes e secas onde outros pereceriam, seus corpos adaptados para conservar cada gota de umidade.',
         moduleName: 'Mini Carga Aprimorada - Xyrrh',
         moduleDesc: 'Módulo de mini carga otimizado para Xyrrh com +20% de estatísticas melhoradas',
+        images: [],
         stats: {
             agua: { range: '0% - 20%', bonus: '+20%' },
             gravidade: { range: '1G - 2G', bonus: '+15%' },
