@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { Button, Card, Badge } from '../ui/Shared';
-import { Search, ZoomIn, ZoomOut, Maximize2, Cpu, Info, Boxes, Box, Zap, Shield, Target, Globe, Landmark, ShieldCheck, Crosshair, Factory, Radio, Landmark as Bank, ShieldAlert, Building2, Map, ArrowRight, CornerDownRight, History, Route, Printer } from 'lucide-react';
+import { Search, ZoomIn, ZoomOut, Maximize2, Cpu, Info, Boxes, Box, Zap, Shield, Target, Globe, Landmark, ShieldCheck, Crosshair, Factory, Radio, Landmark as Bank, ShieldAlert, Building2, Map, ArrowRight, CornerDownRight, History, Route, Printer, Clock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { TECH_NODES, CATEGORY_UI, TechNode } from '../../lib/techData';
 
@@ -33,7 +33,8 @@ const STATIC_TEXT = {
             defense: 'Proteção e Blindagem',
             chassis: 'Estruturas de Nave',
             other: 'Extração e Exploração'
-        }
+        },
+        base_time: 'Tempo de Pesquisa'
     },
     en: {
         title: 'Technology Tree',
@@ -63,7 +64,8 @@ const STATIC_TEXT = {
             defense: 'Protection & Armor',
             chassis: 'Ship Structures',
             other: 'Extraction & Exploration'
-        }
+        },
+        base_time: 'Research Time'
     }
 };
 
@@ -357,6 +359,18 @@ export const TechTreeView: React.FC = () => {
                                         <p className="text-xs text-space-text/80 font-mono leading-relaxed first-letter:text-xl first-letter:font-bold first-letter:text-space-neon first-letter:mr-1">
                                             {language === 'pt' ? displayNode.desc_pt : displayNode.desc_en}
                                         </p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-4 mb-8">
+                                    <div className="p-4 bg-space-neon/5 border border-space-steel/30 rounded-lg flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-space-neon/10 flex items-center justify-center border border-space-neon/30">
+                                                <Clock size={16} className="text-space-neon" />
+                                            </div>
+                                            <span className="text-[10px] font-bold text-space-muted uppercase tracking-widest">{t.base_time}</span>
+                                        </div>
+                                        <span className="text-sm font-mono font-bold text-white bg-space-dark px-3 py-1 rounded border border-space-steel/30 shadow-inner">{displayNode.baseTime || '-'}</span>
                                     </div>
                                 </div>
 
