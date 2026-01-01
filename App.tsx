@@ -528,28 +528,32 @@ export default function App() {
       )}
 
       {view === 'public-profile' && viewingProfileId && (
-        <PublicProfileView
-          userId={viewingProfileId}
-          onClose={() => setView('home')}
-          onPostClick={openPostView}
-          currentUser={currentUser}
-        />
+        <RestrictedView>
+          <PublicProfileView
+            userId={viewingProfileId}
+            onClose={() => setView('home')}
+            onPostClick={openPostView}
+            currentUser={currentUser}
+          />
+        </RestrictedView>
       )}
 
       {view === 'post-view' && selectedPost && (
-        <div className="container mx-auto px-4 py-8">
-          <PostViewModal
-            isOpen={true}
-            post={selectedPost}
-            onClose={() => setView('home')}
-            currentUser={currentUser}
-            onDeleteConfirmed={handlePostDelete}
-            onEdit={handleEditPost}
-            onAuthorClick={handleProfileClick}
-            allPosts={posts}
-            onPostClick={(p) => setSelectedPost(p)}
-          />
-        </div>
+        <RestrictedView>
+          <div className="container mx-auto px-4 py-8">
+            <PostViewModal
+              isOpen={true}
+              post={selectedPost}
+              onClose={() => setView('home')}
+              currentUser={currentUser}
+              onDeleteConfirmed={handlePostDelete}
+              onEdit={handleEditPost}
+              onAuthorClick={handleProfileClick}
+              allPosts={posts}
+              onPostClick={(p) => setSelectedPost(p)}
+            />
+          </div>
+        </RestrictedView>
       )}
 
       <EditWelcomeModal
