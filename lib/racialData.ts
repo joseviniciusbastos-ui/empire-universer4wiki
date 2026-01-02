@@ -30,17 +30,17 @@ export const RACES: Race[] = [
         moduleName: 'Mini Coletor de Destroços Aprimorado - Abysseens',
         moduleDesc: 'Módulo de mini coletor de destroços otimizado para Abysseens com +20% de estatísticas melhoradas',
         images: [
-            'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-1.jpg',
-            'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-2.jpg',
-            'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-3.jpg',
-            'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-4.jpg',
-            'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-5.jpg',
-            'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-6.jpg',
-            'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-7.jpg',
-            'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-8.jpg'
+            '/images/races/abissais/abyssal-1.jpg',
+            '/images/races/abissais/abyssal-2.jpg',
+            '/images/races/abissais/abyssal-3.jpg',
+            '/images/races/abissais/abyssal-4.jpg',
+            '/images/races/abissais/abyssal-5.jpg',
+            '/images/races/abissais/abyssal-6.jpg',
+            '/images/races/abissais/abyssal-7.jpg',
+            '/images/races/abissais/abyssal-8.jpg'
         ],
-        demonstrationImage: 'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-1.jpg',
-        moduleImage: 'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-module.jpg',
+        demonstrationImage: '/images/races/abissais/abyssal-1.jpg',
+        moduleImage: '/images/races/abissais/abyssal-module.jpg',
         stats: {
             agua: { range: '80% - 100%', bonus: '+30%' },
             gravidade: { range: '1.5G - 2.5G', bonus: '+20%' },
