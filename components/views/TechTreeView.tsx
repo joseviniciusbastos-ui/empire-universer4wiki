@@ -3,6 +3,7 @@ import { Button, Card, Badge } from '../ui/Shared';
 import { Search, ZoomIn, ZoomOut, Maximize2, Cpu, Info, Boxes, Box, Zap, Shield, Target, Globe, Landmark, ShieldCheck, Crosshair, Factory, Radio, Landmark as Bank, ShieldAlert, Building2, Map, ArrowRight, CornerDownRight, History, Route, Printer, Clock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { TECH_NODES, CATEGORY_UI, TechNode } from '../../lib/techData';
+import { RACES } from '../../lib/racialData';
 import DOMPurify from 'isomorphic-dompurify';
 
 const STATIC_TEXT = {
@@ -365,6 +366,26 @@ export const TechTreeView: React.FC = () => {
                                         />
                                     </div>
                                 </div>
+
+                                {displayNode.id.includes('_racial') && (() => {
+                                    const raceName = displayNode.desc_pt.split('Racial ')[1]?.split(' -')[0];
+                                    const race = RACES.find(r => r.name.toLowerCase().includes(raceName?.toLowerCase() || ''));
+
+                                    if (race && race.moduleImage) {
+                                        return (
+                                            <div className="mb-8 p-4 bg-space-neon/10 border border-space-neon/30 rounded-lg flex items-center gap-4 animate-fadeIn">
+                                                <div className="w-16 h-16 rounded-lg bg-space-black border border-space-neon/30 p-1 flex-shrink-0">
+                                                    <img src={race.moduleImage} alt={race.moduleName} className="w-full h-full object-cover" />
+                                                </div>
+                                                <div>
+                                                    <span className="text-[8px] font-black text-space-neon uppercase tracking-widest block mb-1">Tecnologia Especializada</span>
+                                                    <span className="text-xs font-bold text-white uppercase">{race.moduleName}</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                })()}
 
                                 <div className="grid grid-cols-1 gap-4 mb-8">
                                     <div className="p-4 bg-space-neon/5 border border-space-steel/30 rounded-lg flex items-center justify-between">

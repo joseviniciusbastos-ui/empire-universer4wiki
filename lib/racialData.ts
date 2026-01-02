@@ -29,9 +29,18 @@ export const RACES: Race[] = [
         summary: 'Os Abissais são criaturas adaptadas a ambientes de alta pressão e água abundante. Eles prosperam em oceanos profundos e mundos aquáticos, com resistência natural às profundezas esmagadoras.',
         moduleName: 'Mini Coletor de Destroços Aprimorado - Abysseens',
         moduleDesc: 'Módulo de mini coletor de destroços otimizado para Abysseens com +20% de estatísticas melhoradas',
-        images: [],
-        demonstrationImage: '',
-        moduleImage: '',
+        images: [
+            'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-1.jpg',
+            'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-2.jpg',
+            'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-3.jpg',
+            'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-4.jpg',
+            'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-5.jpg',
+            'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-6.jpg',
+            'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-7.jpg',
+            'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-8.jpg'
+        ],
+        demonstrationImage: 'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-1.jpg',
+        moduleImage: 'https://xyagurflukbuawgbcuil.supabase.co/storage/v1/object/public/images/races/abissais/abyssal-module.jpg',
         stats: {
             agua: { range: '80% - 100%', bonus: '+30%' },
             gravidade: { range: '1.5G - 2.5G', bonus: '+20%' },

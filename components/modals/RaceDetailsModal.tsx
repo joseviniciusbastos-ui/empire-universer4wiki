@@ -11,7 +11,19 @@ interface RaceDetailsModalProps {
 }
 
 const RaceDetailsModal: React.FC<RaceDetailsModalProps> = ({ race, isOpen, onClose }) => {
+    const [activeImage, setActiveImage] = useState<string | null>(null);
     const [isExpanded, setIsExpanded] = useState(false);
+
+    // Update activeImage when race changes
+    React.useEffect(() => {
+        if (race && race.images && race.images.length > 0) {
+            setActiveImage(race.images[0]);
+        } else if (race?.demonstrationImage) {
+            setActiveImage(race.demonstrationImage);
+        } else {
+            setActiveImage(null);
+        }
+    }, [race]);
 
     if (!isOpen || !race) return null;
 
@@ -23,6 +35,8 @@ const RaceDetailsModal: React.FC<RaceDetailsModalProps> = ({ race, isOpen, onClo
         { id: 'vento_solar', label: 'Vento Solar', icon: <Wind size={16} />, value: race.stats.vento_solar },
         { id: 'atmosfera', label: 'Atmosfera', icon: <Shield size={16} />, value: race.stats.atmosfera },
     ];
+
+    const currentDisplayImage = activeImage || race.demonstrationImage;
 
     return (
         <>
@@ -70,26 +84,46 @@ const RaceDetailsModal: React.FC<RaceDetailsModalProps> = ({ race, isOpen, onClo
                             />
                         </section>
 
-                        {/* Avatar Showcase - New Requirement */}
-                        {race.demonstrationImage && (
+                        {/* Avatar Showcase */}
+                        {currentDisplayImage && (
                             <section className="space-y-4">
                                 <h3 className="text-[10px] font-bold text-space-neon uppercase tracking-widest flex items-center gap-2 ml-1">
                                     <Maximize2 size={14} /> DEMONSTRAÇÃO DE AVATARES
                                 </h3>
-                                <div
-                                    className="group relative cursor-zoom-in rounded-xl border border-space-steel/30 overflow-hidden bg-space-dark/50 transition-all hover:border-space-neon/50"
-                                    onClick={() => setIsExpanded(true)}
-                                >
-                                    <img
-                                        src={race.demonstrationImage}
-                                        alt="Avatar Showcase"
-                                        className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-space-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                                        <span className="text-[10px] font-mono text-white/70 uppercase tracking-widest flex items-center gap-2">
-                                            <Maximize2 size={12} /> Clique para expandir visualização
-                                        </span>
+
+                                <div className="space-y-4">
+                                    {/* Main Image */}
+                                    <div
+                                        className="group relative cursor-zoom-in rounded-xl border border-space-steel/30 overflow-hidden bg-space-dark/50 transition-all hover:border-space-neon/50"
+                                        onClick={() => setIsExpanded(true)}
+                                    >
+                                        <img
+                                            src={currentDisplayImage}
+                                            alt="Avatar Showcase"
+                                            className="w-full aspect-[16/9] object-cover transition-transform duration-500 group-hover:scale-105"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-space-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                                            <span className="text-[10px] font-mono text-white/70 uppercase tracking-widest flex items-center gap-2">
+                                                <Maximize2 size={12} /> Clique para expandir visualização
+                                            </span>
+                                        </div>
                                     </div>
+
+                                    {/* Thumbnails */}
+                                    {race.images && race.images.length > 1 && (
+                                        <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
+                                            {race.images.map((img, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => setActiveImage(img)}
+                                                    className={`aspect-square rounded-lg border overflow-hidden transition-all ${activeImage === img ? 'border-space-neon ring-2 ring-space-neon/30' : 'border-space-steel/30 hover:border-space-neon/50'
+                                                        }`}
+                                                >
+                                                    <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </section>
                         )}
@@ -117,7 +151,7 @@ const RaceDetailsModal: React.FC<RaceDetailsModalProps> = ({ race, isOpen, onClo
                             </div>
                         </section>
 
-                        {/* Racial Module - Updated with Icon */}
+                        {/* Racial Module */}
                         <section className="relative p-5 bg-space-neon/5 border border-space-neon/20 rounded-lg overflow-hidden group/module">
                             <div className="absolute -top-3 left-4 bg-space-black px-2 flex items-center gap-2">
                                 <Cpu size={12} className="text-space-neon" />
@@ -126,8 +160,8 @@ const RaceDetailsModal: React.FC<RaceDetailsModalProps> = ({ race, isOpen, onClo
 
                             <div className="flex items-start gap-4">
                                 {race.moduleImage && (
-                                    <div className="w-16 h-16 rounded-lg bg-space-black border border-space-neon/20 p-2 flex-shrink-0 relative z-10">
-                                        <img src={race.moduleImage} alt={race.moduleName} className="w-full h-full object-contain filter grayscale group-hover/module:grayscale-0 transition-all duration-500" />
+                                    <div className="w-20 h-20 rounded-lg bg-space-black border border-space-neon/30 p-1 flex-shrink-0 relative z-10 overflow-hidden shadow-[0_0_15px_rgba(0,194,255,0.1)] group-hover/module:border-space-neon/60 transition-colors">
+                                        <img src={race.moduleImage} alt={race.moduleName} className="w-full h-full object-cover group-hover/module:scale-110 transition-transform duration-500" />
                                     </div>
                                 )}
                                 <div className="space-y-2 relative z-10">
