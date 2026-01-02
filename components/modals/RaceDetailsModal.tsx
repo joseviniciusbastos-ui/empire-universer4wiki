@@ -196,7 +196,7 @@ const RaceDetailsModal: React.FC<RaceDetailsModalProps> = ({ race, isOpen, onClo
             </div>
 
             {/* Expanded Image Overlay */}
-            {isExpanded && race.demonstrationImage && (
+            {isExpanded && currentDisplayImage && (
                 <div
                     className="fixed inset-0 z-[10000] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 cursor-zoom-out animate-in zoom-in duration-300"
                     onClick={() => setIsExpanded(false)}
@@ -208,7 +208,7 @@ const RaceDetailsModal: React.FC<RaceDetailsModalProps> = ({ race, isOpen, onClo
                         <X size={32} />
                     </button>
                     <img
-                        src={race.demonstrationImage}
+                        src={currentDisplayImage}
                         alt="Avatar Showcase Full"
                         className="max-w-full max-h-full rounded-xl shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/10"
                     />
