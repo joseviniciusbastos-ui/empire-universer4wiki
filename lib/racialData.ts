@@ -10,6 +10,8 @@ export interface Race {
     moduleName: string;
     moduleDesc: string;
     images?: string[];
+    demonstrationImage?: string;
+    moduleImage?: string;
     stats: {
         agua: RacialStat;
         gravidade: RacialStat;
@@ -28,6 +30,8 @@ export const RACES: Race[] = [
         moduleName: 'Mini Coletor de Destroços Aprimorado - Abysseens',
         moduleDesc: 'Módulo de mini coletor de destroços otimizado para Abysseens com +20% de estatísticas melhoradas',
         images: ['/assets/races/abissais.png'],
+        demonstrationImage: '/assets/races/abissais.png',
+        moduleImage: 'https://cdn-icons-png.flaticon.com/512/3263/3263228.png',
         stats: {
             agua: { range: '80% - 100%', bonus: '+30%' },
             gravidade: { range: '1.5G - 2.5G', bonus: '+20%' },
@@ -44,6 +48,8 @@ export const RACES: Race[] = [
         moduleName: 'Mini Balista Aprimorada - Aerions',
         moduleDesc: 'Módulo de mini balista otimizado para Aerions com +20% de estatísticas melhoradas',
         images: ['/assets/races/aerials.png'],
+        demonstrationImage: '/assets/races/aerials.png',
+        moduleImage: 'https://cdn-icons-png.flaticon.com/512/2991/2991155.png',
         stats: {
             agua: { range: '0% - 20%', bonus: '+20%' },
             gravidade: { range: '0.3G - 0.7G', bonus: '+30%' },
@@ -60,6 +66,8 @@ export const RACES: Race[] = [
         moduleName: 'Mini Laser Aprimorado - Lithars',
         moduleDesc: 'Módulo de mini laser otimizado para Lithars com +20% de estatísticas melhoradas',
         images: ['/assets/races/lithars.png'],
+        demonstrationImage: '/assets/races/lithars.png',
+        moduleImage: 'https://cdn-icons-png.flaticon.com/512/3063/3063822.png',
         stats: {
             agua: { range: '0% - 30%', bonus: '+25%' },
             gravidade: { range: '2G - 3G', bonus: '+20%' },
@@ -76,6 +84,8 @@ export const RACES: Race[] = [
         moduleName: 'Mini Escudo Aprimorado - Mecalythes',
         moduleDesc: 'Módulo de mini escudo otimizado para Mecalythes com +20% de estatísticas melhoradas',
         images: ['/assets/races/mecalitas.png'],
+        demonstrationImage: '/assets/races/mecalitas.png',
+        moduleImage: 'https://cdn-icons-png.flaticon.com/512/3592/3592817.png',
         stats: {
             agua: { range: '10% - 40%', bonus: '+20%' },
             gravidade: { range: '0.86 - 1.5G', bonus: '+10%' },
@@ -92,6 +102,8 @@ export const RACES: Race[] = [
         moduleName: 'Mini Extrator de Asteroides Aprimorado - Nemoryx',
         moduleDesc: 'Módulo de mini extrator de asteroides otimizado para Nemoryx com +20% de estatísticas melhoradas',
         images: ['/assets/races/nemorix.png'],
+        demonstrationImage: '/assets/races/nemorix.png',
+        moduleImage: 'https://cdn-icons-png.flaticon.com/512/3263/3263228.png',
         stats: {
             agua: { range: '40% - 70%', bonus: '+20%' },
             gravidade: { range: '0.6G - 1.2G', bonus: '+15%' },
@@ -108,6 +120,8 @@ export const RACES: Race[] = [
         moduleName: 'Mini Transporte de Tropas Aprimorado - Sylvae',
         moduleDesc: 'Módulo de mini transporte de tropas otimizado para Sylvae com +20% de estatísticas melhoradas',
         images: ['/assets/races/silvae.png'],
+        demonstrationImage: '/assets/races/silvae.png',
+        moduleImage: 'https://cdn-icons-png.flaticon.com/512/2991/2991155.png',
         stats: {
             agua: { range: '50% - 80%', bonus: '+25%' },
             gravidade: { range: '0.5G - 1G', bonus: '+20%' },
@@ -124,6 +138,8 @@ export const RACES: Race[] = [
         moduleName: 'Mini Warp Aprimorado - Terrans',
         moduleDesc: 'Módulo de mini warp otimizado para Terrans com +20% de estatísticas melhoradas',
         images: ['/assets/races/terranos.png'],
+        demonstrationImage: '/assets/races/terranos.png',
+        moduleImage: 'https://cdn-icons-png.flaticon.com/512/3592/3592817.png',
         stats: {
             agua: { range: '30% - 70%', bonus: '+15%' },
             gravidade: { range: '0.8G - 1.2G', bonus: '+20%' },
@@ -140,6 +156,8 @@ export const RACES: Race[] = [
         moduleName: 'Mini Carga Aprimorada - Xyrrh',
         moduleDesc: 'Módulo de mini carga otimizado para Xyrrh com +20% de estatísticas melhoradas',
         images: ['/assets/races/xyrrh.png'],
+        demonstrationImage: '/assets/races/xyrrh.png',
+        moduleImage: 'https://cdn-icons-png.flaticon.com/512/3063/3063822.png',
         stats: {
             agua: { range: '0% - 20%', bonus: '+25%' },
             gravidade: { range: '1G - 2G', bonus: '+15%' },
