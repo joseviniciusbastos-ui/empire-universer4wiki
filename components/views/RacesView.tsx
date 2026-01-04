@@ -10,6 +10,13 @@ const RacesView: React.FC = () => {
     const { language } = useLanguage();
     const [selectedRace, setSelectedRace] = useState<Race | null>(null);
     const [imageIndices, setImageIndices] = useState<Record<string, number>>({});
+    const [featuredRace, setFeaturedRace] = useState<Race | null>(null);
+
+    // Initial setup: Random featured race
+    useEffect(() => {
+        const randomRace = RACES[Math.floor(Math.random() * RACES.length)];
+        setFeaturedRace(randomRace);
+    }, []);
 
     // Automated Slideshow Logic (Every 10s)
     useEffect(() => {
@@ -30,7 +37,7 @@ const RacesView: React.FC = () => {
                 });
                 return next;
             });
-        }, 10000);
+        }, 8000); // Slightly faster cycle for more dynamism
 
         return () => clearInterval(interval);
     }, []);
@@ -38,101 +45,128 @@ const RacesView: React.FC = () => {
     const t = {
         pt: {
             title: 'PROTOCOLOS RACIAIS',
-            subtitle: 'Catálogo de Formas de Vida Galáticas',
-            info: 'Selecione uma espécie para acessar o protocolo detalhado de adaptabilidade e bônus tecnológicos.',
-            specimen: 'espécime'
+            subtitle: 'CATÁLOGO DE FORMAS DE VIDA GALÁTICAS',
+            info: 'Selecione uma espécie para acessar o protocolo detalhado.',
+            featured: 'ESPÉCIE EM DESTAQUE',
+            access: 'ACESSAR DADOS',
+            specimen: 'ESPÉCIME'
         },
         en: {
             title: 'RACIAL PROTOCOLS',
-            subtitle: 'Galactic Lifeforms Catalog',
-            info: 'Select a species to access detailed adaptability protocols and technological bonuses.',
-            specimen: 'specimen'
+            subtitle: 'GALACTIC LIFEFORMS CATALOG',
+            info: 'Select a species to access detailed protocols.',
+            featured: 'FEATURED SPECIES',
+            access: 'ACCESS DATA',
+            specimen: 'SPECIMEN'
         }
     }[language === 'pt' ? 'pt' : 'en'];
 
     return (
-        <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto px-4">
-            {/* Header Area */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-space-steel pb-8">
-                <div className="flex items-center gap-6">
-                    <div className="p-4 bg-space-neon/10 border border-space-neon/30 rounded-2xl shadow-[0_0_20px_rgba(0,194,255,0.1)]">
-                        <Dna className="text-space-neon animate-pulse-fast" size={40} />
-                    </div>
-                    <div>
-                        <h2 className="text-4xl font-display font-black uppercase text-white tracking-widest leading-tight italic">
-                            {t.title}
-                        </h2>
-                        <div className="flex items-center gap-2 text-xs font-mono text-space-muted uppercase tracking-[0.3em]">
-                            <span className="text-space-neon">XENO-DATABASE:</span> v2.0.5 • {RACES.length} SPECIES DETECTED
+        <div className="space-y-12 animate-fadeIn max-w-[1600px] mx-auto px-4 pb-20">
+            {/* Hero Section */}
+            {featuredRace && (
+                <div className="relative w-full h-[500px] rounded-3xl overflow-hidden border border-space-steel/30 shadow-[0_0_50px_rgba(0,194,255,0.15)] group transition-all duration-700 hover:shadow-[0_0_80px_rgba(0,194,255,0.25)]">
+                    {/* Background Blur */}
+                    <div
+                        className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-xl opacity-40 scale-110 transition-transform duration-[20s] ease-linear"
+                        style={{ backgroundImage: `url(${featuredRace.demonstrationImage})` }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-space-black via-space-black/80 to-transparent" />
+
+                    <div className="relative z-10 h-full flex flex-col md:flex-row items-center p-8 md:p-16 gap-12">
+                        {/* Featured Content */}
+                        <div className="flex-1 space-y-6 text-left">
+                            <div className="flex items-center gap-3">
+                                <Badge color="bg-space-neon/20 text-space-neon border-space-neon/50 animate-pulse">
+                                    {t.featured}
+                                </Badge>
+                                <span className="text-space-muted font-mono text-xs tracking-[0.2em]">{featuredRace.id.toUpperCase()}</span>
+                            </div>
+
+                            <h1 className="text-5xl md:text-7xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-space-steel/50 uppercase tracking-tighter leading-none italic">
+                                {featuredRace.name}
+                            </h1>
+
+                            <p className="max-w-xl text-space-muted text-lg font-light leading-relaxed line-clamp-3">
+                                {featuredRace.summary}
+                            </p>
+
+                            <Button
+                                onClick={() => setSelectedRace(featuredRace)}
+                                className="mt-4 bg-space-neon hover:bg-space-neon/80 text-space-black font-bold uppercase tracking-widest px-8 py-4 rounded-xl shadow-[0_0_20px_rgba(0,194,255,0.4)] hover:shadow-[0_0_40px_rgba(0,194,255,0.6)] hover:-translate-y-1 transition-all duration-300 flex items-center gap-3 group/btn"
+                            >
+                                {t.access} <ArrowRight className="group-hover/btn:translate-x-1 transition-transform" />
+                            </Button>
+                        </div>
+
+                        {/* Featured Image */}
+                        <div className="w-full md:w-1/2 h-full relative perspective-1000 flex items-center justify-center">
+                            <img
+                                src={featuredRace.demonstrationImage}
+                                alt={featuredRace.name}
+                                className="max-h-[120%] object-contain drop-shadow-[0_0_30px_rgba(0,0,0,0.8)] mask-image-gradient-b transition-transform duration-700 hover:scale-105"
+                                style={{ maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)' }}
+                            />
                         </div>
                     </div>
                 </div>
-                <div className="max-w-md text-right hidden md:block">
-                    <p className="text-xs font-mono text-space-muted leading-relaxed uppercase italic">
-                        {t.info}
-                    </p>
+            )}
+
+            {/* List Header */}
+            <div className="flex items-end justify-between border-b border-space-steel pb-4 px-2">
+                <div>
+                    <h2 className="text-2xl font-display font-bold text-white uppercase tracking-widest flex items-center gap-3">
+                        <Dna className="text-space-neon" /> {t.subtitle}
+                    </h2>
+                </div>
+                <div className="hidden md:block text-space-muted font-mono text-xs tracking-widest">
+                    SYSTEM_STATUS: ONLINE • {RACES.length} ENTRIES
                 </div>
             </div>
 
             {/* Grid of Races */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {RACES.map(race => (
-                    <Card
+                    <div
                         key={race.id}
-                        id={`race-card-${race.id}`}
                         onClick={() => setSelectedRace(race)}
-                        className="group relative cursor-pointer overflow-hidden transition-all duration-500 hover:border-space-neon/50 hover:shadow-[0_0_30px_rgba(0,194,255,0.1)] flex flex-col h-full"
+                        className="group relative h-[400px] rounded-2xl overflow-hidden cursor-pointer border border-space-steel/20 bg-space-black transition-all duration-500 hover:border-space-neon hover:shadow-[0_0_30px_rgba(0,194,255,0.15)] hover:-translate-y-2"
                     >
-                        {/* Interactive glow effect */}
-                        <div className="absolute -inset-0.5 bg-gradient-to-b from-space-neon/10 to-transparent opacity-0 group-hover:opacity-100 transition duration-500" />
+                        {/* Background Image (Full Cover) */}
+                        <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-110">
+                            <div className="absolute inset-0 bg-gradient-to-t from-space-black via-space-black/50 to-transparent z-10" />
+                            <img
+                                src={race.images && race.images.length > 0 ? race.images[imageIndices[race.id] || 0] : ''}
+                                alt={race.name}
+                                className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
+                            />
+                        </div>
 
-                        <div className="relative z-10 flex flex-col h-full">
-                            <div className="flex justify-between items-start mb-6">
-                                <div className="w-16 h-16 rounded-xl border border-space-steel/50 flex items-center justify-center bg-space-black shadow-inner group-hover:border-space-neon transition-all duration-500 overflow-hidden relative">
-                                    {race.images && race.images.length > 0 ? (
-                                        <div className="absolute inset-0 transition-opacity duration-1000">
-                                            <img
-                                                src={race.images[imageIndices[race.id] || 0]}
-                                                alt={race.name}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <span className="text-3xl font-display font-black text-white group-hover:text-space-neon transition-colors">
-                                            {race.name.charAt(0)}
-                                        </span>
-                                    )}
+                        {/* Content Overlay */}
+                        <div className="absolute inset-0 z-20 flex flex-col justify-end p-6">
+                            <div className="transform transition-all duration-300 translate-y-4 group-hover:translate-y-0">
+                                <div className="flex justify-between items-center mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                                    <span className="text-space-neon font-mono text-xs tracking-widest">{t.specimen} {race.id.substring(0, 3).toUpperCase()}</span>
                                 </div>
-                                <Badge color="bg-space-dark border border-space-steel/30 text-space-muted group-hover:text-space-neon transition-colors">
-                                    {race.id.toUpperCase()}
-                                </Badge>
-                            </div>
 
-                            <div className="space-y-4 flex-1">
-                                <h3 className="text-xl font-display font-bold text-white uppercase tracking-tighter italic group-hover:translate-x-1 transition-transform">
+                                <h3 className="text-3xl font-display font-black text-white italic uppercase leading-none mb-2 drop-shadow-lg">
                                     {race.name}
                                 </h3>
-                                <div
-                                    className="text-[11px] font-mono text-space-muted leading-relaxed opacity-70 line-clamp-4 italic"
-                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(race.summary) }}
-                                />
-                            </div>
 
-                            <div className="mt-8 pt-4 border-t border-space-steel/20 flex items-center justify-between group-hover:border-space-neon/20 transition-colors">
-                                <span className="text-[10px] font-mono text-space-muted uppercase tracking-widest">
-                                    DNA {t.specimen}
-                                </span>
-                                <div className="flex items-center gap-2 text-space-neon font-bold text-[10px] items-center">
-                                    PROTOCOL <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                                <div className="h-0 group-hover:h-auto overflow-hidden transition-all duration-500">
+                                    <p className="text-space-muted text-sm line-clamp-2 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200">
+                                        {race.summary}
+                                    </p>
+                                    <div className="flex items-center gap-2 text-space-neon text-xs font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity delay-300">
+                                        View Data <ArrowRight size={12} />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Background pattern */}
-                        <div className="absolute bottom-[-20px] right-[-20px] opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500">
-                            <Globe size={120} />
-                        </div>
-                    </Card>
+                        {/* Tech Overlay lines */}
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-space-neon to-transparent -translate-x-full group-hover:animate-scanline opacity-50" />
+                    </div>
                 ))}
             </div>
 
