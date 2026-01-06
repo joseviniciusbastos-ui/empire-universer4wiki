@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Button, Card, Badge, Input } from './ui/Shared';
 import {
     Users, Settings, Save, Trash2, Shield, ShieldAlert,
-    CheckCircle, X, ChevronUp, ChevronDown, FileText, MessageSquare, Search
+    CheckCircle, X, ChevronUp, ChevronDown, FileText, MessageSquare, Search, LayoutDashboard, Clock, ExternalLink
 } from 'lucide-react';
 import { PostType, User } from '../types';
 import { useToast } from '../contexts/ToastContext';
@@ -29,10 +29,11 @@ const POST_TYPE_LABELS = {
 
 export default function AdminPanel({ currentUser }: AdminPanelProps) {
     const { showToast } = useToast();
-    const [activeTab, setActiveTab] = useState<'users' | 'settings' | 'publications' | 'trash' | 'feedback'>('users');
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'settings' | 'publications' | 'trash' | 'feedback'>('dashboard');
     const [users, setUsers] = useState<any[]>([]);
     const [deletedPosts, setDeletedPosts] = useState<any[]>([]);
     const [reports, setReports] = useState<any[]>([]);
+    const [recentPosts, setRecentPosts] = useState<any[]>([]);
     const [posts, setPosts] = useState<any[]>([]);
     const [categories, setCategories] = useState<Record<string, string[]>>({});
     const [isLoading, setIsLoading] = useState(false);
@@ -41,6 +42,7 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
     const [pubFilter, setPubFilter] = useState<'all' | PostType>('all');
 
     useEffect(() => {
+        if (activeTab === 'dashboard') fetchRecentPosts();
         if (activeTab === 'users') fetchUsers();
         if (activeTab === 'settings') fetchSettings();
         if (activeTab === 'publications') {
@@ -50,6 +52,19 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
         if (activeTab === 'trash') fetchDeletedPosts();
         if (activeTab === 'feedback') fetchReports();
     }, [activeTab]);
+
+    // --- DASHBOARD ---
+    const fetchRecentPosts = async () => {
+        setIsLoading(true);
+        const { data } = await supabase
+            .from('posts')
+            .select('*, profiles(username)')
+            .order('created_at', { ascending: false })
+            .limit(5);
+
+        if (data) setRecentPosts(data);
+        setIsLoading(false);
+    };
 
     // --- USERS MANAGEMENT ---
     const fetchUsers = async () => {
@@ -315,6 +330,7 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                     <Shield className="text-space-neon" /> Painel Administrativo
                 </h2>
                 <div className="flex flex-wrap gap-2 justify-center">
+                    <Button variant={activeTab === 'dashboard' ? 'primary' : 'ghost'} onClick={() => setActiveTab('dashboard')} icon={<LayoutDashboard size={16} />}>VISÃO GERAL</Button>
                     <Button variant={activeTab === 'users' ? 'primary' : 'ghost'} onClick={() => setActiveTab('users')} icon={<Users size={16} />}>USUÁRIOS</Button>
                     <Button variant={activeTab === 'publications' ? 'primary' : 'ghost'} onClick={() => setActiveTab('publications')} icon={<FileText size={16} />}>POSTS</Button>
                     <Button variant={activeTab === 'settings' ? 'primary' : 'ghost'} onClick={() => setActiveTab('settings')} icon={<Settings size={16} />}>CONFIG</Button>
@@ -323,6 +339,65 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                     <Button variant={activeTab === 'trash' ? 'primary' : 'ghost'} onClick={() => setActiveTab('trash')} icon={<Trash2 size={16} />} className="text-space-alert">LIXO</Button>
                 </div>
             </div>
+
+            {/* --- DASHBOARD TAB --- */}
+            {activeTab === 'dashboard' && (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <Card className="p-6 bg-space-dark/50 border-space-neon/20">
+                            <h3 className="text-space-muted text-sm font-mono uppercase">Total Usuários</h3>
+                            <p className="text-4xl font-display font-bold text-white mt-2">{users.length > 0 ? users.length : '...'}</p>
+                        </Card>
+                        <Card className="p-6 bg-space-dark/50 border-space-neon/20">
+                            <h3 className="text-space-muted text-sm font-mono uppercase">Total Posts</h3>
+                            <p className="text-4xl font-display font-bold text-white mt-2">{posts.length > 0 ? posts.length : '...'}</p>
+                        </Card>
+                        <Card className="p-6 bg-space-dark/50 border-space-neon/20">
+                            <h3 className="text-space-muted text-sm font-mono uppercase">Status</h3>
+                            <div className="flex items-center gap-2 mt-2">
+                                <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                                <span className="text-white font-bold">OPERACIONAL</span>
+                            </div>
+                        </Card>
+                    </div>
+
+                    <Card title="ÚLTIMAS TRANSMISSÕES" className="border-t-4 border-t-space-neon">
+                        <div className="space-y-4">
+                            {isLoading ? (
+                                <p className="text-space-muted font-mono animate-pulse">Buscando dados recentes...</p>
+                            ) : recentPosts.length === 0 ? (
+                                <p className="text-space-muted">Nenhuma transmissão recente.</p>
+                            ) : (
+                                recentPosts.map((post) => (
+                                    <div key={post.id} className="flex items-center justify-between p-3 bg-space-black/40 rounded border border-space-steel/20 hover:border-space-neon/50 transition-colors group">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`p-2 rounded bg-space-steel/10 text-space-neon`}>
+                                                {post.type === PostType.WIKI ? <FileText size={18} /> :
+                                                    post.type === PostType.BLOG ? <MessageSquare size={18} /> :
+                                                        <LayoutDashboard size={18} />}
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-white group-hover:text-space-neon transition-colors line-clamp-1">{post.title}</h4>
+                                                <div className="flex items-center gap-2 text-xs text-space-muted font-mono">
+                                                    <span>{POST_TYPE_LABELS[post.type as PostType]}</span>
+                                                    <span>•</span>
+                                                    <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                                                    <span>•</span>
+                                                    <span className="text-space-text">{post.profiles?.username || 'Desconhecido'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <Badge color="bg-space-dark border border-space-steel text-xs">
+                                            <Clock size={10} className="mr-1" />
+                                            {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </Badge>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </Card>
+                </div>
+            )}
 
             {/* --- EXISTING TABS (Users, Settings, Publications, Trash, Feedback) --- */}
             {activeTab === 'users' && (

@@ -22,8 +22,17 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     onFeedbackClick
 }) => {
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
-    const [isSidebarPinned, setIsSidebarPinned] = React.useState(false);
+    // Initialize from localStorage, default to false if not set
+    const [isSidebarPinned, setIsSidebarPinned] = React.useState(() => {
+        const saved = localStorage.getItem('sidebar_pinned');
+        return saved === 'true';
+    });
     const [isTerminalOpen, setIsTerminalOpen] = React.useState(false);
+
+    // Persist pinned state
+    React.useEffect(() => {
+        localStorage.setItem('sidebar_pinned', isSidebarPinned.toString());
+    }, [isSidebarPinned]);
 
     return (
         <div className="min-h-screen bg-space-black text-space-text font-sans selection:bg-space-neon selection:text-black flex flex-col md:flex-row relative overflow-hidden">
