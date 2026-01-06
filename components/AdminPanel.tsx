@@ -41,6 +41,9 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
     const [pubSearch, setPubSearch] = useState('');
     const [pubFilter, setPubFilter] = useState<'all' | PostType>('all');
 
+    // Carousel State
+    const [currentSlide, setCurrentSlide] = useState(0);
+
     useEffect(() => {
         if (activeTab === 'dashboard') fetchRecentPosts();
         if (activeTab === 'users') fetchUsers();
