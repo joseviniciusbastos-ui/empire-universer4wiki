@@ -145,6 +145,17 @@ export const TechTreeView: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [showAllConnections, setShowAllConnections] = useState(true);
 
+    // Navigation Categories Configuration
+    const navCategories = [
+        { id: 'general', y: 200, icon: <Building2 size={12} /> },
+        { id: 'cargo', y: 600, icon: <Box size={12} /> },
+        { id: 'engine', y: 900, icon: <Zap size={12} /> },
+        { id: 'weapon', y: 1400, icon: <Target size={12} /> },
+        { id: 'defense', y: 2000, icon: <Shield size={12} /> },
+        { id: 'chassis', y: 2400, icon: <Boxes size={12} /> },
+        { id: 'other', y: 3000, icon: <Factory size={12} /> },
+    ] as const;
+
     const containerRef = useRef<HTMLDivElement>(null);
 
     // --- Interaction ---
@@ -428,15 +439,7 @@ export const TechTreeView: React.FC = () => {
                             <div className="flex flex-col gap-2 mb-6">
                                 <span className="text-[10px] font-black text-space-muted uppercase tracking-[0.3em] mb-2 px-2">Navegação Rápida</span>
                                 <div className="grid grid-cols-2 gap-2">
-                                    {[
-                                        { id: 'general', y: 300, icon: <Building2 size={12} /> },
-                                        { id: 'cargo', y: 650, icon: <Box size={12} /> },
-                                        { id: 'engine', y: 1050, icon: <Zap size={12} /> },
-                                        { id: 'weapon', y: 1600, icon: <Target size={12} /> },
-                                        { id: 'defense', y: 2100, icon: <Shield size={12} /> },
-                                        { id: 'chassis', y: 2550, icon: <Boxes size={12} /> },
-                                        { id: 'other', y: 3400, icon: <Factory size={12} /> },
-                                    ].map(cat => (
+                                    {navCategories.map(cat => (
                                         <Button
                                             key={cat.id}
                                             variant="ghost"
@@ -461,6 +464,34 @@ export const TechTreeView: React.FC = () => {
 
                         {displayNode ? (
                             <div className="relative flex flex-col h-full z-10">
+                                {/* Compact Navigation Strip */}
+                                <div className="flex gap-1 mb-4 overflow-x-auto pb-2 scrollbar-none border-b border-space-steel/20">
+                                    {navCategories.map(cat => (
+                                        <Button
+                                            key={cat.id}
+                                            variant="ghost"
+                                            size="sm"
+                                            className={`p-1 h-7 w-7 rounded-lg border border-space-steel/30 transition-all ${displayNode.category === cat.id
+                                                    ? 'bg-space-neon/20 text-space-neon border-space-neon/50'
+                                                    : 'bg-space-dark text-space-muted hover:bg-space-neon/10 hover:text-white'
+                                                }`}
+                                            title={t.categories[cat.id]}
+                                            onClick={() => {
+                                                const rect = containerRef.current?.getBoundingClientRect();
+                                                if (rect) {
+                                                    setSelectedNode(null);
+                                                    setScale(0.5);
+                                                    setPosition({
+                                                        x: rect.width / 2 - 200 * 0.5,
+                                                        y: rect.height / 2 - cat.y * 0.5
+                                                    });
+                                                }
+                                            }}
+                                        >
+                                            {cat.icon}
+                                        </Button>
+                                    ))}
+                                </div>
                                 <div className="flex items-center justify-between mb-6">
                                     <Badge className={`${CATEGORY_UI[displayNode.category].bg} ${CATEGORY_UI[displayNode.category].color} border-${CATEGORY_UI[displayNode.category].color.split('-')[1]}-500/30 text-[9px] px-3 font-bold`}>
                                         {t.categories[displayNode.category].toUpperCase()}
