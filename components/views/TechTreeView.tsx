@@ -217,19 +217,35 @@ export const TechTreeView: React.FC = () => {
                             transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
                         }}
                     >
+                        {/* Tier Background Strips */}
+                        {Array.from({ length: 16 }).map((_, i) => (
+                            <div
+                                key={`tier-${i}`}
+                                className="absolute top-0 bottom-0 border-r border-space-steel/5 pointer-events-none"
+                                style={{
+                                    left: (i + 1) * 400 - 100,
+                                    width: 400,
+                                    height: 5000,
+                                    backgroundColor: i % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent'
+                                }}
+                            >
+                                <span className="absolute top-4 left-4 text-[10px] font-mono text-space-muted opacity-30">CP LEVEL {i + 1}</span>
+                            </div>
+                        ))}
+
                         {/* Category Background Clusters */}
                         {[
-                            { y: 100, x: 0, w: 2500, h: 300, label: t.categories.general, color: 'sky' },
-                            { y: 400, x: 0, w: 2500, h: 200, label: t.categories.cargo, color: 'blue' },
-                            { y: 600, x: 0, w: 2500, h: 400, label: t.categories.engine, color: 'lime' },
-                            { y: 1000, x: 0, w: 2500, h: 700, label: t.categories.weapon, color: 'red' },
-                            { y: 1700, x: 0, w: 2500, h: 500, label: t.categories.defense, color: 'purple' },
-                            { y: 2200, x: 0, w: 3500, h: 600, label: t.categories.chassis, color: 'amber' },
-                            { y: 2800, x: 0, w: 3500, h: 1000, label: t.categories.other, color: 'orange' },
+                            { y: 100, x: 0, w: 6000, h: 400, label: t.categories.general, color: 'sky' },
+                            { y: 500, x: 0, w: 6000, h: 300, label: t.categories.cargo, color: 'blue' },
+                            { y: 800, x: 0, w: 6000, h: 500, label: t.categories.engine, color: 'lime' },
+                            { y: 1300, x: 0, w: 6000, h: 600, label: t.categories.weapon, color: 'red' },
+                            { y: 1900, x: 0, w: 6000, h: 400, label: t.categories.defense, color: 'purple' },
+                            { y: 2300, x: 0, w: 6000, h: 500, label: t.categories.chassis, color: 'amber' },
+                            { y: 2800, x: 0, w: 6000, h: 1200, label: t.categories.other, color: 'orange' },
                         ].map(cluster => (
-                            <div key={cluster.label} className="absolute pointer-events-none" style={{ top: cluster.y - 100, left: 100, width: cluster.w, height: cluster.h }}>
-                                <div className={`absolute inset-0 bg-${cluster.color}-400/[0.03] border-l-4 border-${cluster.color}-400/20 rounded-r-3xl`} />
-                                <span className={`absolute left-6 top-6 text-4xl font-display font-black uppercase tracking-[0.6em] opacity-20 text-${cluster.color}-400 select-none`}>
+                            <div key={cluster.label} className="absolute pointer-events-none" style={{ top: cluster.y, left: 100, width: cluster.w, height: cluster.h }}>
+                                <div className={`absolute inset-0 bg-${cluster.color}-400/[0.02] border-l-4 border-${cluster.color}-400/20 rounded-r-3xl`} />
+                                <span className={`absolute left-6 top-6 text-4xl font-display font-black uppercase tracking-[0.6em] opacity-10 text-${cluster.color}-400 select-none`}>
                                     {cluster.label}
                                 </span>
                             </div>
@@ -258,22 +274,27 @@ export const TechTreeView: React.FC = () => {
                                     const isRelevant = !selectedNode || isPath;
                                     const color = isPath ? '#00ffa3' : (CATEGORY_UI[node.category].border.split('-')[1] === 'red' ? '#ef4444' : '#00C2FF');
 
+                                    // Manhattan style path (Right-angled)
+                                    const midX = reqNode.x + (node.x - reqNode.x) / 2;
+                                    const pathD = `M ${reqNode.x} ${reqNode.y} L ${midX} ${reqNode.y} L ${midX} ${node.y} L ${node.x} ${node.y}`;
+
                                     return (
-                                        <g key={`${node.id} -${reqId} `}>
-                                            <line
-                                                x1={reqNode.x} y1={reqNode.y}
-                                                x2={node.x} y2={node.y}
+                                        <g key={`${node.id}-${reqId}`}>
+                                            <path
+                                                d={pathD}
+                                                fill="none"
                                                 stroke={color}
                                                 strokeWidth={isPath ? "4" : "2"}
                                                 strokeDasharray={isPath ? "none" : "8,8"}
                                                 opacity={isRelevant ? (isPath ? 1 : 0.2) : 0.05}
                                                 style={{ filter: isPath ? 'url(#glow)' : 'none' }}
+                                                className="transition-all duration-500"
                                             />
                                             {isPath && (
                                                 <circle r="4" fill="#00ffa3">
                                                     <animateMotion
-                                                        path={`M ${reqNode.x} ${reqNode.y} L ${node.x} ${node.y} `}
-                                                        dur="1.5s"
+                                                        path={pathD}
+                                                        dur="2s"
                                                         repeatCount="indefinite"
                                                     />
                                                 </circle>
