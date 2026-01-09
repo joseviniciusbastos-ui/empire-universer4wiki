@@ -196,7 +196,7 @@ export const TechTreeView: React.FC = () => {
     const handleMouseDown = (e: React.MouseEvent) => {
         if (e.button !== 0) return;
         setIsDragging(true);
-        setDragStart({ x: e.clientX - position.x, y: e.clientY - dragStart.y });
+        setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
         if ((e.target as HTMLElement) === containerRef.current) {
             setSelectedNode(null);
         }
@@ -324,7 +324,70 @@ export const TechTreeView: React.FC = () => {
                             transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
                         }}
                     >
-                        {/* ... (existing canvas content) ... */}
+                        {/* Connection Lines (SVG) */}
+                        <svg className="absolute top-0 left-0 w-[6000px] h-[4000px] pointer-events-none overflow-visible">
+                            <defs>
+                                <filter id="glow-line" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="2" result="blur" />
+                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                </filter>
+                            </defs>
+                            {TECH_NODES.map(node => {
+                                if (!node.requirements) return null;
+                                return node.requirements.map(reqId => {
+                                    const reqNode = TECH_NODES.find(n => n.id === reqId);
+                                    if (!reqNode) return null;
+
+                                    const isHighlight = (selectedNode && (
+                                        (activeChain.has(node.id) && activeChain.has(reqId)) ||
+                                        (selectedNode.id === reqId && activeUnlocks.some(u => u.id === node.id))
+                                    ));
+
+                                    const isDimmed = selectedNode && !isHighlight;
+                                    if (!showAllConnections && !isHighlight && !selectedNode) return null; // Logic for focus mode
+
+                                    return (
+                                        <g key={`${node.id}-${reqId}`}>
+                                            <path
+                                                d={`M ${reqNode.x} ${reqNode.y} C ${reqNode.x + 100} ${reqNode.y}, ${node.x - 100} ${node.y}, ${node.x} ${node.y}`}
+                                                fill="none"
+                                                className={`transition-all duration-500 ${isHighlight ? 'stroke-space-neon stroke-[3px]' : (isDimmed ? 'stroke-space-steel/10 stroke-[1px]' : 'stroke-space-steel/30 stroke-[1px] dashed')}`}
+                                                strokeDasharray={isHighlight ? "none" : "5,5"}
+                                                filter={isHighlight ? "url(#glow-line)" : undefined}
+                                            />
+                                        </g>
+                                    );
+                                });
+                            })}
+                        </svg>
+
+                        {/* Nodes */}
+                        {filteredNodes.map(node => {
+                            const isSelected = selectedNode?.id === node.id;
+                            const isHovered = hoveredNode?.id === node.id;
+                            const isInPrereqChain = activeChain.has(node.id);
+                            const isUnlock = activeUnlocks.some(n => n.id === node.id);
+                            const isDimmed = selectedNode && !isSelected && !isInPrereqChain && !isUnlock;
+
+                            return (
+                                <TechNodeComponent
+                                    key={node.id}
+                                    node={node}
+                                    language={language}
+                                    isSelected={isSelected}
+                                    isHovered={isHovered}
+                                    isInPrereqChain={isInPrereqChain}
+                                    isUnlock={isUnlock}
+                                    isDimmed={!!isDimmed} // Force boolean
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedNode(node === selectedNode ? null : node);
+                                    }}
+                                    onMouseEnter={() => setHoveredNode(node)}
+                                    onMouseLeave={() => setHoveredNode(null)}
+                                />
+                            );
+                        })}
                     </div>
 
                     {/* Mini-Map */}
