@@ -1,5 +1,5 @@
 import React from 'react';
-import { Book, MessageSquare, Terminal as TerminalIcon, Wrench, LogOut, X, User as UserIcon, BookOpen, LogIn, Shield, AlertTriangle, Pin, PinOff, Cpu, Trophy, Rocket, Globe, Dna } from 'lucide-react';
+import { Book, MessageSquare, Terminal as TerminalIcon, Wrench, LogOut, X, User as UserIcon, BookOpen, LogIn, Shield, AlertTriangle, Pin, PinOff, Cpu, Trophy, Rocket, Globe, Dna, Calculator } from 'lucide-react';
 import { Button } from '../ui/Shared';
 import { User } from '../../types';
 import { supabase } from '../../lib/supabase';
@@ -23,7 +23,8 @@ const STATIC_TEXT: Record<Language, any> = {
         tech: 'ÁRVORE TECH',
         achievements: 'CONQUISTAS',
         races: 'RAÇAS',
-        ship_designer: 'ESTALEIRO'
+        ship_designer: 'ESTALEIRO',
+        calc: 'CALCULADORA'
     },
     en: {
         nav: 'NAVIGATION',
@@ -41,7 +42,8 @@ const STATIC_TEXT: Record<Language, any> = {
         tech: 'TECH TREE',
         achievements: 'ACHIEVEMENTS',
         races: 'RACES',
-        ship_designer: 'SHIPYARD'
+        ship_designer: 'SHIPYARD',
+        calc: 'CALCULATOR'
     },
     fr: {
         nav: 'NAVIGATION',
@@ -59,7 +61,8 @@ const STATIC_TEXT: Record<Language, any> = {
         tech: 'ARBRE TECH',
         achievements: 'SUCCÈS',
         races: 'RACES',
-        ship_designer: 'CHANTIER SPATIAL'
+        ship_designer: 'CHANTIER SPATIAL',
+        calc: 'CALCULATEUR'
     }
 };
 
@@ -131,6 +134,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                             { id: 'forum', icon: <MessageSquare size={20} />, label: t.comms },
                             { id: 'tech-tree', icon: <Cpu size={20} />, label: t.tech },
                             { id: 'races', icon: <Dna size={20} />, label: t.races },
+                            { id: 'mining-calc', icon: <Calculator size={20} />, label: t.calc },
                             { id: 'achievements', icon: <Trophy size={20} />, label: t.achievements }
                         ].map((item) => (
                             <div key={item.id} className="relative">

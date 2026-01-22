@@ -17,6 +17,7 @@ import { MainLayout } from './components/layout/MainLayout';
 import { WikiView } from './components/views/WikiView';
 import { BlogView } from './components/views/BlogView';
 import { ForumView } from './components/views/ForumView';
+import { MiningCalculatorView } from './components/views/MiningCalculatorView';
 import { TechTreeView } from './components/views/TechTreeView';
 import { AchievementsView } from './components/views/AchievementsView';
 import { ProfileView } from './components/views/ProfileView';
@@ -35,7 +36,7 @@ const CATEGORY_KEYS = {
 };
 
 export default function App() {
-  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'profile' | 'admin' | 'post-view' | 'public-profile' | 'tech-tree' | 'achievements' | 'races'>('home');
+  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'profile' | 'admin' | 'post-view' | 'public-profile' | 'tech-tree' | 'achievements' | 'races' | 'mining-calc'>('home');
 
   // App State
   const { currentUser, isLoading: isAuthLoading, refreshProfile } = useAuth();
@@ -503,6 +504,12 @@ export default function App() {
       {view === 'races' && (
         <RestrictedView>
           <RacesView />
+        </RestrictedView>
+      )}
+
+      {view === 'mining-calc' && (
+        <RestrictedView>
+          <MiningCalculatorView />
         </RestrictedView>
       )}
 
