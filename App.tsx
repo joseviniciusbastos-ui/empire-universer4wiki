@@ -17,7 +17,7 @@ import { MainLayout } from './components/layout/MainLayout';
 import { WikiView } from './components/views/WikiView';
 import { BlogView } from './components/views/BlogView';
 import { ForumView } from './components/views/ForumView';
-import { MiningCalculatorView } from './components/views/MiningCalculatorView';
+import { CalculatorsView } from './components/views/CalculatorsView';
 import { TechTreeView } from './components/views/TechTreeView';
 import { AchievementsView } from './components/views/AchievementsView';
 import { ProfileView } from './components/views/ProfileView';
@@ -509,7 +509,7 @@ export default function App() {
 
       {view === 'mining-calc' && (
         <RestrictedView>
-          <MiningCalculatorView />
+          <CalculatorsView />
         </RestrictedView>
       )}
 

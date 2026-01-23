@@ -24,7 +24,7 @@ const STATIC_TEXT: Record<Language, any> = {
         achievements: 'CONQUISTAS',
         races: 'RAÇAS',
         ship_designer: 'ESTALEIRO',
-        calc: 'CALCULADORA'
+        calc: 'FERRAMENTAS'
     },
     en: {
         nav: 'NAVIGATION',
@@ -43,7 +43,7 @@ const STATIC_TEXT: Record<Language, any> = {
         achievements: 'ACHIEVEMENTS',
         races: 'RACES',
         ship_designer: 'SHIPYARD',
-        calc: 'CALCULATOR'
+        calc: 'TOOLS'
     },
     fr: {
         nav: 'NAVIGATION',
@@ -62,7 +62,7 @@ const STATIC_TEXT: Record<Language, any> = {
         achievements: 'SUCCÈS',
         races: 'RACES',
         ship_designer: 'CHANTIER SPATIAL',
-        calc: 'CALCULATEUR'
+        calc: 'CALCULATEURS'
     }
 };
 
