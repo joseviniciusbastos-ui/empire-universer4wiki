@@ -3,8 +3,31 @@ import { Clock, Zap, AlertTriangle, MonitorPlay } from 'lucide-react';
 import { Card, Input, Button } from '../ui/Shared';
 
 export const ResearchCalculator: React.FC = () => {
-    const [baseTimeHours, setBaseTimeHours] = useState<number>(0);
-    const [modifier, setModifier] = useState<number>(0); // Percentage
+    // Helper to load from localStorage
+    const loadStored = (key: string, defaultValue: any) => {
+        const stored = localStorage.getItem('research_calc_data');
+        if (stored) {
+            try {
+                const data = JSON.parse(stored);
+                return data[key] !== undefined ? data[key] : defaultValue;
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+        return defaultValue;
+    };
+
+    const [baseTimeHours, setBaseTimeHours] = useState<number>(() => loadStored('baseTimeHours', 0));
+    const [modifier, setModifier] = useState<number>(() => loadStored('modifier', 0)); // Percentage
+
+    // Persistence Effect
+    useEffect(() => {
+        const data = {
+            baseTimeHours,
+            modifier
+        };
+        localStorage.setItem('research_calc_data', JSON.stringify(data));
+    }, [baseTimeHours, modifier]);
     const [finalTime, setFinalTime] = useState<string>("");
     const [finalTimeHours, setFinalTimeHours] = useState<number>(0);
 

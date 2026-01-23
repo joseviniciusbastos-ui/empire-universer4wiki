@@ -3,15 +3,44 @@ import { Calculator, Clock, Zap, Anchor, Crosshair, Box, TrendingUp, Cpu } from 
 import { Card, Input, Button, Badge } from '../ui/Shared';
 
 export const MiningCalculator: React.FC = () => {
+    // Helper to load from localStorage
+    const loadStored = (key: string, defaultValue: any) => {
+        const stored = localStorage.getItem('mining_calc_data');
+        if (stored) {
+            try {
+                const data = JSON.parse(stored);
+                return data[key] !== undefined ? data[key] : defaultValue;
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+        return defaultValue;
+    };
+
     // Inputs
-    const [resources, setResources] = useState<number>(0);
-    const [modules, setModules] = useState<number>(1);
-    const [logistics, setLogistics] = useState<number>(0);
-    const [strategy, setStrategy] = useState<number>(0); // -15 to +15
-    const [skillLevel, setSkillLevel] = useState<number>(0); // 0 to 10 (I to X)
-    const [asteroidEff, setAsteroidEff] = useState<number>(100);
-    const [optimizerEff, setOptimizerEff] = useState<number>(100);
-    const [extraModifier, setExtraModifier] = useState<number>(0); // New Modifier %
+    const [resources, setResources] = useState<number>(() => loadStored('resources', 0));
+    const [modules, setModules] = useState<number>(() => loadStored('modules', 1));
+    const [logistics, setLogistics] = useState<number>(() => loadStored('logistics', 0));
+    const [strategy, setStrategy] = useState<number>(() => loadStored('strategy', 0)); // -15 to +15
+    const [skillLevel, setSkillLevel] = useState<number>(() => loadStored('skillLevel', 0)); // 0 to 10 (I to X)
+    const [asteroidEff, setAsteroidEff] = useState<number>(() => loadStored('asteroidEff', 100));
+    const [optimizerEff, setOptimizerEff] = useState<number>(() => loadStored('optimizerEff', 100));
+    const [extraModifier, setExtraModifier] = useState<number>(() => loadStored('extraModifier', 0)); // New Modifier %
+
+    // Persistence Effect
+    useEffect(() => {
+        const data = {
+            resources,
+            modules,
+            logistics,
+            strategy,
+            skillLevel,
+            asteroidEff,
+            optimizerEff,
+            extraModifier
+        };
+        localStorage.setItem('mining_calc_data', JSON.stringify(data));
+    }, [resources, modules, logistics, strategy, skillLevel, asteroidEff, optimizerEff, extraModifier]);
 
     // Results
     const [miningRate, setMiningRate] = useState<number>(0);
