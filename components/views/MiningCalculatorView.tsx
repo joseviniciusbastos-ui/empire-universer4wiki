@@ -47,6 +47,7 @@ export const MiningCalculatorView: React.FC = () => {
                             <p><strong className="text-white">4. Estratégia Planetária:</strong> Ajuste o slider conforme sua configuração planetária (-15 a +15). Valores negativos focam em Mineração (+50% bônus).</p>
                             <p><strong className="text-white">5. Skill da Nave:</strong> Selecione o nível do módulo (I a X) para bônus extra.</p>
                             <p><strong className="text-white">6. Eficiência:</strong> Ajuste as porcentagens do asteroide e do otimizador de minério.</p>
+                            <p><strong className="text-white">7. Módulo Extensão:</strong> Adicione bônus (+) ou penalidade (-) percentual de módulos especiais.</p>
                         </div>
                     </div>
                 </div>

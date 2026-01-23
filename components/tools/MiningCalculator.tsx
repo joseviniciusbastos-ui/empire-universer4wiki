@@ -11,6 +11,7 @@ export const MiningCalculator: React.FC = () => {
     const [skillLevel, setSkillLevel] = useState<number>(0); // 0 to 10 (I to X)
     const [asteroidEff, setAsteroidEff] = useState<number>(100);
     const [optimizerEff, setOptimizerEff] = useState<number>(100);
+    const [extraModifier, setExtraModifier] = useState<number>(0); // New Modifier %
 
     // Results
     const [miningRate, setMiningRate] = useState<number>(0);
@@ -32,7 +33,16 @@ export const MiningCalculator: React.FC = () => {
         // Skill Bonus: 1% per level
         const skillBonusPercent = skillLevel;
 
+        // Skill Bonus: 1% per level
+        const skillBonusPercent = skillLevel;
+
         const totalBonusMultiplier = 1 + (logisticsBonusPercent + strategyBonusPercent + skillBonusPercent) / 100;
+
+        // Extra Modifier (Extension Module):
+        // 1 + (Modifier / 100)
+        // If 10% buff -> 1.1x
+        // If -10% debuff -> 0.9x
+        const extraModifierMult = 1 + (extraModifier / 100);
 
         // Multipliers
         const asteroidMult = asteroidEff / 100;
@@ -41,7 +51,10 @@ export const MiningCalculator: React.FC = () => {
         // Final Rate Calculation
         // Rate = 1000 * (1 + SumBonuses) * Modules * AstEff * OptEff
         const ratePerModule = baseRate * totalBonusMultiplier;
-        const totalRate = ratePerModule * modules * asteroidMult * optimizerMult;
+        // Final Rate Calculation
+        // Rate = 1000 * (1 + SumBonuses) * Modules * AstEff * OptEff * ExtraMod
+        const ratePerModule = baseRate * totalBonusMultiplier;
+        const totalRate = ratePerModule * modules * asteroidMult * optimizerMult * extraModifierMult;
 
         setMiningRate(totalRate);
 
@@ -63,7 +76,7 @@ export const MiningCalculator: React.FC = () => {
             setTimeResult("0m");
         }
 
-    }, [resources, modules, logistics, strategy, skillLevel, asteroidEff, optimizerEff]);
+    }, [resources, modules, logistics, strategy, skillLevel, asteroidEff, optimizerEff, extraModifier]);
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
@@ -181,6 +194,25 @@ export const MiningCalculator: React.FC = () => {
                                     value={optimizerEff}
                                     onChange={(e) => setOptimizerEff(Number(e.target.value))}
                                 />
+                            </div>
+
+                            {/* Extra Modifier */}
+                            <div className="space-y-1 pt-2 border-t border-space-steel/30">
+                                <label className="text-xs font-mono text-space-muted flex items-center gap-2">
+                                    <Zap size={14} /> MÓDULO EXTENSÃO (% MOD)
+                                </label>
+                                <div className="flex gap-4 items-center">
+                                    <Input
+                                        type="number"
+                                        value={extraModifier}
+                                        onChange={(e) => setExtraModifier(Number(e.target.value))}
+                                        placeholder="0"
+                                        className={extraModifier > 0 ? 'text-space-neon border-space-neon' : extraModifier < 0 ? 'text-red-500 border-red-500' : ''}
+                                    />
+                                </div>
+                                <div className="text-[10px] font-mono text-space-muted opacity-60">
+                                    Use valores positivos para Bônus e negativos para Penalidade/Debuff.
+                                </div>
                             </div>
                         </div>
                     </Card>
