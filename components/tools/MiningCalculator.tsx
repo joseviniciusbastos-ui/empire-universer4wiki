@@ -30,11 +30,9 @@ export const MiningCalculator: React.FC = () => {
         // e.g. -15 => -(-1) * 0.5 = 0.5 (+50%)
         const strategyBonusPercent = (-strategy / 15) * 0.5 * 100;
 
-        // Skill Bonus: 1% per level
-        const skillBonusPercent = skillLevel;
-
-        // Skill Bonus: 1% per level
-        const skillBonusPercent = skillLevel;
+        // Skill Bonus: Cumulative points (1, 3, 6, 10, 15, 21, 28, 36, 45, 55)
+        // Formula: (n * (n + 1)) / 2
+        const skillBonusPercent = (skillLevel * (skillLevel + 1)) / 2;
 
         const totalBonusMultiplier = 1 + (logisticsBonusPercent + strategyBonusPercent + skillBonusPercent) / 100;
 
@@ -48,9 +46,6 @@ export const MiningCalculator: React.FC = () => {
         const asteroidMult = asteroidEff / 100;
         const optimizerMult = optimizerEff / 100;
 
-        // Final Rate Calculation
-        // Rate = 1000 * (1 + SumBonuses) * Modules * AstEff * OptEff
-        const ratePerModule = baseRate * totalBonusMultiplier;
         // Final Rate Calculation
         // Rate = 1000 * (1 + SumBonuses) * Modules * AstEff * OptEff * ExtraMod
         const ratePerModule = baseRate * totalBonusMultiplier;
@@ -153,7 +148,7 @@ export const MiningCalculator: React.FC = () => {
                             {/* Skill Level Selection */}
                             <div className="space-y-2">
                                 <label className="text-xs font-mono text-space-muted flex items-center gap-2">
-                                    <TrendingUp size={14} /> SKILL DA NAVE (NÍVEL {skillLevel})
+                                    <TrendingUp size={14} /> SKILL DA NAVE (NÍVEL {skillLevel}: +{(skillLevel * (skillLevel + 1)) / 2}%)
                                 </label>
                                 <div className="flex flex-wrap gap-1">
                                     {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(lvl => (
