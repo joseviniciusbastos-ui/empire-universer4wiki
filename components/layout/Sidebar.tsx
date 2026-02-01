@@ -131,22 +131,32 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                             { id: 'ship-designer', icon: <Rocket size={20} />, label: t.ship_designer },
                             { id: 'achievements', icon: <Trophy size={20} />, label: t.achievements },
                             { id: 'tools', icon: <Wrench size={20} />, label: t.engineering }
-                        ].map((item) => (
-                            <Button
-                                key={item.id}
-                                variant={view === item.id ? 'primary' : 'ghost'}
-                                className={`w-full mb-1 flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
-                                onClick={() => setView(item.id)}
-                                title={!isExpanded ? item.label : ''}
-                            >
-                                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                                    {item.icon}
-                                </div>
-                                <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
-                                    {item.label}
-                                </span>
-                            </Button>
-                        ))}
+                        ].map((item) => {
+                            const handleClick = () => {
+                                setView(item.id);
+                                // Auto-close sidebar on mobile after navigation
+                                if (window.innerWidth < 768) {
+                                    setIsOpen(false);
+                                }
+                            };
+
+                            return (
+                                <Button
+                                    key={item.id}
+                                    variant={view === item.id ? 'primary' : 'ghost'}
+                                    className={`w-full mb-1 flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
+                                    onClick={handleClick}
+                                    title={!isExpanded ? item.label : ''}
+                                >
+                                    <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                                        {item.icon}
+                                    </div>
+                                    <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
+                                        {item.label}
+                                    </span>
+                                </Button>
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -159,7 +169,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                             <Button
                                 variant={view === 'profile' ? 'primary' : 'ghost'}
                                 className={`w-full mb-1 flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
-                                onClick={() => setView('profile')}
+                                onClick={() => {
+                                    setView('profile');
+                                    if (window.innerWidth < 768) setIsOpen(false);
+                                }}
                                 title={!isExpanded ? `PERFIL: ${currentUser.username.toUpperCase()}` : ''}
                             >
                                 <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
@@ -174,7 +187,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                                 <Button
                                     variant={view === 'admin' ? 'primary' : 'ghost'}
                                     className={`w-full mb-1 text-space-neon flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
-                                    onClick={() => setView('admin')}
+                                    onClick={() => {
+                                        setView('admin');
+                                        if (window.innerWidth < 768) setIsOpen(false);
+                                    }}
                                     title={!isExpanded ? 'COMANDO' : ''}
                                 >
                                     <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">

@@ -65,6 +65,9 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onClick, currentUser, 
                             <img
                                 src={coverImageUrl}
                                 alt={post.title}
+                                loading="lazy"
+                                width="128"
+                                height="128"
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0"
                             />
                             <div className="absolute inset-0 bg-space-neon/10 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -119,6 +122,9 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onClick, currentUser, 
                         <img
                             src={coverImageUrl}
                             alt={post.title}
+                            loading="lazy"
+                            width="160"
+                            height="160"
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity" />

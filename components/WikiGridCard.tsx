@@ -44,6 +44,9 @@ export const WikiGridCard: React.FC<WikiGridCardProps> = ({ post, onClick, curre
                 <img
                     src={coverImage}
                     alt={post.title}
+                    loading="lazy"
+                    width="320"
+                    height="160"
                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700 ease-out"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-space-black/80 to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />

@@ -50,6 +50,86 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
     const [policyModifiers, setPolicyModifiers] = useState<any>({});
     const [showWelcome, setShowWelcome] = useState(true);
 
+    // Admin Enhancement State
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filterCategory, setFilterCategory] = useState<string>("all");
+    const [filterType, setFilterType] = useState<string>("all");
+
+    // SHIP TEMPLATES
+    const SHIP_TEMPLATES = {
+        fighter: {
+            name: "Caça Interceptor",
+            category: "fighter",
+            description: "Caça leve e ágil, ideal para patrulhas e combate rápido.",
+            base_stats: { hull: 150, shield: 75, speed: 200, cargo: 10, energy_production: 100, energy_consumption: 0 },
+            slots_layout: [{ type: "engine", count: 1 }, { type: "weapon", count: 2 }, { type: "shield", count: 1 }],
+            base_cost: { metal: 2000, crystal: 1000, deuterium: 200 },
+            base_build_time: 300
+        },
+        corvette: {
+            name: "Corveta de Patrulha",
+            category: "corvette",
+            description: "Nave de patrulha balanceada com boa versatilidade.",
+            base_stats: { hull: 300, shield: 150, speed: 150, cargo: 50, energy_production: 150, energy_consumption: 0 },
+            slots_layout: [{ type: "engine", count: 1 }, { type: "weapon", count: 3 }, { type: "shield", count: 2 }, { type: "armor", count: 1 }],
+            base_cost: { metal: 5000, crystal: 2500, deuterium: 500 },
+            base_build_time: 600
+        },
+        frigate: {
+            name: "Fragata de Combate",
+            category: "frigate",
+            description: "Nave de combate média com múltiplos sistemas.",
+            base_stats: { hull: 600, shield: 300, speed: 120, cargo: 100, energy_production: 200, energy_consumption: 0 },
+            slots_layout: [{ type: "engine", count: 2 }, { type: "weapon", count: 4 }, { type: "shield", count: 2 }, { type: "armor", count: 2 }],
+            base_cost: { metal: 10000, crystal: 5000, deuterium: 1000 },
+            base_build_time: 1200
+        },
+        cruiser: {
+            name: "Cruzador Pesado",
+            category: "cruiser",
+            description: "Cruzador de grande porte com alta capacidade de combate.",
+            base_stats: { hull: 1200, shield: 600, speed: 90, cargo: 200, energy_production: 300, energy_consumption: 0 },
+            slots_layout: [{ type: "engine", count: 2 }, { type: "weapon", count: 6 }, { type: "shield", count: 3 }, { type: "armor", count: 3 }],
+            base_cost: { metal: 25000, crystal: 12500, deuterium: 2500 },
+            base_build_time: 2400
+        },
+        transport: {
+            name: "Transporte de Carga",
+            category: "transport",
+            description: "Nave especializada em transporte de recursos.",
+            base_stats: { hull: 400, shield: 100, speed: 80, cargo: 1000, energy_production: 120, energy_consumption: 0 },
+            slots_layout: [{ type: "engine", count: 1 }, { type: "cargo", count: 4 }, { type: "shield", count: 1 }],
+            base_cost: { metal: 8000, crystal: 4000, deuterium: 800 },
+            base_build_time: 900
+        },
+        mining: {
+            name: "Nave de Mineração",
+            category: "mining",
+            description: "Nave equipada para extração eficiente de recursos.",
+            base_stats: { hull: 350, shield: 120, speed: 70, cargo: 500, energy_production: 150, energy_consumption: 0 },
+            slots_layout: [{ type: "engine", count: 1 }, { type: "mining", count: 3 }, { type: "cargo", count: 2 }, { type: "shield", count: 1 }],
+            base_cost: { metal: 12000, crystal: 6000, deuterium: 1200 },
+            base_build_time: 1500
+        }
+    };
+
+    // MODULE TEMPLATES
+    const MODULE_TEMPLATES = {
+        engine_basic: { name: "Propulsor Iônico Mk-I", type: "engine", description: "Motor de propulsão básico.", level: 1, stats_modifier: { speed: 50, energy_consumption: 20 }, cost: { metal: 500, crystal: 300, deuterium: 50 } },
+        engine_advanced: { name: "Propulsor Iônico Mk-II", type: "engine", description: "Motor de propulsão avançado.", level: 3, stats_modifier: { speed: 100, energy_consumption: 35 }, cost: { metal: 1500, crystal: 900, deuterium: 150 } },
+        engine_elite: { name: "Propulsor Quântico", type: "engine", description: "Motor de última geração.", level: 5, stats_modifier: { speed: 200, energy_consumption: 50 }, cost: { metal: 5000, crystal: 3000, deuterium: 500 } },
+        weapon_laser: { name: "Canhão Laser Mk-I", type: "weapon", description: "Arma laser básica.", level: 1, stats_modifier: { attack: 25, energy_consumption: 15 }, cost: { metal: 800, crystal: 400, deuterium: 100 } },
+        weapon_plasma: { name: "Canhão de Plasma", type: "weapon", description: "Arma de plasma avançada.", level: 3, stats_modifier: { attack: 60, energy_consumption: 30 }, cost: { metal: 2500, crystal: 1500, deuterium: 300 } },
+        weapon_railgun: { name: "Railgun Magnético", type: "weapon", description: "Arma cinética de alto poder.", level: 5, stats_modifier: { attack: 120, energy_consumption: 45 }, cost: { metal: 6000, crystal: 3500, deuterium: 700 } },
+        shield_light: { name: "Escudo Deflector Leve", type: "shield", description: "Proteção energética básica.", level: 1, stats_modifier: { shield: 50, energy_consumption: 10 }, cost: { metal: 600, crystal: 500, deuterium: 80 } },
+        shield_medium: { name: "Escudo Deflector Médio", type: "shield", description: "Proteção energética moderada.", level: 3, stats_modifier: { shield: 120, energy_consumption: 20 }, cost: { metal: 1800, crystal: 1500, deuterium: 240 } },
+        shield_heavy: { name: "Escudo Deflector Pesado", type: "shield", description: "Proteção energética máxima.", level: 5, stats_modifier: { shield: 250, energy_consumption: 35 }, cost: { metal: 5000, crystal: 4000, deuterium: 600 } },
+        armor_reactive: { name: "Blindagem Reativa", type: "armor", description: "Proteção física adaptativa.", level: 2, stats_modifier: { hull: 100 }, cost: { metal: 1200, crystal: 400, deuterium: 0 } },
+        armor_composite: { name: "Blindagem Composta", type: "armor", description: "Proteção multicamada avançada.", level: 4, stats_modifier: { hull: 250 }, cost: { metal: 3500, crystal: 1200, deuterium: 0 } },
+        cargo_bay: { name: "Compartimento de Carga", type: "cargo", description: "Expansão de capacidade de carga.", level: 1, stats_modifier: { cargo: 200 }, cost: { metal: 1000, crystal: 200, deuterium: 0 } },
+        mining_drill: { name: "Broca de Mineração", type: "mining", description: "Equipamento de extração de recursos.", level: 2, stats_modifier: { mining_efficiency: 1.5 }, cost: { metal: 2000, crystal: 1000, deuterium: 300 } }
+    };
+
     useEffect(() => {
         if (selectedShip) {
             // Initialize slots based on ship layout
@@ -267,6 +347,84 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
             showToast("Erro: " + error.message, "error");
         }
     };
+
+    // --- TEMPLATE & CLONE FUNCTIONS ---
+    const applyShipTemplate = (templateKey: keyof typeof SHIP_TEMPLATES, formRef: any) => {
+        const template = SHIP_TEMPLATES[templateKey];
+        if (formRef.current) {
+            formRef.current.name.value = template.name;
+            formRef.current.description.value = template.description;
+            formRef.current.category.value = template.category;
+            formRef.current.base_stats.value = JSON.stringify(template.base_stats, null, 2);
+            formRef.current.slots_layout.value = JSON.stringify(template.slots_layout, null, 2);
+            formRef.current.base_cost.value = JSON.stringify(template.base_cost, null, 2);
+            formRef.current.base_build_time.value = template.base_build_time;
+        }
+        showToast(`Template "${template.name}" aplicado!`, "success");
+    };
+
+    const applyModuleTemplate = (templateKey: keyof typeof MODULE_TEMPLATES, formRef: any) => {
+        const template = MODULE_TEMPLATES[templateKey];
+        if (formRef.current) {
+            formRef.current.name.value = template.name;
+            formRef.current.type.value = template.type;
+            formRef.current.description.value = template.description;
+            formRef.current.level.value = template.level;
+            formRef.current.stats_modifier.value = JSON.stringify(template.stats_modifier, null, 2);
+            formRef.current.cost.value = JSON.stringify(template.cost, null, 2);
+        }
+        showToast(`Template "${template.name}" aplicado!`, "success");
+    };
+
+    const cloneShip = (ship: any, formRef: any) => {
+        if (formRef.current) {
+            formRef.current.name.value = ship.name + " (Cópia)";
+            formRef.current.description.value = ship.description;
+            formRef.current.category.value = ship.category;
+            formRef.current.image_url.value = ship.image_url || "";
+            formRef.current.base_stats.value = JSON.stringify(ship.base_stats, null, 2);
+            formRef.current.slots_layout.value = JSON.stringify(ship.slots_layout, null, 2);
+            formRef.current.base_cost.value = JSON.stringify(ship.base_cost, null, 2);
+            formRef.current.base_build_time.value = ship.base_build_time;
+        }
+        showToast("Nave clonada! Ajuste o nome e salve.", "info");
+        // Scroll to form
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const cloneModule = (module: any, formRef: any) => {
+        if (formRef.current) {
+            formRef.current.name.value = module.name + " (Cópia)";
+            formRef.current.type.value = module.type;
+            formRef.current.description.value = module.description;
+            formRef.current.level.value = module.level;
+            formRef.current.stats_modifier.value = JSON.stringify(module.stats_modifier, null, 2);
+            formRef.current.cost.value = JSON.stringify(module.cost, null, 2);
+            formRef.current.image_url.value = module.image_url || "";
+        }
+        showToast("Módulo clonado! Ajuste o nome e salve.", "info");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // --- FILTER FUNCTIONS ---
+    const getFilteredShips = () => {
+        return ships.filter(ship => {
+            const matchesSearch = ship.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                ship.description?.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesCategory = filterCategory === "all" || ship.category === filterCategory;
+            return matchesSearch && matchesCategory;
+        });
+    };
+
+    const getFilteredModules = () => {
+        return modules.filter(module => {
+            const matchesSearch = module.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                module.description?.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesType = filterType === "all" || module.type === filterType;
+            return matchesSearch && matchesType;
+        });
+    };
+
 
     // Helper for JSON inputs
     const JsonInput = ({ value, onChange, placeholder }: { value: any, onChange: (v: any) => void, placeholder?: string }) => {
@@ -495,106 +653,290 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
                         )}
                     </div>
                 </>
-            ) : viewMode === 'admin-ships' ? (
+            ) : viewMode === 'admin-ships' ? (() => {
                 /* ADMIN: SHIPS MANAGEMENT */
-                <div className="space-y-6">
-                    <Card title="Adicionar Nova Nave">
-                        <form onSubmit={(e) => {
-                            e.preventDefault();
-                            const form = e.target as any;
-                            const data = {
-                                name: form.name.value,
-                                description: form.description.value,
-                                category: form.category.value,
-                                image_url: form.image_url.value,
-                                base_stats: JSON.parse(form.base_stats.value || '{}'),
-                                slots_layout: JSON.parse(form.slots_layout.value || '[]'),
-                                base_cost: JSON.parse(form.base_cost.value || '{}'),
-                                base_build_time: parseInt(form.base_build_time.value)
-                            };
-                            createItem('ships', data, fetchInitialData);
-                            form.reset();
-                        }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Input name="name" placeholder="Nome da Nave" required />
-                            <select name="category" className="bg-space-black border border-space-steel rounded p-2 text-white">
-                                <option value="fighter">Caça (Fighter)</option>
+                const shipFormRef = React.useRef<any>(null);
+                const filteredShips = getFilteredShips();
+
+                return (
+                    <div className="space-y-6">
+                        {/* TEMPLATES SECTION */}
+                        <Card title="🚀 Templates Rápidos de Naves">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                                {Object.entries(SHIP_TEMPLATES).map(([key, template]) => (
+                                    <Button
+                                        key={key}
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => applyShipTemplate(key as keyof typeof SHIP_TEMPLATES, shipFormRef)}
+                                        className="flex flex-col items-center gap-1 h-auto py-3"
+                                    >
+                                        <Rocket size={20} className="text-space-neon" />
+                                        <span className="text-[10px] text-center">{template.name}</span>
+                                        <Badge className="text-[8px] mt-1">{template.category}</Badge>
+                                    </Button>
+                                ))}
+                            </div>
+                        </Card>
+
+                        {/* CREATE FORM */}
+                        <Card title="Adicionar Nova Nave">
+                            <form ref={shipFormRef} onSubmit={(e) => {
+                                e.preventDefault();
+                                const form = e.target as any;
+                                try {
+                                    const data = {
+                                        name: form.name.value,
+                                        description: form.description.value,
+                                        category: form.category.value,
+                                        image_url: form.image_url.value,
+                                        base_stats: JSON.parse(form.base_stats.value || '{}'),
+                                        slots_layout: JSON.parse(form.slots_layout.value || '[]'),
+                                        base_cost: JSON.parse(form.base_cost.value || '{}'),
+                                        base_build_time: parseInt(form.base_build_time.value)
+                                    };
+
+                                    // Validation
+                                    if (!data.base_stats.hull || data.base_stats.hull <= 0) {
+                                        showToast("Hull deve ser maior que 0", "error");
+                                        return;
+                                    }
+                                    if (!data.slots_layout || data.slots_layout.length === 0) {
+                                        showToast("Nave deve ter pelo menos 1 slot", "error");
+                                        return;
+                                    }
+
+                                    createItem('ships', data, fetchInitialData);
+                                    form.reset();
+                                } catch (err: any) {
+                                    showToast("Erro no JSON: " + err.message, "error");
+                                }
+                            }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Input name="name" placeholder="Nome da Nave" required />
+                                <select name="category" className="bg-space-black border border-space-steel rounded p-2 text-white">
+                                    <option value="fighter">Caça (Fighter)</option>
+                                    <option value="corvette">Corveta</option>
+                                    <option value="frigate">Fragata</option>
+                                    <option value="destroyer">Destroyer</option>
+                                    <option value="cruiser">Cruzador</option>
+                                    <option value="battleship">Couraçado</option>
+                                    <option value="capital">Capital</option>
+                                    <option value="transport">Transporte</option>
+                                    <option value="mining">Mineração</option>
+                                </select>
+                                <Input name="image_url" placeholder="URL da Imagem" />
+                                <Input name="base_build_time" type="number" placeholder="Tempo de Construção (segundos)" required />
+                                <div className="col-span-2">
+                                    <Input name="description" placeholder="Descrição" />
+                                </div>
+
+                                <div className="col-span-2 md:col-span-1">
+                                    <label className="text-xs text-space-neon mb-1 block">Stats Base (JSON)</label>
+                                    <textarea
+                                        name="base_stats"
+                                        className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24"
+                                        defaultValue='{"hull": 100, "shield": 50, "speed": 100, "cargo": 0, "energy_production": 100, "energy_consumption": 0}'
+                                    />
+                                </div>
+                                <div className="col-span-2 md:col-span-1">
+                                    <label className="text-xs text-space-neon mb-1 block">Slots Layout (JSON)</label>
+                                    <textarea
+                                        name="slots_layout"
+                                        className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24"
+                                        defaultValue='[{"type":"engine", "count": 1}, {"type":"weapon", "count": 2}]'
+                                    />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="text-xs text-space-neon mb-1 block">Custo Base (JSON)</label>
+                                    <textarea
+                                        name="base_cost"
+                                        className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-16"
+                                        defaultValue='{"metal": 1000, "crystal": 500, "deuterium": 100}'
+                                    />
+                                </div>
+
+                                <div className="col-span-2">
+                                    <Button type="submit" variant="primary" className="w-full">CRIAR NAVE</Button>
+                                </div>
+                            </form>
+                        </Card>
+
+                        {/* SEARCH AND FILTERS */}
+                        <div className="flex gap-4 items-center bg-space-dark/30 p-4 rounded-lg border border-space-steel">
+                            <Input
+                                placeholder="🔍 Buscar naves..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="flex-1"
+                            />
+                            <select
+                                value={filterCategory}
+                                onChange={(e) => setFilterCategory(e.target.value)}
+                                className="bg-space-black border border-space-steel rounded p-2 text-white text-sm"
+                            >
+                                <option value="all">Todas Categorias</option>
+                                <option value="fighter">Caça</option>
                                 <option value="corvette">Corveta</option>
                                 <option value="frigate">Fragata</option>
-                                <option value="destroyer">Destroyer</option>
                                 <option value="cruiser">Cruzador</option>
-                                <option value="battleship">Couraçado</option>
-                                <option value="capital">Capital</option>
                                 <option value="transport">Transporte</option>
                                 <option value="mining">Mineração</option>
                             </select>
-                            <Input name="image_url" placeholder="URL da Imagem" />
-                            <Input name="base_build_time" type="number" placeholder="Tempo de Construção (segundos)" required />
-                            <div className="col-span-2">
-                                <Input name="description" placeholder="Descrição" />
-                            </div>
+                            <Badge className="bg-space-neon/20 text-space-neon">
+                                {filteredShips.length} naves
+                            </Badge>
+                        </div>
 
-                            <div className="col-span-2 md:col-span-1">
-                                <label className="text-xs text-space-neon mb-1 block">Stats Base (JSON)</label>
-                                <textarea name="base_stats" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24" defaultValue='{"hull": 100, "shield": 50, "speed": 100, "cargo": 0}' />
-                            </div>
-                            <div className="col-span-2 md:col-span-1">
-                                <label className="text-xs text-space-neon mb-1 block">Slots Layout (JSON)</label>
-                                <textarea name="slots_layout" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24" defaultValue='[{"type":"engine", "count": 1}, {"type":"weapon", "count": 2}]' />
-                            </div>
-                            <div className="col-span-2">
-                                <label className="text-xs text-space-neon mb-1 block">Custo Base (JSON)</label>
-                                <textarea name="base_cost" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-16" defaultValue='{"metal": 1000, "crystal": 500, "deuterium": 100}' />
-                            </div>
-
-                            <div className="col-span-2">
-                                <Button type="submit" variant="primary" className="w-full">CRIAR NAVE</Button>
-                            </div>
-                        </form>
-                    </Card>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {ships.map(ship => (
-                            <div key={ship.id} className="border border-space-steel bg-space-dark/50 p-4 rounded relative group">
-                                <button onClick={() => deleteItem('ships', ship.id, fetchInitialData)} className="absolute top-2 right-2 text-space-alert opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
-                                <div className="flex items-center gap-3 mb-2">
-                                    <div className="w-12 h-12 bg-space-black rounded border border-space-steel overflow-hidden flex items-center justify-center">
-                                        {ship.image_url ? <img src={ship.image_url} className="w-full h-full object-cover" /> : <Rocket size={20} className="text-space-muted" />}
+                        {/* SHIPS LIST */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {filteredShips.map(ship => (
+                                <div key={ship.id} className="border border-space-steel bg-space-dark/50 p-4 rounded relative group hover:border-space-neon transition-all">
+                                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => cloneShip(ship, shipFormRef)}
+                                            className="p-1.5 text-space-neon hover:bg-space-neon/20 rounded"
+                                            title="Clonar"
+                                        >
+                                            <Plus size={14} />
+                                        </button>
+                                        <button
+                                            onClick={() => deleteItem('ships', ship.id, fetchInitialData)}
+                                            className="p-1.5 text-space-alert hover:bg-space-alert/20 rounded"
+                                            title="Deletar"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
                                     </div>
-                                    <div>
-                                        <h4 className="font-bold text-white">{ship.name}</h4>
-                                        <Badge>{ship.category}</Badge>
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="w-12 h-12 bg-space-black rounded border border-space-steel overflow-hidden flex items-center justify-center">
+                                            {ship.image_url ? <img src={ship.image_url} className="w-full h-full object-cover" /> : <Rocket size={20} className="text-space-muted" />}
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="font-bold text-white">{ship.name}</h4>
+                                            <Badge>{ship.category}</Badge>
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] text-space-muted mb-2 line-clamp-2">{ship.description}</p>
+                                    <div className="grid grid-cols-2 gap-2 text-[10px] font-mono text-space-muted">
+                                        {Object.entries(ship.base_stats).slice(0, 4).map(([k, v]) => (
+                                            <div key={k}>{k.toUpperCase()}: <span className="text-white">{String(v)}</span></div>
+                                        ))}
+                                    </div>
+                                    <div className="mt-2 text-[10px] text-space-neon">
+                                        {ship.slots_layout.length} slots
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 text-[10px] font-mono text-space-muted mt-2">
-                                    {Object.entries(ship.base_stats).slice(0, 4).map(([k, v]) => (
-                                        <div key={k}>{k.toUpperCase()}: <span className="text-white">{String(v)}</span></div>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
-            ) : viewMode === 'admin-modules' ? (
+                );
+            })() : viewMode === 'admin-modules' ? (() => {
                 /* ADMIN: MODULES MANAGEMENT */
-                <div className="space-y-6">
-                    <Card title="Adicionar Novo Módulo">
-                        <form onSubmit={(e) => {
-                            e.preventDefault();
-                            const form = e.target as any;
-                            const data = {
-                                name: form.name.value,
-                                type: form.type.value,
-                                description: form.description.value,
-                                level: parseInt(form.level.value),
-                                stats_modifier: JSON.parse(form.stats_modifier.value || '{}'),
-                                cost: JSON.parse(form.cost.value || '{}'),
-                                image_url: form.image_url.value
-                            };
-                            createItem('ship_modules', data, fetchInitialData);
-                            form.reset();
-                        }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Input name="name" placeholder="Nome do Módulo" required />
-                            <select name="type" className="bg-space-black border border-space-steel rounded p-2 text-white">
+                const moduleFormRef = React.useRef<any>(null);
+                const filteredModules = getFilteredModules();
+
+                return (
+                    <div className="space-y-6">
+                        {/* TEMPLATES SECTION */}
+                        <Card title="⚙️ Templates Rápidos de Módulos">
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                                {Object.entries(MODULE_TEMPLATES).slice(0, 12).map(([key, template]) => (
+                                    <Button
+                                        key={key}
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => applyModuleTemplate(key as keyof typeof MODULE_TEMPLATES, moduleFormRef)}
+                                        className="flex flex-col items-center gap-1 h-auto py-3"
+                                    >
+                                        <Cpu size={16} className="text-space-neon" />
+                                        <span className="text-[9px] text-center line-clamp-2">{template.name}</span>
+                                        <Badge className="text-[7px] mt-1">Lvl {template.level}</Badge>
+                                    </Button>
+                                ))}
+                            </div>
+                        </Card>
+
+                        {/* CREATE FORM */}
+                        <Card title="Adicionar Novo Módulo">
+                            <form ref={moduleFormRef} onSubmit={(e) => {
+                                e.preventDefault();
+                                const form = e.target as any;
+                                try {
+                                    const data = {
+                                        name: form.name.value,
+                                        type: form.type.value,
+                                        description: form.description.value,
+                                        level: parseInt(form.level.value),
+                                        stats_modifier: JSON.parse(form.stats_modifier.value || '{}'),
+                                        cost: JSON.parse(form.cost.value || '{}'),
+                                        image_url: form.image_url.value
+                                    };
+
+                                    // Validation
+                                    if (data.level < 1) {
+                                        showToast("Nível deve ser pelo menos 1", "error");
+                                        return;
+                                    }
+
+                                    createItem('ship_modules', data, fetchInitialData);
+                                    form.reset();
+                                } catch (err: any) {
+                                    showToast("Erro no JSON: " + err.message, "error");
+                                }
+                            }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Input name="name" placeholder="Nome do Módulo" required />
+                                <select name="type" className="bg-space-black border border-space-steel rounded p-2 text-white">
+                                    <option value="engine">Motor</option>
+                                    <option value="weapon">Arma</option>
+                                    <option value="shield">Escudo</option>
+                                    <option value="armor">Blindagem</option>
+                                    <option value="cargo">Carga</option>
+                                    <option value="mining">Mineração</option>
+                                    <option value="special">Especial</option>
+                                </select>
+                                <Input name="level" type="number" placeholder="Nível / Tech Level" defaultValue="1" />
+                                <Input name="image_url" placeholder="URL da Imagem Ícone" />
+                                <div className="col-span-2">
+                                    <Input name="description" placeholder="Descrição" />
+                                </div>
+
+                                <div className="col-span-2 md:col-span-1">
+                                    <label className="text-xs text-space-neon mb-1 block">Modificadores (JSON)</label>
+                                    <textarea
+                                        name="stats_modifier"
+                                        className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24"
+                                        defaultValue='{"speed": 50, "energy_consumption": 20}'
+                                    />
+                                </div>
+                                <div className="col-span-2 md:col-span-1">
+                                    <label className="text-xs text-space-neon mb-1 block">Custo (JSON)</label>
+                                    <textarea
+                                        name="cost"
+                                        className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24"
+                                        defaultValue='{"metal": 500, "crystal": 300, "deuterium": 50}'
+                                    />
+                                </div>
+
+                                <div className="col-span-2">
+                                    <Button type="submit" variant="primary" className="w-full">CRIAR MÓDULO</Button>
+                                </div>
+                            </form>
+                        </Card>
+
+                        {/* SEARCH AND FILTERS */}
+                        <div className="flex gap-4 items-center bg-space-dark/30 p-4 rounded-lg border border-space-steel">
+                            <Input
+                                placeholder="🔍 Buscar módulos..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="flex-1"
+                            />
+                            <select
+                                value={filterType}
+                                onChange={(e) => setFilterType(e.target.value)}
+                                className="bg-space-black border border-space-steel rounded p-2 text-white text-sm"
+                            >
+                                <option value="all">Todos Tipos</option>
                                 <option value="engine">Motor</option>
                                 <option value="weapon">Arma</option>
                                 <option value="shield">Escudo</option>
@@ -603,44 +945,46 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
                                 <option value="mining">Mineração</option>
                                 <option value="special">Especial</option>
                             </select>
-                            <Input name="level" type="number" placeholder="Nível / Tech Level" defaultValue="1" />
-                            <Input name="image_url" placeholder="URL da Imagem Icone" />
-                            <div className="col-span-2">
-                                <Input name="description" placeholder="Descrição" />
-                            </div>
+                            <Badge className="bg-space-neon/20 text-space-neon">
+                                {filteredModules.length} módulos
+                            </Badge>
+                        </div>
 
-                            <div className="col-span-2 md:col-span-1">
-                                <label className="text-xs text-space-neon mb-1 block">Modificadores (JSON)</label>
-                                <textarea name="stats_modifier" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24" defaultValue='{"speed_add": 10, "energy_consumption": 5}' />
-                            </div>
-                            <div className="col-span-2 md:col-span-1">
-                                <label className="text-xs text-space-neon mb-1 block">Custo (JSON)</label>
-                                <textarea name="cost" className="w-full bg-space-black border border-space-steel rounded p-2 font-mono text-xs h-24" defaultValue='{"metal": 500, "crystal": 200}' />
-                            </div>
-
-                            <div className="col-span-2">
-                                <Button type="submit" variant="primary" className="w-full">CRIAR MÓDULO</Button>
-                            </div>
-                        </form>
-                    </Card>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {modules.map(mod => (
-                            <div key={mod.id} className="border border-space-steel bg-space-dark/50 p-3 rounded relative group flex flex-col gap-2">
-                                <button onClick={() => deleteItem('ship_modules', mod.id, fetchInitialData)} className="absolute top-2 right-2 text-space-alert opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={14} /></button>
-                                <div className="flex items-center gap-2">
-                                    <Badge color="bg-blue-900/50 text-blue-300">{mod.type}</Badge>
+                        {/* MODULES LIST */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {filteredModules.map(mod => (
+                                <div key={mod.id} className="border border-space-steel bg-space-dark/50 p-3 rounded relative group flex flex-col gap-2 hover:border-space-neon transition-all">
+                                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => cloneModule(mod, moduleFormRef)}
+                                            className="p-1 text-space-neon hover:bg-space-neon/20 rounded"
+                                            title="Clonar"
+                                        >
+                                            <Plus size={12} />
+                                        </button>
+                                        <button
+                                            onClick={() => deleteItem('ship_modules', mod.id, fetchInitialData)}
+                                            className="p-1 text-space-alert hover:bg-space-alert/20 rounded"
+                                            title="Deletar"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Badge color="bg-blue-900/50 text-blue-300">{mod.type}</Badge>
+                                        <Badge className="text-[8px]">Lvl {mod.level}</Badge>
+                                    </div>
                                     <span className="font-bold text-white text-sm">{mod.name}</span>
+                                    <p className="text-[10px] text-space-muted line-clamp-2">{mod.description}</p>
+                                    <div className="text-[9px] font-mono bg-space-black p-1 rounded">
+                                        {JSON.stringify(mod.stats_modifier).slice(0, 40)}...
+                                    </div>
                                 </div>
-                                <p className="text-[10px] text-space-muted">{mod.description}</p>
-                                <div className="text-[10px] font-mono bg-space-black p-1 rounded">
-                                    {JSON.stringify(mod.stats_modifier).slice(0, 50)}...
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
-            ) : viewMode === 'admin-policies' ? (
+                );
+            })() : viewMode === 'admin-policies' ? (
                 /* ADMIN: POLICIES MANAGEMENT */
                 <div className="space-y-6">
                     <Card title="Gerenciar Políticas & Bônus">
@@ -901,6 +1245,6 @@ export function ShipDesignerView({ currentUser }: ShipDesignerViewProps) {
                     </div>
                 </div>
             )}
-        </div>
+        </div >
     );
 }
