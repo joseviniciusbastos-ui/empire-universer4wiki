@@ -2,14 +2,16 @@ import React from 'react';
 import { Search, Menu, Terminal as TerminalIcon } from 'lucide-react';
 import NotificationsMenu from '../NotificationsMenu';
 import { User } from '../../types';
+import { GameClock } from '../ui/GameClock';
 
 interface HeaderProps {
     onToggleSidebar: () => void;
     onToggleTerminal: () => void;
     currentUser: User | null;
+    setView: (view: string) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, onToggleTerminal, currentUser }) => {
+export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, onToggleTerminal, currentUser, setView }) => {
     return (
         <header className="h-16 border-b border-space-steel bg-space-dark/80 backdrop-blur-md flex justify-between items-center px-6 sticky top-0 z-40">
             <div className="flex items-center gap-4 md:hidden">
@@ -29,7 +31,13 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, onToggleTermina
                     <TerminalIcon size={20} />
                 </button>
 
-                <NotificationsMenu currentUser={currentUser} />
+                <div className="hidden sm:block border-l border-space-steel h-8 mx-2" />
+
+                <GameClock className="hidden md:flex" />
+
+                <div className="hidden md:block border-l border-space-steel h-8 mx-2" />
+
+                <NotificationsMenu currentUser={currentUser} setView={setView} />
 
                 {currentUser && (
                     <div className="w-8 h-8 rounded border border-space-neon overflow-hidden">

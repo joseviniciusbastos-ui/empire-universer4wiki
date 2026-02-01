@@ -6,7 +6,7 @@ import Terminal from '../Terminal';
 
 interface MainLayoutProps {
     children: React.ReactNode;
-    view: string;
+    view: 'home' | 'wiki' | 'articles' | 'forum' | 'profile' | 'admin' | 'post-view' | 'public-profile' | 'tech-tree' | 'achievements' | 'races';
     setView: (view: string) => void;
     currentUser: User | null;
     onLoginClick: () => void;
@@ -22,11 +22,27 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     onFeedbackClick
 }) => {
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
-    const [isSidebarPinned, setIsSidebarPinned] = React.useState(false);
+    // Initialize from localStorage, default to false if not set
+    const [isSidebarPinned, setIsSidebarPinned] = React.useState(() => {
+        const saved = localStorage.getItem('sidebar_pinned');
+        return saved === 'true';
+    });
     const [isTerminalOpen, setIsTerminalOpen] = React.useState(false);
 
+    // Persist pinned state
+    React.useEffect(() => {
+        localStorage.setItem('sidebar_pinned', isSidebarPinned.toString());
+    }, [isSidebarPinned]);
+
     return (
-        <div className="min-h-screen bg-space-black text-space-text font-sans selection:bg-space-neon selection:text-black flex flex-col md:flex-row">
+        <div className="min-h-screen bg-space-black text-space-text font-sans selection:bg-space-neon selection:text-black flex flex-col md:flex-row relative overflow-hidden">
+            {/* Background Stars */}
+            <div className="stars-container">
+                <div id="stars"></div>
+                <div id="stars2"></div>
+                <div id="stars3"></div>
+            </div>
+
             {/* Terminal Overlay */}
             <Terminal isOpen={isTerminalOpen} onClose={() => setIsTerminalOpen(false)} />
 
@@ -42,7 +58,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                 onFeedbackClick={onFeedbackClick}
             />
 
-            <main className="flex-1 flex flex-col min-h-screen relative">
+            <main className="flex-1 flex flex-col min-h-screen relative min-w-0 overflow-hidden">
                 <Header
                     onToggleSidebar={() => {
                         if (window.innerWidth >= 768) {
@@ -53,6 +69,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                     }}
                     onToggleTerminal={() => setIsTerminalOpen(true)}
                     currentUser={currentUser}
+                    setView={setView}
                 />
 
                 {/* View Content */}

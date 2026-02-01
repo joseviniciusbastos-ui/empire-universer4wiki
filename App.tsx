@@ -3,8 +3,6 @@ import { supabase } from './lib/supabase';
 import { CATEGORIES } from './constants';
 import { Post, PostType, DB_Post, BulletinItem } from './types';
 import { CacheManager, debounce } from './lib/cache';
-import Terminal from './components/Terminal';
-import Tools from './components/Tools';
 import CreatePostModal from './components/modals/CreatePostModal';
 import FeedbackModal from './components/modals/FeedbackModal';
 import LoginModal from './components/modals/LoginModal';
@@ -15,16 +13,16 @@ import EditWelcomeModal from './components/modals/EditWelcomeModal';
 import EditBulletinModal from './components/modals/EditBulletinModal';
 import BulletinViewModal from './components/modals/BulletinViewModal';
 import PostViewModal from './components/modals/PostViewModal';
-import { PostView } from './components/views/PostView';
 import { MainLayout } from './components/layout/MainLayout';
 import { WikiView } from './components/views/WikiView';
 import { BlogView } from './components/views/BlogView';
 import { ForumView } from './components/views/ForumView';
+import { CalculatorsView } from './components/views/CalculatorsView';
 import { TechTreeView } from './components/views/TechTreeView';
 import { AchievementsView } from './components/views/AchievementsView';
-import { ShipDesignerView } from './components/views/ShipDesignerView';
 import { ProfileView } from './components/views/ProfileView';
 import { PublicProfileView } from './components/views/PublicProfileView';
+import RacesView from './components/views/RacesView';
 import { useToast } from './contexts/ToastContext';
 import { useAuth } from './contexts/AuthContext';
 import { FilterState } from './components/SearchFilters';
@@ -38,7 +36,7 @@ const CATEGORY_KEYS = {
 };
 
 export default function App() {
-  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'tools' | 'profile' | 'admin' | 'post-view' | 'public-profile' | 'tech-tree' | 'achievements' | 'ship-designer'>('home');
+  const [view, setView] = useState<'home' | 'wiki' | 'articles' | 'forum' | 'profile' | 'admin' | 'post-view' | 'public-profile' | 'tech-tree' | 'achievements' | 'races' | 'mining-calc'>('home');
 
   // App State
   const { currentUser, isLoading: isAuthLoading, refreshProfile } = useAuth();
@@ -226,6 +224,13 @@ export default function App() {
     if (searchFilters.category !== 'all' && post.category !== searchFilters.category) return false;
     if (searchFilters.author && !post.authorName.toLowerCase().includes(searchFilters.author.toLowerCase())) return false;
 
+    // Advanced Tag Filter: Must contain ALL selected tags
+    if (searchFilters.tags && searchFilters.tags.length > 0) {
+      const postTags = post.tags.map(t => t.toLowerCase());
+      const hasAllTags = searchFilters.tags.every(tag => postTags.includes(tag.toLowerCase()));
+      if (!hasAllTags) return false;
+    }
+
     if (searchFilters.dateRange !== 'all') {
       const date = new Date(post.createdAt);
       const now = new Date();
@@ -365,12 +370,6 @@ export default function App() {
     setIsBulletinViewOpen(true);
   };
 
-  // Removed misplaced import
-
-  // ... (existing imports)
-
-  // ... (inside App component)
-
   // Helper to restrict access
   const RestrictedView = ({ children }: { children: React.ReactNode }) => {
     if (!currentUser) {
@@ -409,8 +408,6 @@ export default function App() {
         currentUser={currentUser}
         onUpdate={refreshProfile}
       />
-
-      {/* Removed PostViewModal for dedicated PostView */}
 
       {/* RENDER CURRENT VIEW */}
       {view === 'home' && (
@@ -504,32 +501,26 @@ export default function App() {
         </RestrictedView>
       )}
 
+      {view === 'races' && (
+        <RestrictedView>
+          <RacesView />
+        </RestrictedView>
+      )}
+
+      {view === 'mining-calc' && (
+        <RestrictedView>
+          <CalculatorsView />
+        </RestrictedView>
+      )}
+
       {view === 'achievements' && (
         <RestrictedView>
           <AchievementsView currentUser={currentUser} />
         </RestrictedView>
       )}
 
-      {view === 'ship-designer' && (
-        <RestrictedView>
-          <ShipDesignerView currentUser={currentUser} />
-        </RestrictedView>
-      )}
 
-      {view === 'tools' && (
-        <RestrictedView>
-          <div className="space-y-6">
-            <h2 className="text-3xl font-display font-bold uppercase">Ferramentas de Engenharia</h2>
-            <Tools />
-            {/* Feedback Modal */}
-            <FeedbackModal
-              isOpen={isFeedbackModalOpen}
-              onClose={() => setIsFeedbackModalOpen(false)}
-              currentUser={currentUser}
-            />
-          </div>
-        </RestrictedView>
-      )}
+
 
       {view === 'admin' && currentUser && (
         <AdminPanel currentUser={currentUser} />
@@ -544,24 +535,32 @@ export default function App() {
       )}
 
       {view === 'public-profile' && viewingProfileId && (
-        <PublicProfileView
-          userId={viewingProfileId}
-          onClose={() => setView('home')}
-          onPostClick={openPostView}
-        />
+        <RestrictedView>
+          <PublicProfileView
+            userId={viewingProfileId}
+            onClose={() => setView('home')}
+            onPostClick={openPostView}
+            currentUser={currentUser}
+          />
+        </RestrictedView>
       )}
 
       {view === 'post-view' && selectedPost && (
-        <div className="container mx-auto px-4 py-8">
-          <PostView
-            post={selectedPost}
-            onClose={() => setView('home')} // Default back to home
-            currentUser={currentUser}
-            onDeleteConfirmed={handlePostDelete}
-            onEdit={handleEditPost}
-            onAuthorClick={handleProfileClick}
-          />
-        </div>
+        <RestrictedView>
+          <div className="container mx-auto px-4 py-8">
+            <PostViewModal
+              isOpen={true}
+              post={selectedPost}
+              onClose={() => setView('home')}
+              currentUser={currentUser}
+              onDeleteConfirmed={handlePostDelete}
+              onEdit={handleEditPost}
+              onAuthorClick={handleProfileClick}
+              allPosts={posts}
+              onPostClick={(p) => setSelectedPost(p)}
+            />
+          </div>
+        </RestrictedView>
       )}
 
       <EditWelcomeModal

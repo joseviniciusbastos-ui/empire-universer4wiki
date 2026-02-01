@@ -1,11 +1,10 @@
 import React from 'react';
-import { Book, MessageSquare, Terminal as TerminalIcon, Wrench, LogOut, X, User as UserIcon, BookOpen, LogIn, Shield, AlertTriangle, Pin, PinOff, Cpu, Trophy, Rocket } from 'lucide-react';
+import { Book, MessageSquare, Terminal as TerminalIcon, Wrench, LogOut, X, User as UserIcon, BookOpen, LogIn, Shield, AlertTriangle, Pin, PinOff, Cpu, Trophy, Rocket, Globe, Dna, Calculator } from 'lucide-react';
 import { Button } from '../ui/Shared';
 import { User } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { RANK_THRESHOLDS } from '../../constants';
 import { useLanguage, Language } from '../../contexts/LanguageContext';
-import { GameClock } from '../ui/GameClock';
 
 const STATIC_TEXT: Record<Language, any> = {
     pt: {
@@ -23,7 +22,9 @@ const STATIC_TEXT: Record<Language, any> = {
         lang: 'IDIOMA / LANG',
         tech: 'ÁRVORE TECH',
         achievements: 'CONQUISTAS',
-        ship_designer: 'ESTALEIRO'
+        races: 'RAÇAS',
+        ship_designer: 'ESTALEIRO',
+        calc: 'FERRAMENTAS'
     },
     en: {
         nav: 'NAVIGATION',
@@ -40,7 +41,9 @@ const STATIC_TEXT: Record<Language, any> = {
         lang: 'LANGUAGE / LINGUE',
         tech: 'TECH TREE',
         achievements: 'ACHIEVEMENTS',
-        ship_designer: 'SHIPYARD'
+        races: 'RACES',
+        ship_designer: 'SHIPYARD',
+        calc: 'TOOLS'
     },
     fr: {
         nav: 'NAVIGATION',
@@ -57,7 +60,9 @@ const STATIC_TEXT: Record<Language, any> = {
         lang: 'LANGUE / LANG',
         tech: 'ARBRE TECH',
         achievements: 'SUCCÈS',
-        ship_designer: 'CHANTIER SPATIAL'
+        races: 'RACES',
+        ship_designer: 'CHANTIER SPATIAL',
+        calc: 'CALCULATEURS'
     }
 };
 
@@ -85,9 +90,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
         <aside
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className={`fixed inset-y-0 left-0 z-50 bg-space-dark border-r border-space-steel transition-all duration-300 ease-in-out flex flex-col overflow-hidden
+            className={`transition-all duration-300 ease-in-out flex flex-col overflow-hidden border-r border-space-steel bg-space-dark z-50 flex-shrink-0
                 ${isExpanded ? 'w-72' : 'w-20'} 
-                ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}
+                ${isOpen ? 'translate-x-0 fixed inset-y-0 left-0' : 'fixed inset-y-0 left-0 -translate-x-full md:relative md:translate-x-0'}`}
         >
             <div className={`h-24 border-b border-space-steel flex items-center transition-all duration-300 ${isExpanded ? 'px-5 justify-between' : 'justify-center'}`}>
                 <div className="flex items-center gap-3 min-w-max">
@@ -128,24 +133,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                             { id: 'articles', icon: <TerminalIcon size={20} />, label: t.logs },
                             { id: 'forum', icon: <MessageSquare size={20} />, label: t.comms },
                             { id: 'tech-tree', icon: <Cpu size={20} />, label: t.tech },
-                            { id: 'ship-designer', icon: <Rocket size={20} />, label: t.ship_designer },
-                            { id: 'achievements', icon: <Trophy size={20} />, label: t.achievements },
-                            { id: 'tools', icon: <Wrench size={20} />, label: t.engineering }
-                        ].map((item) => {
-                            const handleClick = () => {
-                                setView(item.id);
-                                // Auto-close sidebar on mobile after navigation
-                                if (window.innerWidth < 768) {
-                                    setIsOpen(false);
-                                }
-                            };
-
-                            return (
+                            { id: 'races', icon: <Dna size={20} />, label: t.races },
+                            { id: 'mining-calc', icon: <Calculator size={20} />, label: t.calc },
+                            { id: 'achievements', icon: <Trophy size={20} />, label: t.achievements }
+                        ].map((item) => (
+                            <div key={item.id} className="relative">
+                                {view === item.id && (
+                                    <div className="absolute left-0 top-1 bottom-1 w-[3px] bg-space-neon shadow-[0_0_10px_rgba(0,194,255,0.5)] z-10" />
+                                )}
                                 <Button
-                                    key={item.id}
-                                    variant={view === item.id ? 'primary' : 'ghost'}
-                                    className={`w-full mb-1 flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
-                                    onClick={handleClick}
+                                    variant="ghost"
+                                    className={`w-full mb-1 flex items-center transition-all duration-300 border-none outline-none
+                                        ${view === item.id ? 'bg-space-neon/5 text-space-neon' : 'text-space-muted hover:text-white'}
+                                        ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
+                                    onClick={() => {
+                                        setView(item.id);
+                                        if (window.innerWidth < 768) setIsOpen(false);
+                                    }}
                                     title={!isExpanded ? item.label : ''}
                                 >
                                     <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
@@ -155,8 +159,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                                         {item.label}
                                     </span>
                                 </Button>
-                            );
-                        })}
+                            </div>
+                        ))}
                     </div>
                 </div>
 
@@ -166,40 +170,54 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                     </p>
                     {currentUser ? (
                         <div className="space-y-1">
-                            <Button
-                                variant={view === 'profile' ? 'primary' : 'ghost'}
-                                className={`w-full mb-1 flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
-                                onClick={() => {
-                                    setView('profile');
-                                    if (window.innerWidth < 768) setIsOpen(false);
-                                }}
-                                title={!isExpanded ? `PERFIL: ${currentUser.username.toUpperCase()}` : ''}
-                            >
-                                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                                    <UserIcon size={20} />
-                                </div>
-                                <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
-                                    {currentUser.username.toUpperCase()}
-                                </span>
-                            </Button>
-
-                            {currentUser.role === 'ADMIN' && (
+                            <div className="relative">
+                                {view === 'profile' && (
+                                    <div className="absolute left-0 top-1 bottom-1 w-[3px] bg-space-neon shadow-[0_0_10px_rgba(0,194,255,0.5)] z-10" />
+                                )}
                                 <Button
-                                    variant={view === 'admin' ? 'primary' : 'ghost'}
-                                    className={`w-full mb-1 text-space-neon flex items-center transition-all duration-300 ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
+                                    variant="ghost"
+                                    className={`w-full mb-1 flex items-center transition-all duration-300 border-none outline-none
+                                        ${view === 'profile' ? 'bg-space-neon/5 text-space-neon' : 'text-space-muted hover:text-white'}
+                                        ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
                                     onClick={() => {
-                                        setView('admin');
+                                        setView('profile');
                                         if (window.innerWidth < 768) setIsOpen(false);
                                     }}
-                                    title={!isExpanded ? 'COMANDO' : ''}
+                                    title={!isExpanded ? `PERFIL: ${currentUser.username.toUpperCase()}` : ''}
                                 >
                                     <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                                        <Shield size={20} />
+                                        <UserIcon size={20} />
                                     </div>
-                                    <span className={`flex-1 text-left transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
-                                        COMANDO
+                                    <span className={`flex-1 text-left whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
+                                        {currentUser.username.toUpperCase()}
                                     </span>
                                 </Button>
+                            </div>
+
+                            {currentUser.role === 'ADMIN' && (
+                                <div className="relative">
+                                    {view === 'admin' && (
+                                        <div className="absolute left-0 top-1 bottom-1 w-[3px] bg-space-neon shadow-[0_0_10px_rgba(0,194,255,0.5)] z-10" />
+                                    )}
+                                    <Button
+                                        variant="ghost"
+                                        className={`w-full mb-1 flex items-center transition-all duration-300 border-none outline-none
+                                            ${view === 'admin' ? 'bg-space-neon/5 text-space-neon' : 'text-space-muted hover:text-white'}
+                                            ${isExpanded ? 'justify-start px-5' : 'justify-center px-0'}`}
+                                        onClick={() => {
+                                            setView('admin');
+                                            if (window.innerWidth < 768) setIsOpen(false);
+                                        }}
+                                        title={!isExpanded ? 'COMANDO' : ''}
+                                    >
+                                        <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                                            <Shield size={20} />
+                                        </div>
+                                        <span className={`flex-1 text-left transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
+                                            COMANDO
+                                        </span>
+                                    </Button>
+                                </div>
                             )}
 
                             <div className={`transition-all duration-300 overflow-hidden ${isExpanded ? 'opacity-100 h-auto mt-2' : 'opacity-0 h-0 w-0'}`}>
@@ -315,16 +333,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isPinned, s
                 </div>
             </nav>
 
-            <div className={`p-4 border-t border-space-steel transition-all duration-300 ${isExpanded ? 'opacity-100 h-auto' : 'opacity-0 h-0 p-0 hidden'}`}>
-                <div className="bg-space-darker rounded p-4 border border-space-steel/50 space-y-4">
-                    <GameClock className="justify-center" />
 
-                    <div className="flex items-center justify-center gap-2 pt-2 border-t border-space-steel/20">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                        <span className="text-[10px] text-space-neon font-mono uppercase tracking-widest">Link Online</span>
-                    </div>
-                </div>
-            </div>
         </aside>
     );
 };

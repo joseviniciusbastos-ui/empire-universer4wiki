@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Button, Card, Badge, Input } from './ui/Shared';
 import {
     Users, Settings, Save, Trash2, Shield, ShieldAlert,
-    CheckCircle, X, ChevronUp, ChevronDown, FileText, MessageSquare, Search
+    CheckCircle, X, ChevronUp, ChevronDown, FileText, MessageSquare, Search, LayoutDashboard, Clock, ExternalLink
 } from 'lucide-react';
 import { PostType, User } from '../types';
 import { useToast } from '../contexts/ToastContext';
@@ -29,10 +29,11 @@ const POST_TYPE_LABELS = {
 
 export default function AdminPanel({ currentUser }: AdminPanelProps) {
     const { showToast } = useToast();
-    const [activeTab, setActiveTab] = useState<'users' | 'settings' | 'publications' | 'trash' | 'feedback'>('users');
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'settings' | 'publications' | 'trash' | 'feedback'>('dashboard');
     const [users, setUsers] = useState<any[]>([]);
     const [deletedPosts, setDeletedPosts] = useState<any[]>([]);
     const [reports, setReports] = useState<any[]>([]);
+    const [recentPosts, setRecentPosts] = useState<any[]>([]);
     const [posts, setPosts] = useState<any[]>([]);
     const [categories, setCategories] = useState<Record<string, string[]>>({});
     const [isLoading, setIsLoading] = useState(false);
@@ -40,7 +41,11 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
     const [pubSearch, setPubSearch] = useState('');
     const [pubFilter, setPubFilter] = useState<'all' | PostType>('all');
 
+    // Carousel State
+    const [currentSlide, setCurrentSlide] = useState(0);
+
     useEffect(() => {
+        if (activeTab === 'dashboard') fetchRecentPosts();
         if (activeTab === 'users') fetchUsers();
         if (activeTab === 'settings') fetchSettings();
         if (activeTab === 'publications') {
@@ -50,6 +55,19 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
         if (activeTab === 'trash') fetchDeletedPosts();
         if (activeTab === 'feedback') fetchReports();
     }, [activeTab]);
+
+    // --- DASHBOARD ---
+    const fetchRecentPosts = async () => {
+        setIsLoading(true);
+        const { data } = await supabase
+            .from('posts')
+            .select('*, profiles(username)')
+            .order('created_at', { ascending: false })
+            .limit(5);
+
+        if (data) setRecentPosts(data);
+        setIsLoading(false);
+    };
 
     // --- USERS MANAGEMENT ---
     const fetchUsers = async () => {
@@ -315,6 +333,7 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                     <Shield className="text-space-neon" /> Painel Administrativo
                 </h2>
                 <div className="flex flex-wrap gap-2 justify-center">
+                    <Button variant={activeTab === 'dashboard' ? 'primary' : 'ghost'} onClick={() => setActiveTab('dashboard')} icon={<LayoutDashboard size={16} />}>VISÃO GERAL</Button>
                     <Button variant={activeTab === 'users' ? 'primary' : 'ghost'} onClick={() => setActiveTab('users')} icon={<Users size={16} />}>USUÁRIOS</Button>
                     <Button variant={activeTab === 'publications' ? 'primary' : 'ghost'} onClick={() => setActiveTab('publications')} icon={<FileText size={16} />}>POSTS</Button>
                     <Button variant={activeTab === 'settings' ? 'primary' : 'ghost'} onClick={() => setActiveTab('settings')} icon={<Settings size={16} />}>CONFIG</Button>
@@ -323,6 +342,65 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
                     <Button variant={activeTab === 'trash' ? 'primary' : 'ghost'} onClick={() => setActiveTab('trash')} icon={<Trash2 size={16} />} className="text-space-alert">LIXO</Button>
                 </div>
             </div>
+
+            {/* --- DASHBOARD TAB --- */}
+            {activeTab === 'dashboard' && (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <Card className="p-6 bg-space-dark/50 border-space-neon/20">
+                            <h3 className="text-space-muted text-sm font-mono uppercase">Total Usuários</h3>
+                            <p className="text-4xl font-display font-bold text-white mt-2">{users.length > 0 ? users.length : '...'}</p>
+                        </Card>
+                        <Card className="p-6 bg-space-dark/50 border-space-neon/20">
+                            <h3 className="text-space-muted text-sm font-mono uppercase">Total Posts</h3>
+                            <p className="text-4xl font-display font-bold text-white mt-2">{posts.length > 0 ? posts.length : '...'}</p>
+                        </Card>
+                        <Card className="p-6 bg-space-dark/50 border-space-neon/20">
+                            <h3 className="text-space-muted text-sm font-mono uppercase">Status</h3>
+                            <div className="flex items-center gap-2 mt-2">
+                                <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                                <span className="text-white font-bold">OPERACIONAL</span>
+                            </div>
+                        </Card>
+                    </div>
+
+                    <Card title="ÚLTIMAS TRANSMISSÕES" className="border-t-4 border-t-space-neon">
+                        <div className="space-y-4">
+                            {isLoading ? (
+                                <p className="text-space-muted font-mono animate-pulse">Buscando dados recentes...</p>
+                            ) : recentPosts.length === 0 ? (
+                                <p className="text-space-muted">Nenhuma transmissão recente.</p>
+                            ) : (
+                                recentPosts.map((post) => (
+                                    <div key={post.id} className="flex items-center justify-between p-3 bg-space-black/40 rounded border border-space-steel/20 hover:border-space-neon/50 transition-colors group">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`p-2 rounded bg-space-steel/10 text-space-neon`}>
+                                                {post.type === PostType.WIKI ? <FileText size={18} /> :
+                                                    post.type === PostType.BLOG ? <MessageSquare size={18} /> :
+                                                        <LayoutDashboard size={18} />}
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-white group-hover:text-space-neon transition-colors line-clamp-1">{post.title}</h4>
+                                                <div className="flex items-center gap-2 text-xs text-space-muted font-mono">
+                                                    <span>{POST_TYPE_LABELS[post.type as PostType]}</span>
+                                                    <span>•</span>
+                                                    <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                                                    <span>•</span>
+                                                    <span className="text-space-text">{post.profiles?.username || 'Desconhecido'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <Badge color="bg-space-dark border border-space-steel text-xs">
+                                            <Clock size={10} className="mr-1" />
+                                            {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </Badge>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </Card>
+                </div>
+            )}
 
             {/* --- EXISTING TABS (Users, Settings, Publications, Trash, Feedback) --- */}
             {activeTab === 'users' && (
@@ -408,21 +486,247 @@ export default function AdminPanel({ currentUser }: AdminPanelProps) {
 
             {activeTab === 'publications' && (
                 <div className="space-y-6">
-                    <p className="text-sm text-space-muted">Gerenciamento de posts (implementação existente simplificada visualmente).</p>
-                    {/* Keep existing logic, simplified for brevity in this replacement block, but fully rendered would be here */}
-                    <Button onClick={fetchPosts}>Recarregar Posts</Button>
-                    <div className="text-center text-space-muted">Use a aba original para ordenar/editar posts.</div>
+                    <Card className="p-4 bg-space-dark/50 border-space-neon/20">
+                        <div className="flex gap-4">
+                            <div className="flex-1 relative">
+                                <Search className="absolute left-3 top-2.5 text-space-muted" size={16} />
+                                <Input
+                                    placeholder="Buscar publicações..."
+                                    className="pl-10"
+                                    value={pubSearch}
+                                    onChange={(e) => setPubSearch(e.target.value)}
+                                />
+                            </div>
+                            <select
+                                className="bg-space-dark border border-space-steel rounded px-3 text-white focus:border-space-neon outline-none"
+                                value={pubFilter}
+                                onChange={(e) => setPubFilter(e.target.value as any)}
+                            >
+                                <option value="all">Todos os Tipos</option>
+                                <option value={PostType.WIKI}>Enciclopédia</option>
+                                <option value={PostType.BLOG}>Blog</option>
+                                <option value={PostType.THREAD}>Fórum</option>
+                                <option value={PostType.ARTICLE}>Data Logs</option>
+                            </select>
+                        </div>
+                    </Card>
+
+                    <div className="space-y-8">
+                        {Object.values(PostType).map(type => {
+                            if (pubFilter !== 'all' && pubFilter !== type) return null;
+
+                            const postsOfType = posts.filter(p => p.type === type);
+                            if (postsOfType.length === 0) return null;
+
+                            // Group by category
+                            const postsByCat: Record<string, any[]> = {};
+                            postsOfType.forEach(p => {
+                                const cat = p.category || 'Sem Categoria';
+                                if (!postsByCat[cat]) postsByCat[cat] = [];
+                                postsByCat[cat].push(p);
+                            });
+
+                            return (
+                                <div key={type} className="animate-fade-in">
+                                    <h3 className="text-xl font-display font-bold text-space-neon mb-4 uppercase flex items-center gap-2">
+                                        {type === PostType.WIKI && <FileText size={20} />}
+                                        {type === PostType.BLOG && <MessageSquare size={20} />}
+                                        {type === PostType.THREAD && <Users size={20} />}
+                                        {type === PostType.ARTICLE && <LayoutDashboard size={20} />}
+                                        {POST_TYPE_LABELS[type]}
+                                    </h3>
+
+                                    <div className="space-y-6">
+                                        {Object.entries(postsByCat).map(([cat, catPosts]) => (
+                                            <Card key={cat} title={cat} className="border-space-steel/30">
+                                                <div className="space-y-2">
+                                                    {catPosts
+                                                        .filter(p => p.title.toLowerCase().includes(pubSearch.toLowerCase()))
+                                                        .map((post, index) => (
+                                                            <div key={post.id} className="flex items-center justify-between p-3 bg-space-dark rounded border border-space-steel/20 hover:border-space-neon/50 group transition-all">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="flex flex-col items-center gap-1 mr-2">
+                                                                        <button
+                                                                            onClick={() => movePost(catPosts, index, 'up')}
+                                                                            disabled={index === 0 || loadingAction !== null}
+                                                                            className="text-space-muted hover:text-space-neon disabled:opacity-20"
+                                                                        >
+                                                                            <ChevronUp size={14} />
+                                                                        </button>
+                                                                        <span className="text-[10px] mobile-hidden font-mono text-space-muted">{post.display_order}</span>
+                                                                        <button
+                                                                            onClick={() => movePost(catPosts, index, 'down')}
+                                                                            disabled={index === catPosts.length - 1 || loadingAction !== null}
+                                                                            className="text-space-muted hover:text-space-neon disabled:opacity-20"
+                                                                        >
+                                                                            <ChevronDown size={14} />
+                                                                        </button>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <h4 className="font-bold text-white cursor-pointer hover:text-space-neon hover:underline" onClick={() => window.open(`/post/${post.slug || post.id}`, '_blank')}>
+                                                                                {post.title}
+                                                                            </h4>
+                                                                            {post.is_pinned && <Badge color="bg-space-neon text-black text-[10px]">FIXADO</Badge>}
+                                                                            {post.is_official && <Badge color="bg-purple-500 text-white text-[10px]">OFICIAL</Badge>}
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2 text-xs text-space-muted mt-1">
+                                                                            <span>ID: {post.id.substring(0, 8)}</span>
+                                                                            <span>•</span>
+                                                                            <Clock size={10} />
+                                                                            <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="flex items-center gap-3">
+                                                                    <select
+                                                                        className="bg-space-black border border-space-steel rounded px-2 py-1 text-xs text-space-text focus:border-space-neon outline-none max-w-[120px]"
+                                                                        value={post.type}
+                                                                        onChange={(e) => {
+                                                                            if (confirm(`Mover "${post.title}" para ${e.target.value}? A categoria será resetada.`)) {
+                                                                                updatePostType(post.id, e.target.value as PostType);
+                                                                            }
+                                                                        }}
+                                                                        disabled={loadingAction === post.id}
+                                                                    >
+                                                                        <option value={PostType.WIKI}>ENCYCLOPEDIA</option>
+                                                                        <option value={PostType.BLOG}>BLOG</option>
+                                                                        <option value={PostType.THREAD}>FORUM</option>
+                                                                        <option value={PostType.ARTICLE}>DATA LOGS</option>
+                                                                    </select>
+
+                                                                    <div className="h-4 w-px bg-space-steel/30"></div>
+
+                                                                    <button
+                                                                        className="p-1.5 text-space-muted hover:text-space-alert hover:bg-space-alert/10 rounded transition-colors"
+                                                                        title="Mover para Lixeira"
+                                                                        onClick={async () => {
+                                                                            if (confirm("Mover para lixeira?")) {
+                                                                                setLoadingAction(post.id);
+                                                                                await supabase.from('posts').update({ deleted_at: new Date().toISOString() }).eq('id', post.id);
+                                                                                fetchPosts();
+                                                                                setLoadingAction(null);
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <Trash2 size={16} />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                </div>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             )}
 
 
 
-            {/* TRASH & FEEDBACK TABS (Restored from memory or simplified if needed, but in this case simple restoration if not fully replaced in prev block) */}
             {activeTab === 'trash' && (
-                <div className="text-center py-10 text-space-muted">Funcionalidade Lixeira (Preservada)</div>
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-xl font-display font-bold text-space-alert flex items-center gap-2">
+                            <Trash2 /> LIXEIRA <span className="text-sm font-mono opacity-60">({deletedPosts.length})</span>
+                        </h3>
+                        <p className="text-xs text-space-muted">Itens removidos há mais de 30 dias são excluídos automaticamente.</p>
+                    </div>
+
+                    {isLoading ? <p className="text-space-muted animate-pulse">Carregando lixeira...</p> : (
+                        deletedPosts.length === 0 ? (
+                            <div className="p-8 text-center border border-dashed border-space-steel rounded opacity-50">
+                                <Trash2 className="mx-auto mb-2" size={32} />
+                                <p>A lixeira está vazia.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-3">
+                                {deletedPosts.map(post => (
+                                    <div key={post.id} className="flex items-center justify-between p-4 bg-space-dark/40 border border-space-alert/30 rounded opacity-75 hover:opacity-100 transition-opacity">
+                                        <div>
+                                            <h4 className="font-bold text-white line-through decoration-space-alert">{post.title}</h4>
+                                            <p className="text-xs text-space-muted font-mono">
+                                                Excluído em: {new Date(post.deleted_at).toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                onClick={() => restorePost(post.id)}
+                                                disabled={loadingAction === post.id}
+                                                icon={<CheckCircle size={14} />}
+                                            >
+                                                RESTAURAR
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                className="bg-space-alert hover:bg-red-600 text-white border-none"
+                                                onClick={() => permanentDeletePost(post.id)}
+                                                disabled={loadingAction === post.id}
+                                                icon={<X size={14} />}
+                                            >
+                                                EXCLUIR
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )
+                    )}
+                </div>
             )}
+
             {activeTab === 'feedback' && (
-                <div className="text-center py-10 text-space-muted">Funcionalidade Feedback (Preservada)</div>
+                <div className="space-y-6">
+                    <h3 className="text-xl font-display font-bold text-space-highlight flex items-center gap-2">
+                        <ShieldAlert /> REPORTS E FEEDBACK
+                    </h3>
+
+                    <div className="grid grid-cols-1 gap-4">
+                        {reports.map(report => (
+                            <Card key={report.id} className="border-l-4 border-l-space-highlight">
+                                <div className="flex justify-between items-start">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <Badge color={report.status === 'PENDING' ? 'bg-yellow-500/20 text-yellow-500' : 'bg-green-500/20 text-green-500'}>
+                                                {report.status}
+                                            </Badge>
+                                            <span className="text-xs text-space-muted font-mono">{new Date(report.created_at).toLocaleString()}</span>
+                                        </div>
+                                        <p className="text-white bg-space-black/30 p-3 rounded border border-space-steel/20 rounded-tl-none">
+                                            {report.reason || report.description}
+                                        </p>
+                                        <div className="flex items-center gap-2 text-sm text-space-muted">
+                                            <Users size={14} />
+                                            <span>Reportado por: <span className="text-space-text">{report.profiles?.username || 'Anônimo'}</span></span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2">
+                                        {report.status !== 'RESOLVED' && (
+                                            <Button size="sm" onClick={() => updateReportStatus(report.id, 'RESOLVED')} icon={<CheckCircle size={14} />}>
+                                                MARCAR RESOLVIDO
+                                            </Button>
+                                        )}
+                                        {report.status !== 'DISMISSED' && (
+                                            <Button size="sm" variant="ghost" onClick={() => updateReportStatus(report.id, 'DISMISSED')} icon={<X size={14} />}>
+                                                IGNORAR
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                            </Card>
+                        ))}
+                        {reports.length === 0 && !isLoading && (
+                            <p className="text-center text-space-muted py-8">Nenhum report pendente.</p>
+                        )}
+                    </div>
+                </div>
             )}
 
         </div>

@@ -15,9 +15,10 @@ interface Notification {
 
 interface NotificationsMenuProps {
     currentUser: User | null;
+    setView: (view: string) => void;
 }
 
-const NotificationsMenu: React.FC<NotificationsMenuProps> = ({ currentUser }) => {
+const NotificationsMenu: React.FC<NotificationsMenuProps> = ({ currentUser, setView }) => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
@@ -73,12 +74,16 @@ const NotificationsMenu: React.FC<NotificationsMenuProps> = ({ currentUser }) =>
     const handleNotificationClick = (n: Notification) => {
         if (!n.read) markAsRead(n.id);
         setIsOpen(false);
-        // Navigation logic here if needed (e.g. using a router or passed prop)
-        // For now we just close the menu. If link exists, we could window.location or similar.
+
         if (n.link) {
-            // Basic client side routing hack or window location
-            // If our app uses state based routing, we might need to pass a callback
-            // But for now, let's assume simple interaction
+            // Handle internal view routing
+            // Expected format: view:view_name (e.g. view:achievements)
+            if (n.link.startsWith('view:')) {
+                const targetView = n.link.split(':')[1];
+                setView(targetView as any);
+            } else if (n.link.startsWith('http')) {
+                window.open(n.link, '_blank');
+            }
         }
     };
 

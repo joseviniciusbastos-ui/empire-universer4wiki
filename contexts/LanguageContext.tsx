@@ -4,11 +4,58 @@ import { Post } from '../types';
 
 export type Language = 'pt' | 'en' | 'fr';
 
+export const UI_TEXT = {
+    pt: {
+        comments: 'Comentários',
+        newComment: 'Novo Comentário',
+        reply: 'Responder',
+        delete: 'Excluir',
+        send: 'Enviar',
+        post: 'Publicar',
+        cancel: 'Cancelar',
+        loading: 'Carregando...',
+        error: 'Erro',
+        success: 'Sucesso',
+        loginRequiredCom: 'Faça login para comentar',
+        beFirst: 'Seja o primeiro a comentar!'
+    },
+    en: {
+        comments: 'Comments',
+        newComment: 'New Comment',
+        reply: 'Reply',
+        delete: 'Delete',
+        send: 'Send',
+        post: 'Post',
+        cancel: 'Cancel',
+        loading: 'Loading...',
+        error: 'Error',
+        success: 'Success',
+        loginRequiredCom: 'Please login to comment',
+        beFirst: 'Be the first to comment!'
+    },
+    fr: {
+        comments: 'Commentaires',
+        newComment: 'Nouveau Commentaire',
+        reply: 'Répondre',
+        delete: 'Supprimer',
+        send: 'Envoyer',
+        post: 'Publier',
+        cancel: 'Annuler',
+        loading: 'Chargement...',
+        error: 'Erreur',
+        success: 'Succès',
+        loginRequiredCom: 'Veuillez vous connecter para commenter',
+        beFirst: 'Soyez le premier à commenter!'
+    }
+};
+
 interface LanguageContextType {
     language: Language;
     setLanguage: (lang: Language) => void;
     translatePost: (post: Post) => Promise<{ title: string; content: string }>;
+    translateText: (text: string, targetLang: string) => Promise<string>;
     isTranslating: boolean;
+    t: typeof UI_TEXT['pt'];
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -28,7 +75,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const translateText = async (text: string, targetLang: string) => {
         if (!text || targetLang === 'pt') return text;
 
-        // Split text into chunks to avoid URL length limits (approx 2000 chars)
         const chunks: string[] = [];
         const maxLength = 1000;
         let currentPos = 0;
@@ -58,7 +104,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const translatePost = async (post: Post): Promise<{ title: string; content: string }> => {
         if (language === 'pt') return { title: post.title, content: post.content };
 
-        // Check cache
         if (post.translations && post.translations[language]) {
             return post.translations[language];
         }
@@ -70,7 +115,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
             const translation = { title: translatedTitle, content: translatedContent };
 
-            // Update database cache (optional, don't block if RLS fails)
             const newTranslations = { ...(post.translations || {}), [language]: translation };
             supabase
                 .from('posts')
@@ -90,7 +134,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     return (
-        <LanguageContext.Provider value={{ language, setLanguage, translatePost, isTranslating }}>
+        <LanguageContext.Provider value={{ language, setLanguage, translatePost, translateText, isTranslating, t: UI_TEXT[language] }}>
             {children}
         </LanguageContext.Provider>
     );

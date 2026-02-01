@@ -10,13 +10,16 @@ interface PublicProfileViewProps {
     userId: string;
     onClose: () => void;
     onPostClick: (post: Post) => void;
+    currentUser: User | null;
 }
 
-export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId, onClose, onPostClick }) => {
+export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId, onClose, onPostClick, currentUser }) => {
     const [profile, setProfile] = useState<any>(null);
     const [posts, setPosts] = useState<Post[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [publicDesigns, setPublicDesigns] = useState<any[]>([]);
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [isActing, setIsActing] = useState(false);
 
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -50,6 +53,17 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId, on
 
                 if (designsError) console.error("Error fetching designs:", designsError);
                 setPublicDesigns(designsData || []);
+
+                // Check following status
+                if (currentUser) {
+                    const { data: followData } = await supabase
+                        .from('follows')
+                        .select('*')
+                        .eq('follower_id', currentUser.id)
+                        .eq('author_id', userId);
+
+                    setIsFollowing(followData && followData.length > 0 ? true : false);
+                }
 
                 // Transform posts
                 const mappedPosts: Post[] = (postsData || []).map((dbPost: any) => ({
@@ -89,7 +103,33 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId, on
         };
 
         if (userId) fetchProfileData();
-    }, [userId]);
+    }, [userId, currentUser?.id]);
+
+    const handleFollow = async () => {
+        if (!currentUser) return;
+        setIsActing(true);
+        try {
+            if (isFollowing) {
+                const { error } = await supabase
+                    .from('follows')
+                    .delete()
+                    .eq('follower_id', currentUser.id)
+                    .eq('author_id', userId);
+                if (error) throw error;
+                setIsFollowing(false);
+            } else {
+                const { error } = await supabase
+                    .from('follows')
+                    .insert([{ follower_id: currentUser.id, author_id: userId }]);
+                if (error) throw error;
+                setIsFollowing(true);
+            }
+        } catch (error) {
+            console.error("Error following/unfollowing:", error);
+        } finally {
+            setIsActing(false);
+        }
+    };
 
     if (isLoading) {
         return <div className="text-center py-20 text-space-neon animate-pulse font-mono">ENCONTRANDO REGISTRO...</div>;
@@ -103,6 +143,15 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId, on
         <div className="max-w-4xl mx-auto space-y-8 animate-fadeIn">
             <div className="flex justify-between items-center mb-4">
                 <Button variant="ghost" onClick={onClose}>← VOLTAR</Button>
+                {currentUser && currentUser.id !== userId && (
+                    <Button
+                        variant={isFollowing ? "outline" : "primary"}
+                        onClick={handleFollow}
+                        isLoading={isActing}
+                    >
+                        {isFollowing ? 'SEGUINDO' : 'SEGUIR AUTOR'}
+                    </Button>
+                )}
             </div>
 
             <div className="bg-space-dark/50 border border-space-neon/30 rounded-xl overflow-hidden p-6 relative">
